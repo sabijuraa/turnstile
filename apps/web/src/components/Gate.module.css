@@ -165,7 +165,7 @@
 .arm {
   position: absolute;
   top: calc(50% - 1.5px);
-  width: 2.375rem;
+  width: calc(50% - 0.125rem);
   height: 3px;
   border-radius: 2px;
   background: var(--color-ink);
@@ -174,13 +174,13 @@
 .armLeft {
   left: 0.125rem;
   transform-origin: 0 50%;
-  transform: rotate(-80deg);
+  transform: scaleX(0.14);
 }
 
 .armRight {
   right: 0.125rem;
   transform-origin: 100% 50%;
-  transform: rotate(80deg);
+  transform: scaleX(0.14);
 }
 
 .gate[data-outcome="refused"] .arm {
@@ -222,6 +222,7 @@
 
 .mark {
   position: relative;
+  display: block;
   width: 1.125rem;
   height: 1.125rem;
 }
@@ -408,13 +409,14 @@
 }
 
 .compact .barrier {
-  top: 1.25rem;
-  left: calc(50% - 1.75rem);
-  width: 3.5rem;
+  top: calc(50% - 0.8125rem);
+  left: calc(50% - 1.5rem);
+  width: 3rem;
+  height: 1.125rem;
 }
 
-.gate.compact .arm {
-  width: 1.375rem;
+.compact .post {
+  height: 1.125rem;
 }
 
 .gate.compact .panelHead,
@@ -425,7 +427,7 @@
 
 .compact .checks {
   position: absolute;
-  bottom: 1rem;
+  bottom: 0.875rem;
   left: 0;
   right: 0;
   display: flex;
@@ -438,8 +440,8 @@
 }
 
 .compact .mark {
-  width: 0.625rem;
-  height: 0.625rem;
+  width: 0.5rem;
+  height: 0.5rem;
 }
 
 .compact .tick svg {
@@ -469,8 +471,17 @@
 
 @media (max-width: 26rem) {
   .compact .stage {
-    column-gap: 1.25rem;
-    grid-template-columns: minmax(0, 1fr) 3.75rem minmax(0, 1fr);
+    column-gap: 0.75rem;
+    grid-template-columns: minmax(0, 1fr) 3.5rem minmax(0, 1fr);
+  }
+
+  .compact .request,
+  .compact .outcome {
+    padding: 0 var(--space-2);
+  }
+
+  .compact .path {
+    font-size: var(--text-xs);
   }
 }
 
@@ -648,33 +659,33 @@
 
 @keyframes arm-left {
   0% {
-    transform: rotate(-80deg);
+    transform: scaleX(0.14);
     animation-timing-function: var(--ease-out);
   }
   5%,
   44% {
-    transform: rotate(0deg);
+    transform: scaleX(1);
     animation-timing-function: var(--ease-out);
   }
   50%,
   100% {
-    transform: rotate(-80deg);
+    transform: scaleX(0.14);
   }
 }
 
 @keyframes arm-right {
   0% {
-    transform: rotate(80deg);
+    transform: scaleX(0.14);
     animation-timing-function: var(--ease-out);
   }
   5%,
   44% {
-    transform: rotate(0deg);
+    transform: scaleX(1);
     animation-timing-function: var(--ease-out);
   }
   50%,
   100% {
-    transform: rotate(80deg);
+    transform: scaleX(0.14);
   }
 }
 

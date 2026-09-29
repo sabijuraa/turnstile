@@ -1,6 +1,6 @@
 import styles from "./Wordmark.module.css";
 
-/** The Turnstile mark. Two posts and an arm that has just swung open. */
+/** The Turnstile mark. The three arm rotor of a turnstile seen from above. */
 export function Mark({ size = 24 }: { size?: number }) {
   return (
     <svg
@@ -19,10 +19,11 @@ export function Mark({ size = 24 }: { size?: number }) {
         strokeLinejoin="round"
         fill="none"
       >
-        <path d="M7.5 6.5v11" />
-        <path d="M16.5 6.5v11" />
-        <path d="M7.5 11h5.5" />
+        <path d="M12 12V5.75" />
+        <path d="m12 12-5.4 3.1" />
+        <path d="m12 12 5.4 3.1" />
       </g>
+      <circle cx="12" cy="12" r="2.1" fill="var(--color-on-accent)" />
     </svg>
   );
 }

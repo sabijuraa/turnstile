@@ -81,6 +81,10 @@
   text-align: right;
 }
 
+.figure {
+  white-space: nowrap;
+}
+
 .unit {
   color: var(--color-ink-muted);
   font-weight: 400;

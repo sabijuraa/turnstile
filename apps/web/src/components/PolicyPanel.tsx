@@ -59,7 +59,7 @@ export function PolicyPanel({
             <Icon name="coins" size={16} />
             Per-call cap
           </dt>
-          <dd>
+          <dd className={styles.figure}>
             {perCallCap} <span className={styles.unit}>{asset}</span>
           </dd>
         </div>
@@ -68,7 +68,7 @@ export function PolicyPanel({
             <Icon name="clock" size={16} />
             Daily cap, rolling 24 hours
           </dt>
-          <dd>
+          <dd className={styles.figure}>
             {dailyCap} <span className={styles.unit}>{asset}</span>
           </dd>
         </div>

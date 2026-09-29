@@ -127,4 +127,13 @@ Settlement is idempotent by nonce, so a replayed header resolves to the original
 pnpm --filter @turnstile/sdk-resource test
 ```
 
-The unit tests run both adapters against a scripted fake facilitator. `test/integration.test.ts` runs a real facilitator against a real `solana-test-validator` with the programs loaded. It starts only when `TURNSTILE_INTEGRATION=1` is set and `target/deploy` holds both program binaries.
+The unit tests run both adapters against a scripted fake facilitator.
+
+`test/integration.test.ts` starts its own `solana-test-validator` with both programs from `target/deploy`, on ports 38899 and 38900 by default so it does not clash with a running stack. It then runs a real facilitator and a Hono resource server. The agent wallet is created with the shared instruction builders and the payments are signed by hand with the shared helpers. It covers the paid flow with the receipt read back from chain and exact vault and recipient balances. It also covers a replayed header (same transaction, no second debit), five concurrent copies of one payment (one debit), a price over the per-call cap, a resource off the allow-list, an expired authorization, an unreachable facilitator and the NFR3 latency.
+
+```sh
+cargo build-sbf   # or anchor build, so target/deploy holds both .so files
+TURNSTILE_INTEGRATION=1 pnpm --filter @turnstile/sdk-resource test
+```
+
+Set `INTEGRATION_RPC_PORT` to move the validator, `INTEGRATION_LATENCY_RUNS` to change the sample size and `TEST_DATABASE_URL` for Postgres. Measured medians are in the facilitator README.

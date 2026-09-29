@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const config: NextConfig = {
+  // Lets parallel local builds use separate output folders. Defaults to .next.
+  distDir: process.env.NEXT_DIST_DIR ?? ".next",
   reactStrictMode: true,
   poweredByHeader: false,
   serverExternalPackages: ["@solana/web3.js"],

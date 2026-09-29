@@ -1,0 +1,18 @@
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--color-ink);
+}
+
+.mark {
+  flex: none;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: 1.3125rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}

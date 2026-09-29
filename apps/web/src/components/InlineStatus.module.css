@@ -1,0 +1,79 @@
+.status {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-line);
+  border-left-width: 3px;
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  font-size: var(--text-sm);
+}
+
+.icon {
+  flex: none;
+  margin-top: 0.1rem;
+}
+
+.body {
+  flex: 1;
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.title {
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.text {
+  color: var(--color-ink-muted);
+}
+
+.action {
+  flex: none;
+  align-self: center;
+}
+
+.positive {
+  border-left-color: var(--color-positive);
+}
+
+.positive .icon {
+  color: var(--color-positive);
+}
+
+.critical {
+  border-left-color: var(--color-critical);
+  background: var(--color-critical-weak);
+}
+
+.critical .icon {
+  color: var(--color-critical);
+}
+
+.caution {
+  border-left-color: var(--color-caution);
+  background: var(--color-caution-weak);
+}
+
+.caution .icon {
+  color: var(--color-caution);
+}
+
+.info {
+  border-left-color: var(--color-accent);
+}
+
+.info .icon {
+  color: var(--color-accent);
+}
+
+.pending {
+  border-left-color: var(--color-ink-faint);
+}
+
+.pending .icon {
+  color: var(--color-ink-muted);
+}

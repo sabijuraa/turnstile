@@ -1,0 +1,114 @@
+.field {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.hint {
+  color: var(--color-ink-faint);
+  font-weight: 400;
+}
+
+.input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0 var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-control-border);
+  border-radius: var(--radius);
+  color: var(--color-ink);
+  font-size: var(--text-md);
+  transition:
+    border-color var(--duration-1) var(--ease-out),
+    box-shadow var(--duration-1) var(--ease-out);
+}
+
+.affix .input {
+  padding-right: 4.5rem;
+}
+
+.input::placeholder {
+  color: var(--color-ink-faint);
+}
+
+.input:hover:not(:disabled) {
+  border-color: var(--color-ink-muted);
+}
+
+.input:focus-visible {
+  outline: none;
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 1px var(--color-focus);
+}
+
+.input:disabled {
+  background: var(--color-sunken);
+  color: var(--color-ink-faint);
+  cursor: not-allowed;
+}
+
+.field[data-invalid] .input {
+  border-color: var(--color-critical);
+}
+
+.field[data-invalid] .input:focus-visible {
+  box-shadow: 0 0 0 1px var(--color-critical);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+
+.textarea {
+  min-height: 6rem;
+  padding: var(--space-3);
+  resize: vertical;
+  line-height: var(--leading-body);
+}
+
+.affix {
+  position: relative;
+  display: block;
+}
+
+.suffix {
+  position: absolute;
+  right: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-ink-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  pointer-events: none;
+}
+
+.help {
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+}
+
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  color: var(--color-critical);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.error svg {
+  flex: none;
+  margin-top: 0.1rem;
+}

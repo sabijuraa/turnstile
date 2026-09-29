@@ -1,0 +1,171 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--color-header-rest);
+  border-bottom: 1px solid var(--color-line);
+  -webkit-backdrop-filter: saturate(1.4) blur(12px);
+  backdrop-filter: saturate(1.4) blur(12px);
+}
+
+/* A hair more opaque once the page scrolls. Pure CSS, no script. */
+@supports (animation-timeline: scroll()) {
+  .header {
+    animation: header-settle linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 96px;
+  }
+}
+
+@keyframes header-settle {
+  from {
+    background: var(--color-header-rest);
+    border-bottom-color: var(--color-line);
+  }
+  to {
+    background: var(--color-header-scrolled);
+    border-bottom-color: var(--color-line-strong);
+  }
+}
+
+.inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  max-width: var(--content-max);
+  height: var(--header-height);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.home {
+  display: inline-flex;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+}
+
+.nav {
+  flex: 1;
+}
+
+.navList {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius);
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    color var(--duration-1) var(--ease-out),
+    background-color var(--duration-1) var(--ease-out);
+}
+
+.navLink:hover {
+  color: var(--color-ink);
+  background: var(--color-sunken);
+}
+
+.navLink[aria-current="page"] {
+  color: var(--color-ink);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mobile {
+  display: none;
+}
+
+.menuButton {
+  display: inline-grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-right: calc(var(--space-2) * -1);
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.menuButton:hover {
+  background: var(--color-sunken);
+}
+
+.panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--header-height) - 1px);
+  padding: var(--space-4) var(--gutter) var(--space-6);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-line);
+  box-shadow: var(--shadow-float);
+  animation: panel-in var(--duration-2) var(--ease-out);
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+.panel .navList {
+  flex-direction: column;
+  gap: 0;
+}
+
+.panel .navLink {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0 var(--space-2);
+  font-size: var(--text-lg);
+  color: var(--color-ink);
+  border-bottom: 1px solid var(--color-line);
+  border-radius: 0;
+}
+
+.panel .navLink[aria-current="page"] {
+  color: var(--color-accent);
+}
+
+.panelActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (max-width: 52rem) {
+  .nav,
+  .actions {
+    display: none;
+  }
+
+  .mobile {
+    display: block;
+    margin-left: auto;
+  }
+}

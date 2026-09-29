@@ -1,0 +1,29 @@
+.intro {
+  display: grid;
+  gap: var(--space-4);
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: clamp(4rem, 3rem + 5vw, 7rem) var(--gutter) clamp(4rem, 3rem + 5vw, 7rem);
+}
+
+.eyebrow {
+  color: var(--color-accent);
+}
+
+.title {
+  max-width: 20ch;
+  font-size: var(--text-5xl);
+}
+
+.lead {
+  max-width: var(--measure);
+  color: var(--color-ink-muted);
+  font-size: var(--text-lg);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}

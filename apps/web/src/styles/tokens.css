@@ -1,0 +1,117 @@
+/*
+ * Design tokens. Every color, space, radius, shadow, duration and easing in the app comes from here.
+ * Components read only the semantic names below. A dark theme is added by redefining the same
+ * names under [data-theme="dark"] without touching any component.
+ */
+:root {
+  color-scheme: light;
+
+  /* Ground and structure */
+  --color-paper: #f6f5f0;
+  --color-surface: #fcfcf9;
+  --color-sunken: #eeede6;
+  --color-line: #e1e0d7;
+  --color-line-strong: #cdccc2;
+  --color-control-border: #858b86;
+
+  /* Ink, a near black with a faint cool bias toward the accent */
+  --color-ink: #131a1a;
+  --color-ink-muted: #4a5453;
+  --color-ink-faint: #636c6a;
+  --color-on-ink: #f6f5f0;
+  --color-on-ink-muted: #b9c0bd;
+
+  /* Accent, deep teal. Reserved for the primary action and the moment value settles */
+  --color-accent: #0b5a5c;
+  --color-accent-strong: #084547;
+  --color-accent-weak: #e2eeec;
+  --color-on-accent: #f6f5f0;
+  --color-focus: #0b5a5c;
+
+  /* Semantic states, distinct from the accent */
+  --color-positive: #2c6b2f;
+  --color-positive-weak: #e6f0e1;
+  --color-caution: #7d5300;
+  --color-caution-weak: #f6ecd4;
+  --color-critical: #a3301f;
+  --color-critical-weak: #f7e5e0;
+
+  --color-meter-track: #e6e5dd;
+
+  /* Translucent values derived from the ink and paper */
+  --color-header-rest: rgb(246 245 240 / 0.78);
+  --color-header-scrolled: rgb(246 245 240 / 0.94);
+  --color-scrim: rgb(19 26 26 / 0.28);
+  --color-on-ink-line: rgb(246 245 240 / 0.14);
+  --color-on-ink-border: rgb(246 245 240 / 0.22);
+  --color-on-ink-hover: rgb(246 245 240 / 0.08);
+  --shadow-color: 180 20% 10%;
+
+  /* Type families are set by next/font on <html> */
+  --font-display:
+    var(--font-newsreader), "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-text: var(--font-hanken), "Segoe UI", "Helvetica Neue", Helvetica, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  /* Type scale, a 1.2 ratio for UI sizes and fluid display sizes */
+  --text-2xs: 0.6875rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.3125rem;
+  --text-2xl: 1.625rem;
+  --text-3xl: clamp(1.875rem, 1.4rem + 1.6vw, 2.5rem);
+  --text-4xl: clamp(2.25rem, 1.5rem + 2.8vw, 3.5rem);
+  --text-5xl: clamp(2.625rem, 1.6rem + 4.2vw, 4.75rem);
+
+  --leading-tight: 1.04;
+  --leading-snug: 1.2;
+  --leading-body: 1.55;
+  --tracking-display: -0.022em;
+  --tracking-tight: -0.01em;
+  --tracking-label: 0.09em;
+  --measure: 62ch;
+  --measure-narrow: 44ch;
+
+  /* Spacing, a 4px base */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+  --space-10: 8rem;
+
+  --gutter: clamp(1rem, 0.5rem + 2.5vw, 2.5rem);
+  --content-max: 76rem;
+  --section-pad: clamp(4rem, 2.5rem + 6vw, 8rem);
+  --header-height: 3.75rem;
+
+  /* Radius. One small radius on interactive surfaces */
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 10px;
+  --radius-pill: 999px;
+
+  /* Elevation. Only for things that float */
+  --shadow-float:
+    0 1px 1px hsl(var(--shadow-color) / 0.04), 0 4px 10px -2px hsl(var(--shadow-color) / 0.06),
+    0 16px 32px -12px hsl(var(--shadow-color) / 0.14);
+  --shadow-land:
+    0 1px 1px hsl(var(--shadow-color) / 0.05), 0 10px 24px -10px hsl(var(--shadow-color) / 0.18);
+
+  /* Motion. Quick and confident, never bouncy */
+  --duration-1: 120ms;
+  --duration-2: 200ms;
+  --duration-3: 320ms;
+  --duration-4: 560ms;
+  --ease-out: cubic-bezier(0.22, 0.7, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.45, 0, 0.2, 1);
+  --ease-linear: linear;
+
+  --focus-ring: 0 0 0 2px var(--color-paper), 0 0 0 4px var(--color-focus);
+}

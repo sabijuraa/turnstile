@@ -1,0 +1,742 @@
+/*
+ * The gate. The static styles below are the finished state: request shown, every check passed,
+ * the arm open and the receipt landed. Motion only replays the path to that state, so the first
+ * frame is complete without script and reduced motion simply skips the replay.
+ */
+
+.gate {
+  --req-h: 5.5rem;
+  --lane-h: 2.25rem;
+  --panel-h: 10.5rem;
+  --out-h: 5.5rem;
+  --panel-top: calc(var(--req-h) + var(--lane-h));
+  --out-top: calc(var(--panel-top) + var(--panel-h) + var(--lane-h));
+  --token: 0.75rem;
+  --cycle: 7.2s;
+  --delay: 1.2s;
+  --iterations: infinite;
+  --step: 0.07;
+
+  margin: 0;
+  width: 100%;
+  min-width: 0;
+}
+
+.stage {
+  position: relative;
+  height: calc(var(--out-top) + var(--out-h));
+  font-size: var(--text-sm);
+  color: var(--color-ink);
+}
+
+/* Shared card look */
+
+.request,
+.gatePanel,
+.outcome {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+}
+
+.kicker {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+/* The lane the request travels along */
+
+.lane {
+  position: absolute;
+  z-index: 0;
+  top: calc(var(--req-h) - 1px);
+  bottom: calc(var(--out-h) - 1px);
+  left: 50%;
+  width: 0;
+  border-left: 1px dashed var(--color-line-strong);
+}
+
+.token {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: calc(50% - var(--token) / 2);
+  width: var(--token);
+  height: var(--token);
+  border-radius: 50%;
+  background: var(--color-accent);
+  box-shadow: 0 0 0 4px var(--color-accent-weak);
+  opacity: 0;
+  transform: translateY(calc(var(--out-top) - var(--token)));
+}
+
+/* Request */
+
+.request {
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: var(--req-h);
+  display: grid;
+  align-content: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-4);
+}
+
+.route {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+.method {
+  flex: none;
+  padding: 0.0625rem 0.375rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-sunken);
+  color: var(--color-ink-muted);
+  font-size: var(--text-2xs);
+  font-weight: 500;
+}
+
+.path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.price {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-ink-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+
+.status402 {
+  color: var(--color-caution);
+  font-weight: 500;
+}
+
+/* Gate panel */
+
+.gatePanel {
+  top: var(--panel-top);
+  height: var(--panel-h);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-5) var(--space-4);
+  box-shadow: var(--shadow-float);
+}
+
+.barrier {
+  position: absolute;
+  top: -0.4375rem;
+  left: calc(50% - 2.75rem);
+  width: 5.5rem;
+  height: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.post {
+  position: relative;
+  z-index: 1;
+  width: 0.25rem;
+  height: 0.875rem;
+  border-radius: 1px;
+  background: var(--color-ink);
+}
+
+.arm {
+  position: absolute;
+  top: calc(50% - 1.5px);
+  width: 2.375rem;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--color-ink);
+}
+
+.armLeft {
+  left: 0.125rem;
+  transform-origin: 0 50%;
+  transform: rotate(-80deg);
+}
+
+.armRight {
+  right: 0.125rem;
+  transform-origin: 100% 50%;
+  transform: rotate(80deg);
+}
+
+.gate[data-outcome="refused"] .arm {
+  transform: none;
+  background: var(--color-critical);
+}
+
+.panelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.onchain {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--color-ink-muted);
+  font-size: var(--text-2xs);
+  font-weight: 500;
+}
+
+.checks {
+  display: grid;
+  align-content: start;
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.check {
+  display: grid;
+  grid-template-columns: 1.125rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.mark {
+  position: relative;
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.ring,
+.tick {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+
+.ring {
+  border: 1.5px solid var(--color-line-strong);
+}
+
+.tick {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.check[data-state="fail"] .tick {
+  background: var(--color-critical);
+}
+
+.check[data-state="skip"] .tick {
+  opacity: 0;
+}
+
+.checkLabel {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.checkDetail {
+  color: var(--color-ink-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums slashed-zero;
+  white-space: nowrap;
+}
+
+.check[data-state="fail"] .checkDetail {
+  color: var(--color-critical);
+}
+
+.check[data-state="skip"] .checkLabel,
+.check[data-state="skip"] .checkDetail {
+  color: var(--color-ink-faint);
+}
+
+/* Outcome, the receipt that lands */
+
+.outcome {
+  top: var(--out-top);
+  left: 8%;
+  right: 8%;
+  height: var(--out-h);
+  display: grid;
+  align-content: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+  box-shadow: var(--shadow-land);
+}
+
+.outcomeHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.settledPill,
+.refusedPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  height: 1.375rem;
+  padding: 0 0.5rem 0 0.375rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.settledPill {
+  background: var(--color-accent-weak);
+  color: var(--color-accent);
+}
+
+.refusedPill {
+  background: var(--color-critical-weak);
+  color: var(--color-critical);
+}
+
+.reference {
+  color: var(--color-ink-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.amount {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xl);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+
+.asset {
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.refusedReason {
+  color: var(--color-ink);
+  font-weight: 500;
+}
+
+/* Compact, a single row echo */
+
+.compact {
+  --token: 0.625rem;
+}
+
+.compact .stage {
+  height: 4.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4.5rem minmax(0, 1fr);
+  align-items: center;
+  column-gap: 1.75rem;
+}
+
+.compact .request,
+.compact .gatePanel,
+.compact .outcome {
+  position: relative;
+  inset: auto;
+  height: 4.5rem;
+  box-shadow: none;
+}
+
+.compact .request {
+  gap: 0.125rem;
+  padding: 0 var(--space-3);
+}
+
+.compact .method,
+.compact .price {
+  display: none;
+}
+
+.compact .outcome {
+  gap: 0.125rem;
+  padding: 0 var(--space-3);
+  box-shadow: var(--shadow-land);
+}
+
+.compact .reference {
+  display: none;
+}
+
+.compact .amount {
+  font-size: var(--text-md);
+}
+
+.compact .asset {
+  font-size: var(--text-xs);
+}
+
+.compact .gatePanel {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  gap: 0;
+}
+
+.compact .barrier {
+  top: 1.25rem;
+  left: calc(50% - 1.75rem);
+  width: 3.5rem;
+}
+
+.gate.compact .arm {
+  width: 1.375rem;
+}
+
+.gate.compact .panelHead,
+.gate.compact .checkLabel,
+.gate.compact .checkDetail {
+  display: none;
+}
+
+.compact .checks {
+  position: absolute;
+  bottom: 1rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.375rem;
+}
+
+.compact .check {
+  display: block;
+}
+
+.compact .mark {
+  width: 0.625rem;
+  height: 0.625rem;
+}
+
+.compact .tick svg {
+  display: none;
+}
+
+.compact .lane {
+  top: 50%;
+  bottom: auto;
+  left: 10%;
+  right: 10%;
+  width: auto;
+  height: 0;
+  border-left: 0;
+  border-top: 1px dashed var(--color-line-strong);
+}
+
+.compact .token {
+  top: calc(50% - var(--token) / 2);
+  left: 0;
+  transform: translateX(80cqw);
+}
+
+.compact .stage {
+  container-type: inline-size;
+}
+
+@media (max-width: 26rem) {
+  .compact .stage {
+    column-gap: 1.25rem;
+    grid-template-columns: minmax(0, 1fr) 3.75rem minmax(0, 1fr);
+  }
+}
+
+/* Motion. Each part replays its path and finishes on the static state above. */
+
+.motion-once {
+  --cycle: 3.4s;
+  --delay: 0s;
+  --iterations: 1;
+}
+
+.motion-loop .token,
+.motion-once .token {
+  animation: token-full var(--cycle) linear var(--delay) var(--iterations);
+}
+
+.motion-loop.compact .token,
+.motion-once.compact .token {
+  animation-name: token-compact;
+}
+
+.motion-loop .armLeft,
+.motion-once .armLeft {
+  animation: arm-left var(--cycle) linear var(--delay) var(--iterations);
+}
+
+.motion-loop .armRight,
+.motion-once .armRight {
+  animation: arm-right var(--cycle) linear var(--delay) var(--iterations);
+}
+
+.motion-loop .check:not([data-state="skip"]) .tick,
+.motion-once .check:not([data-state="skip"]) .tick {
+  animation: tick var(--cycle) linear calc(var(--delay) + var(--i) * var(--cycle) * var(--step))
+    var(--iterations);
+}
+
+.motion-loop .outcome,
+.motion-once .outcome {
+  animation: land var(--cycle) linear var(--delay) var(--iterations);
+}
+
+/* Refused. The arm never opens and the token stops at the gate. */
+
+.gate[data-outcome="refused"] .arm {
+  animation: none;
+}
+
+.motion-loop[data-outcome="refused"] .token,
+.motion-once[data-outcome="refused"] .token {
+  animation-name: token-refused;
+}
+
+.compact.motion-loop[data-outcome="refused"] .token,
+.compact.motion-once[data-outcome="refused"] .token {
+  animation-name: token-refused-compact;
+}
+
+.motion-loop[data-outcome="refused"] .outcome,
+.motion-once[data-outcome="refused"] .outcome {
+  animation-name: land-refused;
+}
+
+@keyframes token-full {
+  0% {
+    opacity: 0;
+    transform: translateY(calc(var(--req-h) - var(--token)));
+  }
+  5% {
+    opacity: 1;
+    transform: translateY(calc(var(--req-h) - var(--token)));
+    animation-timing-function: var(--ease-out);
+  }
+  16%,
+  46% {
+    opacity: 1;
+    transform: translateY(calc(var(--panel-top) - var(--token) - 0.625rem));
+    animation-timing-function: var(--ease-in-out);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(calc(var(--out-top) - var(--token)));
+  }
+  64%,
+  100% {
+    opacity: 0;
+    transform: translateY(calc(var(--out-top) - var(--token)));
+  }
+}
+
+@keyframes token-refused {
+  0% {
+    opacity: 0;
+    transform: translateY(calc(var(--req-h) - var(--token)));
+  }
+  5% {
+    opacity: 1;
+    transform: translateY(calc(var(--req-h) - var(--token)));
+    animation-timing-function: var(--ease-out);
+  }
+  16%,
+  44% {
+    opacity: 1;
+    background: var(--color-accent);
+    transform: translateY(calc(var(--panel-top) - var(--token) - 0.625rem));
+  }
+  48% {
+    opacity: 1;
+    background: var(--color-critical);
+    transform: translateY(calc(var(--panel-top) - var(--token) - 0.625rem));
+  }
+  58%,
+  100% {
+    opacity: 0;
+    background: var(--color-critical);
+    transform: translateY(calc(var(--panel-top) - var(--token) - 0.625rem));
+  }
+}
+
+@keyframes token-compact {
+  0% {
+    opacity: 0;
+    transform: translateX(20cqw);
+  }
+  5% {
+    opacity: 1;
+    transform: translateX(20cqw);
+    animation-timing-function: var(--ease-out);
+  }
+  16%,
+  46% {
+    opacity: 1;
+    transform: translateX(calc(50cqw - 2.25rem - 1.25rem));
+    animation-timing-function: var(--ease-in-out);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(78cqw);
+  }
+  64%,
+  100% {
+    opacity: 0;
+    transform: translateX(80cqw);
+  }
+}
+
+@keyframes token-refused-compact {
+  0% {
+    opacity: 0;
+    transform: translateX(20cqw);
+  }
+  5% {
+    opacity: 1;
+    transform: translateX(20cqw);
+    animation-timing-function: var(--ease-out);
+  }
+  16%,
+  44% {
+    opacity: 1;
+    background: var(--color-accent);
+    transform: translateX(calc(50cqw - 2.25rem - 1.25rem));
+  }
+  48% {
+    opacity: 1;
+    background: var(--color-critical);
+    transform: translateX(calc(50cqw - 2.25rem - 1.25rem));
+  }
+  58%,
+  100% {
+    opacity: 0;
+    background: var(--color-critical);
+    transform: translateX(calc(50cqw - 2.25rem - 1.25rem));
+  }
+}
+
+@keyframes arm-left {
+  0% {
+    transform: rotate(-80deg);
+    animation-timing-function: var(--ease-out);
+  }
+  5%,
+  44% {
+    transform: rotate(0deg);
+    animation-timing-function: var(--ease-out);
+  }
+  50%,
+  100% {
+    transform: rotate(-80deg);
+  }
+}
+
+@keyframes arm-right {
+  0% {
+    transform: rotate(80deg);
+    animation-timing-function: var(--ease-out);
+  }
+  5%,
+  44% {
+    transform: rotate(0deg);
+    animation-timing-function: var(--ease-out);
+  }
+  50%,
+  100% {
+    transform: rotate(80deg);
+  }
+}
+
+@keyframes tick {
+  0% {
+    opacity: 1;
+    transform: none;
+  }
+  4%,
+  18% {
+    opacity: 0;
+    transform: scale(0.6);
+    animation-timing-function: var(--ease-out);
+  }
+  23%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes land {
+  0% {
+    opacity: 1;
+    transform: none;
+  }
+  5%,
+  60% {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+    animation-timing-function: var(--ease-out);
+  }
+  70%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes land-refused {
+  0% {
+    opacity: 1;
+    transform: none;
+  }
+  5%,
+  48% {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+    animation-timing-function: var(--ease-out);
+  }
+  58%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gate .token,
+  .gate .arm,
+  .gate .tick,
+  .gate .outcome {
+    animation: none;
+  }
+}

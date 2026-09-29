@@ -1,0 +1,23 @@
+.card {
+  position: relative;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  min-width: 0;
+}
+
+.raised {
+  box-shadow: var(--shadow-float);
+}
+
+.pad-none {
+  padding: 0;
+}
+
+.pad-md {
+  padding: var(--space-5);
+}
+
+.pad-lg {
+  padding: clamp(var(--space-5), 4vw, var(--space-7));
+}

@@ -16,6 +16,7 @@ import {
   X402_VERSION,
 } from "@turnstile/shared";
 import { createPool, migrate } from "@turnstile/shared/db";
+import { testDatabaseUrl } from "@turnstile/shared/testing";
 import bs58 from "bs58";
 import type { Pool } from "pg";
 import { createApp } from "../src/app.js";
@@ -32,9 +33,7 @@ import { createLogger } from "../src/logger.js";
 import { createMetrics, type Metrics } from "../src/metrics.js";
 import { createStore, type FacilitatorStore } from "../src/store/store.js";
 
-export const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL ??
-  "postgres://turnstile_facilitator_test:turnstile_facilitator_test@127.0.0.1:5432/turnstile_facilitator_test";
+export const TEST_DATABASE_URL = testDatabaseUrl("facilitator");
 
 export const MINT = new PublicKey("So11111111111111111111111111111111111111112");
 export const RESOURCE = "https://api.example.com/v1/summarize";

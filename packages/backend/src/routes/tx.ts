@@ -6,7 +6,6 @@ import {
   formatUnits,
   hexToBytes,
   MAX_SESSION_KEYS,
-  networkByName,
 } from "@turnstile/shared";
 import {
   addSessionKeyInstruction,
@@ -35,6 +34,7 @@ import {
   createAssociatedTokenIdempotentInstruction,
   decodeTokenAccount,
 } from "../chain/token.js";
+import { explorerNetwork } from "../config.js";
 import type { AppEnv, Services } from "../context.js";
 import { ApiError } from "../errors.js";
 import { resolveResourceId } from "../store/receipts.js";
@@ -247,7 +247,7 @@ const signatureSchema = z
 export function txRoutes(s: Services): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
   const decimals = mintDecimals(s.config);
-  const network = networkByName(s.config.network);
+  const network = explorerNetwork(s.config);
   const amount = amountSchema(decimals);
   const cap = amountSchema(decimals, { allowZero: true });
   app.use("*", requireOwner(s, { apiKey: false }));

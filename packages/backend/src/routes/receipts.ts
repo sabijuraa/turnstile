@@ -1,6 +1,6 @@
-import { networkByName } from "@turnstile/shared";
 import { Hono } from "hono";
 import { requireOwner } from "../auth/middleware.js";
+import { explorerNetwork } from "../config.js";
 import type { AppEnv, Services } from "../context.js";
 import { csvHeader, csvRow } from "../store/csv.js";
 import { listReceipts, receiptFilterSchema, receiptListSchema } from "../store/receipts.js";
@@ -10,7 +10,7 @@ const CSV_PAGE = 500;
 
 export function receiptRoutes(s: Services): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
-  const network = networkByName(s.config.network);
+  const network = explorerNetwork(s.config);
   app.use("*", requireOwner(s, { apiKey: true }));
 
   app.get("/", async (c) => {
@@ -28,7 +28,7 @@ export function receiptRoutes(s: Services): Hono<AppEnv> {
 /** GET /v1/receipts.csv streams every matching receipt, page by page, as a CSV statement. */
 export function receiptCsvRoute(s: Services): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
-  const network = networkByName(s.config.network);
+  const network = explorerNetwork(s.config);
   app.get("/", requireOwner(s, { apiKey: true }), async (c) => {
     const filter = readQuery(c, receiptFilterSchema);
     const owner = c.get("owner");

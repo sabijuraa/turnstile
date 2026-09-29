@@ -3,6 +3,7 @@ import { PublicKey } from "@solana/web3.js";
 import {
   AGENT_WALLET_PROGRAM_ID,
   NETWORKS,
+  type NetworkConfig,
   type NetworkName,
   SETTLEMENT_PROGRAM_ID,
 } from "@turnstile/shared";
@@ -131,5 +132,15 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     challengeTtlSeconds: 300,
     sessionTtlSeconds: 12 * 60 * 60,
     confirmTimeoutMs: 30_000,
+  };
+}
+
+/** Network settings for explorer links. On localnet the link points at the RPC this backend uses. */
+export function explorerNetwork(config: Config): NetworkConfig {
+  const base = NETWORKS[config.network];
+  if (config.network !== "localnet") return base;
+  return {
+    ...base,
+    explorerCluster: `cluster=custom&customUrl=${encodeURIComponent(config.rpcUrl)}`,
   };
 }

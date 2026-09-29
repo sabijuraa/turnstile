@@ -1,7 +1,8 @@
-import { formatUnits, networkByName } from "@turnstile/shared";
+import { formatUnits } from "@turnstile/shared";
 import { Hono } from "hono";
 import { z } from "zod";
 import { requireOwner } from "../auth/middleware.js";
+import { explorerNetwork } from "../config.js";
 import type { AppEnv, Services } from "../context.js";
 import { rangeSchema, windowFor } from "../store/range.js";
 import { listReceipts } from "../store/receipts.js";
@@ -36,7 +37,7 @@ interface DeadLetterRow {
 
 export function summaryRoutes(s: Services): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
-  const network = networkByName(s.config.network);
+  const network = explorerNetwork(s.config);
   app.get("/", requireOwner(s, { apiKey: true }), async (c) => {
     const { range } = readQuery(c, summaryQuery);
     const owner = c.get("owner");

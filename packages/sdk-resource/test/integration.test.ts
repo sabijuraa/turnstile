@@ -59,9 +59,9 @@ import {
   fetchReceipt,
   updatePolicyInstruction,
 } from "@turnstile/shared/programs";
+import { ensureTestDatabase, testDatabaseUrl } from "@turnstile/shared/testing";
 import bs58 from "bs58";
 import { Hono } from "hono";
-
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { honoPaywall, type PaywallEnv } from "../src/hono.js";
 import type { PaymentRejected } from "../src/paywall.js";
@@ -72,9 +72,7 @@ const deployDir = join(repoRoot, "target/deploy");
 const RPC_PORT = Number(process.env.INTEGRATION_RPC_PORT ?? 38899);
 const RPC_URL = `http://127.0.0.1:${RPC_PORT}`;
 const WS_URL = `ws://127.0.0.1:${RPC_PORT + 1}`;
-const DATABASE_URL =
-  process.env.TEST_DATABASE_URL ??
-  "postgres://turnstile_facilitator_test:turnstile_facilitator_test@127.0.0.1:5432/turnstile_facilitator_test";
+const DATABASE_URL = testDatabaseUrl("sdk_resource");
 
 const PRICE = "0.005";
 const PRICE_UNITS = 5_000n;
@@ -199,6 +197,7 @@ describe.skipIf(!enabled)("paid request on a real validator", () => {
     });
 
     // Facilitator on a real port.
+    await ensureTestDatabase("sdk_resource");
     pool = createPool(DATABASE_URL, 5);
     await migrate(pool);
     const logger = createLogger(process.env.INTEGRATION_LOG_LEVEL ?? "silent");

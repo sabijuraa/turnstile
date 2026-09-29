@@ -23,7 +23,7 @@ Environment
 | `DATABASE_URL` | required | Postgres connection string |
 | `TURNSTILE_NETWORK` | `localnet` | `localnet` or `devnet` |
 | `SOLANA_RPC_URL` | the network default | Solana JSON RPC endpoint |
-| `DEPLOYMENT_FILE` | unset | Deployment JSON with program and mint addresses. Checked at startup when set |
+| `DEPLOYMENT_FILE` | unset | Deployment JSON (`network`, `caip2`, `programs`, `mint`, `mintDecimals` and more). Checked at startup when set. Creating an agent needs its `mint` |
 | `WEB_ORIGIN` | `http://localhost:3000` | Origin of the web app. Used for CORS, the sign-in message and the write origin check |
 | `COOKIE_SECURE` | `false` | Set `true` behind HTTPS so the session cookie is marked Secure |
 | `LOG_LEVEL` | `info` | pino log level |
@@ -35,7 +35,7 @@ A bad variable stops the process at startup with one line per problem, for examp
 Two ways to call the API.
 
 - A console session. The owner signs a sign-in message with their wallet and gets an httpOnly `turnstile_session` cookie (SameSite=Lax, Secure when `COOKIE_SECURE=true`, 12 hours).
-- A console API key sent as `Authorization: Bearer tsk_...`. Keys only read. They work on `/v1/me`, `/v1/receipts`, `/v1/receipts.csv`, `/v1/spend` and `/v1/summary`.
+- A console API key sent as `Authorization: Bearer tsk_...`. Keys only read. They work on `/v1/me`, `/v1/receipts`, `/v1/receipts.csv`, `/v1/spend`, `/v1/summary` and `/v1/agents`.
 
 Rules that apply everywhere
 
@@ -50,8 +50,10 @@ Rules that apply everywhere
 | `POST /v1/auth/challenge`, `POST /v1/auth/verify`, `POST /v1/auth/signout` | none |
 | `GET /v1/me` | session or API key |
 | `GET /v1/receipts`, `GET /v1/receipts.csv`, `GET /v1/spend`, `GET /v1/summary` | session or API key |
+| `GET /v1/agents`, `GET /v1/agents/:address` | session or API key |
 | `GET /v1/api-keys`, `POST /v1/api-keys`, `DELETE /v1/api-keys/:id` | session only |
 | `PUT /v1/agents/:address/label` | session only |
+| `POST /v1/tx/create-agent`, `/deposit`, `/withdraw`, `/update-policy`, `/add-session-key`, `/revoke-session-key`, `/close-wallet`, `/confirm` | session only |
 
 ## Errors
 
@@ -63,13 +65,14 @@ Every error has the same shape. The message says what went wrong and what to do 
 
 | Status | Codes |
 | --- | --- |
-| 400 | `invalid_request`, `invalid_query`, `invalid_json`, `invalid_cursor`, `invalid_address`, `invalid_signature_encoding` |
+| 400 | `invalid_request`, `invalid_query`, `invalid_json`, `invalid_cursor`, `invalid_address`, `invalid_signature_encoding`, `insufficient_owner_balance`, `owner_token_account_missing`, `insufficient_vault_balance`, `transaction_too_large` |
 | 401 | `unauthenticated`, `session_expired`, `invalid_authorization`, `invalid_api_key`, `api_key_revoked`, `unknown_challenge`, `challenge_used`, `challenge_expired`, `bad_signature` |
 | 403 | `api_key_not_allowed`, `origin_not_allowed`, `not_agent_owner` |
-| 404 | `not_found`, `api_key_not_found` |
-| 409 | `too_many_api_keys` |
+| 404 | `not_found`, `api_key_not_found`, `agent_not_found`, `session_key_not_found` |
+| 409 | `too_many_api_keys`, `agent_exists`, `duplicate_session_key`, `too_many_session_keys`, `session_key_revoked`, `vault_not_empty` |
 | 415 | `unsupported_media_type` |
 | 500 | `internal_error` |
+| 503 | `mint_not_configured` |
 
 ## Examples
 
@@ -322,11 +325,13 @@ The first 21 buckets are trimmed.
 - `totalSpend` and `settlementCount` over the same window as `/v1/spend`.
 - `activeAgents` counts distinct agent wallets with a receipt in the window.
 - `recentReceipts` holds the 8 newest receipts in the same shape as `/v1/receipts`.
-- `failures` lists settlements waiting in the facilitator dead letter table (`status = pending`) for this owner's agent wallets.
+- `failures` lists settlements waiting in the facilitator dead letter table (`status = pending`) for this owner's agent wallets. Wallets come from receipts, labels and the chain.
+- `notices` explains a partial answer, for example when Solana did not answer and failures could only be matched to wallets with receipts or labels.
 
 ```json
 {
   "range": "7d",
+  "notices": [],
   "from": "2026-09-23T00:00:00.000Z",
   "to": "2026-09-30T00:00:00.000Z",
   "totalSpend": { "amount": "1017000", "displayAmount": "1.017" },
@@ -374,6 +379,151 @@ Content-Type: application/json
 
 Another owner's wallet gives `403 not_agent_owner`.
 
+### Agents from chain
+
+`GET /v1/agents` lists the owner's agent wallets straight from the chain. It runs `getProgramAccounts` on the agent_wallet program with two memcmp filters, the AgentWallet discriminator at offset 0 and the owner at offset 8, then reads every vault balance in one `getMultipleAccountsInfo` call.
+
+- `rollingSpend` is the spend that counts toward the daily cap now, over the rolling 24 hour window, computed from the wallet's spend buckets exactly as the program does.
+- `todaySpend` is the spend since 00:00 UTC.
+- `capUsage` is rolling spend over the daily cap.
+- `attention` lists every condition that needs the owner, most urgent first. `status` is the first one, or `active`. The values are `no_active_key`, `no_allow_list`, `unfunded`, `at_cap` and `near_cap` (80 percent of the daily cap or more).
+
+These examples come from a local validator with the programs loaded. The mint was created for the capture.
+
+```json
+{
+  "agents": [
+    {
+      "address": "3jGFVGG5LEY1hHuAMwHnhQx7aDAfS6TVrYKgygJDxWYc",
+      "id": "0",
+      "label": null,
+      "mint": "BV4U2CVr4n7kjx1MkbQ8utYVFVa9UfJpFoKKqBWXdKH7",
+      "vault": "8Z555dzfKCtoLZGB1on3UpthenuuVFVtytGZjmt2BSFa",
+      "vaultBalance": { "amount": "5000000", "displayAmount": "5" },
+      "perCallCap": { "amount": "50000", "displayAmount": "0.05" },
+      "dailyCap": { "amount": "2000000", "displayAmount": "2" },
+      "rollingSpend": { "amount": "0", "displayAmount": "0" },
+      "todaySpend": { "amount": "0", "displayAmount": "0" },
+      "capUsage": 0,
+      "status": "active",
+      "attention": [],
+      "sessionKeys": { "active": 1, "total": 1 },
+      "allowListCount": 1,
+      "totalSpent": { "amount": "0", "displayAmount": "0" },
+      "settlementCount": "0",
+      "createdAt": "2026-09-29T16:54:22.000Z"
+    }
+  ]
+}
+```
+
+`GET /v1/agents/:address` returns the same fields plus the owner, every session key and the allow-list with readable resource strings from the `resources` table. A wallet that does not exist gives `404 agent_not_found`. A wallet of another owner gives `403 not_agent_owner`.
+
+```json
+{
+  "agent": {
+    "address": "3jGFVGG5LEY1hHuAMwHnhQx7aDAfS6TVrYKgygJDxWYc",
+    "owner": "HYgixhNhJT4y4dZmepqPSmuiVE6N18RmzzKrrGQ8k5H9",
+    "sessionKeyList": [
+      { "key": "GfNpEc4M8z1dKqvCyxiJShmY4CUvQCp7WFFRrZLHFcre", "expiresAt": null, "active": true, "status": "active" }
+    ],
+    "allowList": [
+      {
+        "resourceId": "eff6aba3234c1c5bfe3ab4219b80ff4191d5e05596dce210c922826059da70b0",
+        "resource": "https://demo.turnstile.dev/v1/summarize",
+        "recipient": "84rZqi8WwL4PaCmX4xjGuHsk5aH9kAxcDQJgr3nXXum4"
+      }
+    ]
+  }
+}
+```
+
+The summary fields shared with the list are trimmed here.
+
+### Owner transactions
+
+The backend never signs for the owner. Each builder returns unsigned legacy transactions with a recent blockhash and the owner as fee payer. The browser wallet signs and sends them in order, then the UI calls `/v1/tx/confirm` for each signature.
+
+- Amounts and caps are decimal strings in whole stablecoin units, such as `"1.25"`. They are parsed exactly with `parseUnits`. More than 6 decimal places is an error, never rounded.
+- The per-call cap may not be above the daily cap.
+- An allow-list entry is `{ resource, recipient }`. `resource` is a URL, a canonical resource string or a 64 character hex resource id. URLs are canonicalized and hashed like the programs do, and the readable string is saved in `resources`.
+- The console accepts at most 15 allow-list entries per policy update. The program stores up to 16, but 16 entries do not fit in one legacy transaction.
+- The session key must differ from the owner wallet.
+- Every builder checks ownership on chain first and fails fast with the reason the program would give. Examples are too little in the owner's token account, too little in the vault, a duplicate or unknown session key, no free session key slot, or a vault that is not empty.
+
+Every builder answers in this shape.
+
+```json
+{
+  "action": "create-agent",
+  "network": "localnet",
+  "agentWallet": "3jGFVGG5LEY1hHuAMwHnhQx7aDAfS6TVrYKgygJDxWYc",
+  "id": "0",
+  "feePayer": "HYgixhNhJT4y4dZmepqPSmuiVE6N18RmzzKrrGQ8k5H9",
+  "recentBlockhash": "4HA8JHP6yfjqeCYF9tzx1EjrpiYuxJwgE5bsKyueJcUC",
+  "lastValidBlockHeight": 217,
+  "transactions": [
+    {
+      "transaction": "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...",
+      "description": "Create the agent wallet",
+      "instructions": ["create_wallet", "deposit", "update_policy"]
+    }
+  ]
+}
+```
+
+The base64 transaction is trimmed. `id` appears only on create.
+
+| Endpoint | Body | Instructions |
+| --- | --- | --- |
+| `POST /v1/tx/create-agent` | `sessionKey`, `perCallCap`, `dailyCap`, optional `sessionExpiresAt` (ISO), `deposit`, `allowList`, `id` | `create_wallet`, then `deposit` and `update_policy` when asked. One transaction when it fits. Otherwise two, the second holding `update_policy`. Without `id` the next free id is used |
+| `POST /v1/tx/deposit` | `agentWallet`, `amount` | `deposit` from the owner's associated token account |
+| `POST /v1/tx/withdraw` | `agentWallet`, `amount` | creates the owner's token account if missing, then `withdraw` |
+| `POST /v1/tx/update-policy` | `agentWallet`, `perCallCap`, `dailyCap`, `allowList` | `update_policy`, which replaces caps and allow-list together |
+| `POST /v1/tx/add-session-key` | `agentWallet`, `sessionKey`, optional `expiresAt` (ISO) | `add_session_key` |
+| `POST /v1/tx/revoke-session-key` | `agentWallet`, `sessionKey` | `revoke_session_key` |
+| `POST /v1/tx/close-wallet` | `agentWallet`, optional `withdrawRemaining` | with `withdrawRemaining` true, withdraws the rest first, then `close_wallet` |
+
+Validation examples
+
+```json
+{ "error": { "code": "invalid_request", "message": "perCallCap must not be above dailyCap. Lower the per-call cap or raise the daily cap." } }
+{ "error": { "code": "invalid_request", "message": "amount has more than 6 decimal places. The stablecoin has 6 decimals." } }
+{ "error": { "code": "invalid_request", "message": "allowList can hold at most 15 entries per policy update. Remove some entries and try again." } }
+{ "error": { "code": "vault_not_empty", "message": "The agent vault still holds 5. Withdraw it first or send withdrawRemaining true to do both in one transaction." } }
+```
+
+### Confirm a transaction
+
+`POST /v1/tx/confirm` takes `{ signature, timeoutMs? }` and waits up to 30 seconds (or `timeoutMs`, at most 60000) for the network.
+
+- `confirmed` or `finalized` once it lands.
+- `failed` when the chain rejected it. `error.name` is the program error, such as `InsufficientFunds` or `DailyCapExceeded`.
+- `pending` when the wait ran out. The UI keeps showing pending and asks again.
+
+```json
+{
+  "signature": "44PpV4heFgXaQRdeUdF6acL5xUKueTR5KgfGeAML9eoc51HdmgQHSfffDbmZ1nvHBrfQ5fyQqTkQ4iFk7FAYqPwb",
+  "status": "confirmed",
+  "slot": 68,
+  "error": null,
+  "explorerUrl": "https://explorer.solana.com/tx/44PpV4heFgXaQRdeUdF6acL5xUKueTR5KgfGeAML9eoc51HdmgQHSfffDbmZ1nvHBrfQ5fyQqTkQ4iFk7FAYqPwb?cluster=custom&customUrl=http%3A%2F%2F127.0.0.1%3A8899"
+}
+```
+
+A rejected withdraw, as the test run asserts it. The signature and slot are left out.
+
+```json
+{
+  "status": "failed",
+  "error": {
+    "code": 6007,
+    "name": "InsufficientFunds",
+    "message": "The vault does not hold enough tokens. Deposit more before paying or withdrawing"
+  }
+}
+```
+
 ## Health, readiness and metrics
 
 - `GET /healthz` answers `{"status":"ok","service":"backend"}` while the process runs.
@@ -414,3 +564,5 @@ pnpm --filter @turnstile/backend test
 ```
 
 Tests insert receipt rows directly as fixtures and truncate the tables between cases.
+
+`test/chain.test.ts` runs every chain operation against a real validator. It uses `TEST_RPC_URL` when set. Otherwise it starts `solana-test-validator` on port 47899 with `target/deploy/agent_wallet.so` and `target/deploy/settlement.so` loaded and stops it afterwards. It creates its own mint and funds its own owner. Without a validator binary or program builds it skips and prints why.

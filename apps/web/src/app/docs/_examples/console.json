@@ -1,0 +1,1026 @@
+{
+  "capturedAt": "2026-09-29T17:29:50.523Z",
+  "backend": "http://127.0.0.1:3583",
+  "authChallenge": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/auth/challenge",
+      "body": {
+        "pubkey": "3V5wQrL6roGqSZN4gTfnYdeWpp3BGjyeKEbuMrLA4Tqw"
+      }
+    },
+    "status": 200,
+    "response": {
+      "pubkey": "3V5wQrL6roGqSZN4gTfnYdeWpp3BGjyeKEbuMrLA4Tqw",
+      "nonce": "BLLRVHgUg8enaxx6np5FG2",
+      "message": "localhost:3000 wants you to sign in with your Solana account:\n3V5wQrL6roGqSZN4gTfnYdeWpp3BGjyeKEbuMrLA4Tqw\n\nSign in to the Turnstile console. This request does not send a transaction or cost any fees.\n\nURI: http://localhost:3000\nVersion: 1\nChain ID: localnet\nNonce: BLLRVHgUg8enaxx6np5FG2\nIssued At: 2026-09-29T17:29:16.394Z\nExpiration Time: 2026-09-29T17:34:16.394Z",
+      "issuedAt": "2026-09-29T17:29:16.394Z",
+      "expiresAt": "2026-09-29T17:34:16.394Z"
+    }
+  },
+  "authVerify": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/auth/verify",
+      "body": {
+        "pubkey": "3V5wQrL6roGqSZN4gTfnYdeWpp3BGjyeKEbuMrLA4Tqw",
+        "nonce": "BLLRVHgUg8enaxx6np5FG2",
+        "signature": "4rWBTCG85DwTJdt11EQufX4VhRhuj9gVLpKgvMxagMidUdr8nynXxLy7mdTa66QmjQbwze2oiKsdLfeYBju91ECv"
+      }
+    },
+    "status": 200,
+    "response": {
+      "owner": "3V5wQrL6roGqSZN4gTfnYdeWpp3BGjyeKEbuMrLA4Tqw",
+      "expiresAt": "2026-09-30T05:29:16.696Z"
+    },
+    "headers": {
+      "set-cookie": "turnstile_session=<token>; Max-Age=43200; Path=/; HttpOnly; SameSite=Lax"
+    }
+  },
+  "authReplay": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/auth/verify",
+      "body": {
+        "pubkey": "3V5wQrL6roGqSZN4gTfnYdeWpp3BGjyeKEbuMrLA4Tqw",
+        "nonce": "BLLRVHgUg8enaxx6np5FG2",
+        "signature": "4rWBTCG85DwTJdt11EQufX4VhRhuj9gVLpKgvMxagMidUdr8nynXxLy7mdTa66QmjQbwze2oiKsdLfeYBju91ECv"
+      }
+    },
+    "status": 401,
+    "response": {
+      "error": {
+        "code": "challenge_used",
+        "message": "This sign-in request was already used. Start sign-in again to get a fresh one."
+      }
+    }
+  },
+  "me": {
+    "request": {
+      "method": "GET",
+      "path": "/v1/me",
+      "headers": {
+        "cookie": "turnstile_session=<token>"
+      }
+    },
+    "status": 200,
+    "response": {
+      "owner": "3V5wQrL6roGqSZN4gTfnYdeWpp3BGjyeKEbuMrLA4Tqw",
+      "authMethod": "session",
+      "network": "localnet",
+      "createdAt": "2026-09-29T17:27:15.704Z",
+      "lastSeenAt": "2026-09-29T17:29:16.696Z"
+    }
+  },
+  "meUnauthenticated": {
+    "request": {
+      "method": "GET",
+      "path": "/v1/me"
+    },
+    "status": 401,
+    "response": {
+      "error": {
+        "code": "unauthenticated",
+        "message": "Sign in to the console or send an API key as Authorization: Bearer tsk_... and try again."
+      }
+    }
+  },
+  "apiKeyCreate": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/api-keys",
+      "headers": {
+        "cookie": "turnstile_session=<token>"
+      },
+      "body": {
+        "name": "reporting job"
+      }
+    },
+    "status": 201,
+    "response": {
+      "apiKey": {
+        "id": "key_de7fcf9a-3543-464b-8912-ed9618f1e552",
+        "name": "reporting job",
+        "prefix": "tsk_FW4274",
+        "createdAt": "2026-09-29T17:29:16.864Z",
+        "lastUsedAt": null,
+        "revokedAt": null,
+        "status": "active"
+      },
+      "key": "tsk_FW4274btfUCjJ9g3pvNKkZtVsX2sRbEf8ubvLcJXq5Xd",
+      "notice": "Copy this key now. It is shown only once and cannot be recovered."
+    }
+  },
+  "apiKeyList": {
+    "request": {
+      "method": "GET",
+      "path": "/v1/api-keys",
+      "headers": {
+        "cookie": "turnstile_session=<token>"
+      }
+    },
+    "status": 200,
+    "response": {
+      "apiKeys": [
+        {
+          "id": "key_de7fcf9a-3543-464b-8912-ed9618f1e552",
+          "name": "reporting job",
+          "prefix": "tsk_FW4274",
+          "createdAt": "2026-09-29T17:29:16.864Z",
+          "lastUsedAt": null,
+          "revokedAt": null,
+          "status": "active"
+        },
+        {
+          "id": "key_38766ae3-1d07-4a90-b52e-7139e5f103e3",
+          "name": "reporting job",
+          "prefix": "tsk_DsoNzs",
+          "createdAt": "2026-09-29T17:27:16.014Z",
+          "lastUsedAt": "2026-09-29T17:27:16.304Z",
+          "revokedAt": "2026-09-29T17:27:19.763Z",
+          "status": "revoked"
+        }
+      ]
+    }
+  },
+  "receipts": {
+    "request": {
+      "method": "GET",
+      "path": "/v1/receipts?limit=2",
+      "headers": {
+        "authorization": "Bearer tsk_FW4274btfUCjJ9g3pvNKkZtVsX2sRbEf8ubvLcJXq5Xd"
+      }
+    },
+    "status": 200,
+    "response": {
+      "receipts": [
+        {
+          "receiptAddress": "HYAxpPot7txWFm1M51NEj1irvaduZTJVbM7fo6izGegg",
+          "signature": "iQVUXrBS3VUgmNJv6LUXGNMhA4KvNRTobNHcubYCxaf8MFqEMS2GxzDc52baQ23RGEsw46mJR8Ma5y2GV6F9PF3",
+          "slot": "578",
+          "blockTime": "2026-09-29T17:05:46.000Z",
+          "agentWallet": "3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ",
+          "agentLabel": null,
+          "owner": "3V5wQrL6roGqSZN4gTfnYdeWpp3BGjyeKEbuMrLA4Tqw",
+          "sessionKey": "61urDfhnQNrDdvLiS2GcSAWmEHJvdoybVeczKz3dc5Jo",
+          "recipient": "3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m",
+          "recipientToken": "7TA8gRdGZKvd9EJeZx4iqs5hgf81hpzC7RcM9H2aex2h",
+          "mint": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
+          "amount": "5000",
+          "displayAmount": "0.005",
+          "resourceId": "afc9180ee712e5f2284923779a7710ef472232d95a2dccfd7268565ccbbf682c",
+          "resource": "http://127.0.0.1:4030/v1/summarize",
+          "nonce": "4cc69ec4c65e2997428ad4cbc5b9e0fe00735858fd85a75b47e5b4e7b9ac5e77",
+          "feePayer": "GJMbF9xiuQMcTopBmkbTNg8R4QtwfC4WBaaRStjdBxha",
+          "network": "solana:localnet",
+          "status": "settled",
+          "explorerUrl": "https://explorer.solana.com/tx/iQVUXrBS3VUgmNJv6LUXGNMhA4KvNRTobNHcubYCxaf8MFqEMS2GxzDc52baQ23RGEsw46mJR8Ma5y2GV6F9PF3?cluster=custom&customUrl=http%3A%2F%2F127.0.0.1%3A48899"
+        },
+        {
+          "receiptAddress": "FHgR118t2E32ASKFYqCGRogdQRXhfo5P6Xa1ePFh8FDc",
+          "signature": "5ygKusDSFseNbUeQNm4GNMfhRShRWguSNejtqbdwf1r5zU64gzffuJuMPgyWxDoLv6crypGXraa47RT8R3QNJQ5H",
+          "slot": "577",
+          "blockTime": "2026-09-29T17:05:45.000Z",
+          "agentWallet": "3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ",
+          "agentLabel": null,
+          "owner": "3V5wQrL6roGqSZN4gTfnYdeWpp3BGjyeKEbuMrLA4Tqw",
+          "sessionKey": "61urDfhnQNrDdvLiS2GcSAWmEHJvdoybVeczKz3dc5Jo",
+          "recipient": "3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m",
+          "recipientToken": "7TA8gRdGZKvd9EJeZx4iqs5hgf81hpzC7RcM9H2aex2h",
+          "mint": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
+          "amount": "5000",
+          "displayAmount": "0.005",
+          "resourceId": "afc9180ee712e5f2284923779a7710ef472232d95a2dccfd7268565ccbbf682c",
+          "resource": "http://127.0.0.1:4030/v1/summarize",
+          "nonce": "ca541a88cfb0231af5b4a99941ddab6483db7b270e27471b0adb7fd7eae5f6f6",
+          "feePayer": "GJMbF9xiuQMcTopBmkbTNg8R4QtwfC4WBaaRStjdBxha",
+          "network": "solana:localnet",
+          "status": "settled",
+          "explorerUrl": "https://explorer.solana.com/tx/5ygKusDSFseNbUeQNm4GNMfhRShRWguSNejtqbdwf1r5zU64gzffuJuMPgyWxDoLv6crypGXraa47RT8R3QNJQ5H?cluster=custom&customUrl=http%3A%2F%2F127.0.0.1%3A48899"
+        }
+      ],
+      "nextCursor": "eyJzIjoibmV3ZXN0IiwiayI6IjIwMjYtMDktMjkgMjI6MDU6NDUrMDUiLCJhIjoiRkhnUjExOHQyRTMyQVNLRllxQ0dSb2dkUVJYaGZvNVA2WGExZVBGaDhGRGMifQ"
+    }
+  },
+  "receiptsBadQuery": {
+    "request": {
+      "method": "GET",
+      "path": "/v1/receipts?limit=500",
+      "headers": {
+        "authorization": "Bearer tsk_FW4274btfUCjJ9g3pvNKkZtVsX2sRbEf8ubvLcJXq5Xd"
+      }
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalid_query",
+        "message": "limit must be 200 or less."
+      }
+    }
+  },
+  "spend": {
+    "request": {
+      "method": "GET",
+      "path": "/v1/spend?range=24h",
+      "headers": {
+        "authorization": "Bearer tsk_FW4274btfUCjJ9g3pvNKkZtVsX2sRbEf8ubvLcJXq5Xd"
+      }
+    },
+    "status": 200,
+    "response": {
+      "range": "24h",
+      "bucket": "hour",
+      "from": "2026-09-28T18:00:00.000Z",
+      "to": "2026-09-29T18:00:00.000Z",
+      "series": [
+        {
+          "start": "2026-09-28T18:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-28T19:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-28T20:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-28T21:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-28T22:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-28T23:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-29T00:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-29T01:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-29T02:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-29T03:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-29T04:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-29T05:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-29T06:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-29T07:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-29T08:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-29T09:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-29T10:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-29T11:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-29T12:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-29T13:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-29T14:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-29T15:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-29T16:00:00.000Z",
+          "amount": "0",
+          "displayAmount": "0",
+          "count": 0
+        },
+        {
+          "start": "2026-09-29T17:00:00.000Z",
+          "amount": "35000",
+          "displayAmount": "0.035",
+          "count": 7
+        }
+      ],
+      "totals": {
+        "amount": "35000",
+        "displayAmount": "0.035",
+        "count": 7
+      }
+    }
+  },
+  "summary": {
+    "request": {
+      "method": "GET",
+      "path": "/v1/summary?range=24h",
+      "headers": {
+        "authorization": "Bearer tsk_FW4274btfUCjJ9g3pvNKkZtVsX2sRbEf8ubvLcJXq5Xd"
+      }
+    },
+    "status": 200,
+    "response": {
+      "range": "24h",
+      "notices": [],
+      "from": "2026-09-28T18:00:00.000Z",
+      "to": "2026-09-29T18:00:00.000Z",
+      "totalSpend": {
+        "amount": "35000",
+        "displayAmount": "0.035"
+      },
+      "settlementCount": 7,
+      "activeAgents": 1,
+      "recentReceipts": [
+        {
+          "receiptAddress": "HYAxpPot7txWFm1M51NEj1irvaduZTJVbM7fo6izGegg",
+          "signature": "iQVUXrBS3VUgmNJv6LUXGNMhA4KvNRTobNHcubYCxaf8MFqEMS2GxzDc52baQ23RGEsw46mJR8Ma5y2GV6F9PF3",
+          "slot": "578",
+          "blockTime": "2026-09-29T17:05:46.000Z",
+          "agentWallet": "3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ",
+          "agentLabel": null,
+          "owner": "3V5wQrL6roGqSZN4gTfnYdeWpp3BGjyeKEbuMrLA4Tqw",
+          "sessionKey": "61urDfhnQNrDdvLiS2GcSAWmEHJvdoybVeczKz3dc5Jo",
+          "recipient": "3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m",
+          "recipientToken": "7TA8gRdGZKvd9EJeZx4iqs5hgf81hpzC7RcM9H2aex2h",
+          "mint": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
+          "amount": "5000",
+          "displayAmount": "0.005",
+          "resourceId": "afc9180ee712e5f2284923779a7710ef472232d95a2dccfd7268565ccbbf682c",
+          "resource": "http://127.0.0.1:4030/v1/summarize",
+          "nonce": "4cc69ec4c65e2997428ad4cbc5b9e0fe00735858fd85a75b47e5b4e7b9ac5e77",
+          "feePayer": "GJMbF9xiuQMcTopBmkbTNg8R4QtwfC4WBaaRStjdBxha",
+          "network": "solana:localnet",
+          "status": "settled",
+          "explorerUrl": "https://explorer.solana.com/tx/iQVUXrBS3VUgmNJv6LUXGNMhA4KvNRTobNHcubYCxaf8MFqEMS2GxzDc52baQ23RGEsw46mJR8Ma5y2GV6F9PF3?cluster=custom&customUrl=http%3A%2F%2F127.0.0.1%3A48899"
+        },
+        {
+          "receiptAddress": "FHgR118t2E32ASKFYqCGRogdQRXhfo5P6Xa1ePFh8FDc",
+          "signature": "5ygKusDSFseNbUeQNm4GNMfhRShRWguSNejtqbdwf1r5zU64gzffuJuMPgyWxDoLv6crypGXraa47RT8R3QNJQ5H",
+          "slot": "577",
+          "blockTime": "2026-09-29T17:05:45.000Z",
+          "agentWallet": "3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ",
+          "agentLabel": null,
+          "owner": "3V5wQrL6roGqSZN4gTfnYdeWpp3BGjyeKEbuMrLA4Tqw",
+          "sessionKey": "61urDfhnQNrDdvLiS2GcSAWmEHJvdoybVeczKz3dc5Jo",
+          "recipient": "3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m",
+          "recipientToken": "7TA8gRdGZKvd9EJeZx4iqs5hgf81hpzC7RcM9H2aex2h",
+          "mint": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
+          "amount": "5000",
+          "displayAmount": "0.005",
+          "resourceId": "afc9180ee712e5f2284923779a7710ef472232d95a2dccfd7268565ccbbf682c",
+          "resource": "http://127.0.0.1:4030/v1/summarize",
+          "nonce": "ca541a88cfb0231af5b4a99941ddab6483db7b270e27471b0adb7fd7eae5f6f6",
+          "feePayer": "GJMbF9xiuQMcTopBmkbTNg8R4QtwfC4WBaaRStjdBxha",
+          "network": "solana:localnet",
+          "status": "settled",
+          "explorerUrl": "https://explorer.solana.com/tx/5ygKusDSFseNbUeQNm4GNMfhRShRWguSNejtqbdwf1r5zU64gzffuJuMPgyWxDoLv6crypGXraa47RT8R3QNJQ5H?cluster=custom&customUrl=http%3A%2F%2F127.0.0.1%3A48899"
+        },
+        {
+          "receiptAddress": "CGphzed8rb1WG86JZtquGHwhj3nWY8xBrVkLemb5SM9r",
+          "signature": "46CLavFUVpo3ixbCrW9Y17cmxggKJQ6GR6giCraFTtFuKCf3JKu1ZS4EKKwrPWismDtgxZhdck2qgJCbi6br9gKo",
+          "slot": "559",
+          "blockTime": "2026-09-29T17:05:27.000Z",
+          "agentWallet": "3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ",
+          "agentLabel": null,
+          "owner": "3V5wQrL6roGqSZN4gTfnYdeWpp3BGjyeKEbuMrLA4Tqw",
+          "sessionKey": "61urDfhnQNrDdvLiS2GcSAWmEHJvdoybVeczKz3dc5Jo",
+          "recipient": "3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m",
+          "recipientToken": "7TA8gRdGZKvd9EJeZx4iqs5hgf81hpzC7RcM9H2aex2h",
+          "mint": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
+          "amount": "5000",
+          "displayAmount": "0.005",
+          "resourceId": "afc9180ee712e5f2284923779a7710ef472232d95a2dccfd7268565ccbbf682c",
+          "resource": "http://127.0.0.1:4030/v1/summarize",
+          "nonce": "b45e9ac7e8e32c4d6f488755176864c7829cba9d4c25cb486227c9ee264d7cfb",
+          "feePayer": "GJMbF9xiuQMcTopBmkbTNg8R4QtwfC4WBaaRStjdBxha",
+          "network": "solana:localnet",
+          "status": "settled",
+          "explorerUrl": "https://explorer.solana.com/tx/46CLavFUVpo3ixbCrW9Y17cmxggKJQ6GR6giCraFTtFuKCf3JKu1ZS4EKKwrPWismDtgxZhdck2qgJCbi6br9gKo?cluster=custom&customUrl=http%3A%2F%2F127.0.0.1%3A48899"
+        },
+        {
+          "receiptAddress": "6wsexb4C7kWW1oRoJZAB8h4VatxyzXPq9PsStnxahDbB",
+          "signature": "fWsV4ethynDy2PUKLMbtHKPPBRYda7cfXCE5t94XZLW4M8BVxqCFuajXNnVAgjCBbsYdp9tdK5L1zmg1LxgBihD",
+          "slot": "558",
+          "blockTime": "2026-09-29T17:05:26.000Z",
+          "agentWallet": "3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ",
+          "agentLabel": null,
+          "owner": "3V5wQrL6roGqSZN4gTfnYdeWpp3BGjyeKEbuMrLA4Tqw",
+          "sessionKey": "61urDfhnQNrDdvLiS2GcSAWmEHJvdoybVeczKz3dc5Jo",
+          "recipient": "3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m",
+          "recipientToken": "7TA8gRdGZKvd9EJeZx4iqs5hgf81hpzC7RcM9H2aex2h",
+          "mint": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
+          "amount": "5000",
+          "displayAmount": "0.005",
+          "resourceId": "afc9180ee712e5f2284923779a7710ef472232d95a2dccfd7268565ccbbf682c",
+          "resource": "http://127.0.0.1:4030/v1/summarize",
+          "nonce": "85c493e2ed803bb219aafb791beac5cfd6f81f8ed2a78ccb9363d57b09c7154c",
+          "feePayer": "GJMbF9xiuQMcTopBmkbTNg8R4QtwfC4WBaaRStjdBxha",
+          "network": "solana:localnet",
+          "status": "settled",
+          "explorerUrl": "https://explorer.solana.com/tx/fWsV4ethynDy2PUKLMbtHKPPBRYda7cfXCE5t94XZLW4M8BVxqCFuajXNnVAgjCBbsYdp9tdK5L1zmg1LxgBihD?cluster=custom&customUrl=http%3A%2F%2F127.0.0.1%3A48899"
+        },
+        {
+          "receiptAddress": "GFW2uTetLrqki7x3yxWuL68dukj3B3eqqhKMSzeJyrZm",
+          "signature": "2gaZ7JZJhqSNWne2xxbUQDwmZnD8i5yYb7C5kawdbJShmYqEDDjbzGtuyMeLmrVTSygMeTrZXwW4s7B5Da6EGWZi",
+          "slot": "539",
+          "blockTime": "2026-09-29T17:05:07.000Z",
+          "agentWallet": "3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ",
+          "agentLabel": null,
+          "owner": "3V5wQrL6roGqSZN4gTfnYdeWpp3BGjyeKEbuMrLA4Tqw",
+          "sessionKey": "61urDfhnQNrDdvLiS2GcSAWmEHJvdoybVeczKz3dc5Jo",
+          "recipient": "3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m",
+          "recipientToken": "7TA8gRdGZKvd9EJeZx4iqs5hgf81hpzC7RcM9H2aex2h",
+          "mint": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
+          "amount": "5000",
+          "displayAmount": "0.005",
+          "resourceId": "afc9180ee712e5f2284923779a7710ef472232d95a2dccfd7268565ccbbf682c",
+          "resource": "http://127.0.0.1:4030/v1/summarize",
+          "nonce": "9bc9b782856024f41be10699da844cec9f118819aa77f39f4f70f549a35d5f78",
+          "feePayer": "GJMbF9xiuQMcTopBmkbTNg8R4QtwfC4WBaaRStjdBxha",
+          "network": "solana:localnet",
+          "status": "settled",
+          "explorerUrl": "https://explorer.solana.com/tx/2gaZ7JZJhqSNWne2xxbUQDwmZnD8i5yYb7C5kawdbJShmYqEDDjbzGtuyMeLmrVTSygMeTrZXwW4s7B5Da6EGWZi?cluster=custom&customUrl=http%3A%2F%2F127.0.0.1%3A48899"
+        },
+        {
+          "receiptAddress": "ZP2gWnNT5qxKua8YTE4CzWHnz3EMLQ1theTngZoUqBe",
+          "signature": "46y5ARWuUwoom4tkgt1xLmDgJYzmW6TMCQk32iBydBw6dSUWsVn2XefBfZkD1yPs4BuGm6zRvTjcp6tseFPk3rZc",
+          "slot": "538",
+          "blockTime": "2026-09-29T17:05:06.000Z",
+          "agentWallet": "3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ",
+          "agentLabel": null,
+          "owner": "3V5wQrL6roGqSZN4gTfnYdeWpp3BGjyeKEbuMrLA4Tqw",
+          "sessionKey": "61urDfhnQNrDdvLiS2GcSAWmEHJvdoybVeczKz3dc5Jo",
+          "recipient": "3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m",
+          "recipientToken": "7TA8gRdGZKvd9EJeZx4iqs5hgf81hpzC7RcM9H2aex2h",
+          "mint": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
+          "amount": "5000",
+          "displayAmount": "0.005",
+          "resourceId": "afc9180ee712e5f2284923779a7710ef472232d95a2dccfd7268565ccbbf682c",
+          "resource": "http://127.0.0.1:4030/v1/summarize",
+          "nonce": "b60a99031c87e752531cc85e1ab0fba494aeb0ac2e3fd71e912bc9fcf9291529",
+          "feePayer": "GJMbF9xiuQMcTopBmkbTNg8R4QtwfC4WBaaRStjdBxha",
+          "network": "solana:localnet",
+          "status": "settled",
+          "explorerUrl": "https://explorer.solana.com/tx/46y5ARWuUwoom4tkgt1xLmDgJYzmW6TMCQk32iBydBw6dSUWsVn2XefBfZkD1yPs4BuGm6zRvTjcp6tseFPk3rZc?cluster=custom&customUrl=http%3A%2F%2F127.0.0.1%3A48899"
+        },
+        {
+          "receiptAddress": "AZGngq1z9dVkQqKesbuNR9KPcf8dYXRzzh4m9jmWaWMq",
+          "signature": "4e4QM9QFpL3Royrkfoqpoi6xXeFaD69tqCCjeGXv9U2KmfCcAmEEpgJuaNTbU6ovmoVtCZ9E2VHYwGycXBhepfek",
+          "slot": "529",
+          "blockTime": "2026-09-29T17:04:57.000Z",
+          "agentWallet": "3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ",
+          "agentLabel": null,
+          "owner": "3V5wQrL6roGqSZN4gTfnYdeWpp3BGjyeKEbuMrLA4Tqw",
+          "sessionKey": "61urDfhnQNrDdvLiS2GcSAWmEHJvdoybVeczKz3dc5Jo",
+          "recipient": "3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m",
+          "recipientToken": "7TA8gRdGZKvd9EJeZx4iqs5hgf81hpzC7RcM9H2aex2h",
+          "mint": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
+          "amount": "5000",
+          "displayAmount": "0.005",
+          "resourceId": "afc9180ee712e5f2284923779a7710ef472232d95a2dccfd7268565ccbbf682c",
+          "resource": "http://127.0.0.1:4030/v1/summarize",
+          "nonce": "afd37abd3263a3993ef4aff0f0b25d5a27067420579d6aee791bfce129f4d371",
+          "feePayer": "GJMbF9xiuQMcTopBmkbTNg8R4QtwfC4WBaaRStjdBxha",
+          "network": "solana:localnet",
+          "status": "settled",
+          "explorerUrl": "https://explorer.solana.com/tx/4e4QM9QFpL3Royrkfoqpoi6xXeFaD69tqCCjeGXv9U2KmfCcAmEEpgJuaNTbU6ovmoVtCZ9E2VHYwGycXBhepfek?cluster=custom&customUrl=http%3A%2F%2F127.0.0.1%3A48899"
+        }
+      ],
+      "failures": {
+        "pendingCount": 0,
+        "items": []
+      }
+    }
+  },
+  "agents": {
+    "request": {
+      "method": "GET",
+      "path": "/v1/agents",
+      "headers": {
+        "cookie": "turnstile_session=<token>"
+      }
+    },
+    "status": 200,
+    "response": {
+      "agents": [
+        {
+          "address": "3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ",
+          "id": "1",
+          "label": null,
+          "mint": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
+          "vault": "GRvhgDTgK692tDCS8HiPzZg13eM6N7ribHawCC1gTqra",
+          "vaultBalance": {
+            "amount": "4965000",
+            "displayAmount": "4.965"
+          },
+          "perCallCap": {
+            "amount": "10000",
+            "displayAmount": "0.01"
+          },
+          "dailyCap": {
+            "amount": "1000000",
+            "displayAmount": "1"
+          },
+          "rollingSpend": {
+            "amount": "35000",
+            "displayAmount": "0.035"
+          },
+          "todaySpend": {
+            "amount": "35000",
+            "displayAmount": "0.035"
+          },
+          "capUsage": 0.035,
+          "status": "active",
+          "attention": [],
+          "sessionKeys": {
+            "active": 1,
+            "total": 2
+          },
+          "allowListCount": 1,
+          "totalSpent": {
+            "amount": "35000",
+            "displayAmount": "0.035"
+          },
+          "settlementCount": "7",
+          "createdAt": "2026-09-29T17:04:44.000Z"
+        },
+        {
+          "address": "EvPXJ5a4oXyNKgyum6FrUAJZAAA4ybT9w6kDvkTwVPjB",
+          "id": "1790701168779",
+          "label": null,
+          "mint": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
+          "vault": "7EWCNSLvQC7zGhqsmDopNYwFnJN7ptUN3hazczftXLoV",
+          "vaultBalance": {
+            "amount": "2000000",
+            "displayAmount": "2"
+          },
+          "perCallCap": {
+            "amount": "10000",
+            "displayAmount": "0.01"
+          },
+          "dailyCap": {
+            "amount": "1000000",
+            "displayAmount": "1"
+          },
+          "rollingSpend": {
+            "amount": "0",
+            "displayAmount": "0"
+          },
+          "todaySpend": {
+            "amount": "0",
+            "displayAmount": "0"
+          },
+          "capUsage": 0,
+          "status": "active",
+          "attention": [],
+          "sessionKeys": {
+            "active": 1,
+            "total": 1
+          },
+          "allowListCount": 2,
+          "totalSpent": {
+            "amount": "0",
+            "displayAmount": "0"
+          },
+          "settlementCount": "0",
+          "createdAt": "2026-09-29T16:59:27.000Z"
+        },
+        {
+          "address": "DtDRE3Ps3FnSSiw3C1AjiDr8k7Dt1feeb9NfUqutJauS",
+          "id": "1790701427472",
+          "label": null,
+          "mint": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
+          "vault": "8EFBpnzFMKBFNusn8MHcch9D1GeXNT5X8s8grUTk1cdK",
+          "vaultBalance": {
+            "amount": "2000000",
+            "displayAmount": "2"
+          },
+          "perCallCap": {
+            "amount": "10000",
+            "displayAmount": "0.01"
+          },
+          "dailyCap": {
+            "amount": "1000000",
+            "displayAmount": "1"
+          },
+          "rollingSpend": {
+            "amount": "0",
+            "displayAmount": "0"
+          },
+          "todaySpend": {
+            "amount": "0",
+            "displayAmount": "0"
+          },
+          "capUsage": 0,
+          "status": "active",
+          "attention": [],
+          "sessionKeys": {
+            "active": 1,
+            "total": 1
+          },
+          "allowListCount": 2,
+          "totalSpent": {
+            "amount": "0",
+            "displayAmount": "0"
+          },
+          "settlementCount": "0",
+          "createdAt": "2026-09-29T17:01:40.000Z"
+        },
+        {
+          "address": "4g5rz4mLfxJx9ADXcZB7wb9CFZNZnGWUwJH869oQQv4L",
+          "id": "1790701554712",
+          "label": null,
+          "mint": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
+          "vault": "4WdQQGNhiuoZFcNgibdZWBQUTL7CTJhYusZHdama5NGr",
+          "vaultBalance": {
+            "amount": "1995000",
+            "displayAmount": "1.995"
+          },
+          "perCallCap": {
+            "amount": "10000",
+            "displayAmount": "0.01"
+          },
+          "dailyCap": {
+            "amount": "1000000",
+            "displayAmount": "1"
+          },
+          "rollingSpend": {
+            "amount": "5000",
+            "displayAmount": "0.005"
+          },
+          "todaySpend": {
+            "amount": "5000",
+            "displayAmount": "0.005"
+          },
+          "capUsage": 0.005,
+          "status": "active",
+          "attention": [],
+          "sessionKeys": {
+            "active": 1,
+            "total": 1
+          },
+          "allowListCount": 2,
+          "totalSpent": {
+            "amount": "5000",
+            "displayAmount": "0.005"
+          },
+          "settlementCount": "1",
+          "createdAt": "2026-09-29T17:02:54.000Z"
+        },
+        {
+          "address": "Cxmd43oSShySUukXCSPLSQro59eWCAUPtpczbVc43uom",
+          "id": "1790701615168",
+          "label": "research bot",
+          "mint": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
+          "vault": "FXEejcZgkBoNFKSvYPfDH6Us8Z1FV4X8KP9CBLgL6bcY",
+          "vaultBalance": {
+            "amount": "1995000",
+            "displayAmount": "1.995"
+          },
+          "perCallCap": {
+            "amount": "10000",
+            "displayAmount": "0.01"
+          },
+          "dailyCap": {
+            "amount": "2000000",
+            "displayAmount": "2"
+          },
+          "rollingSpend": {
+            "amount": "5000",
+            "displayAmount": "0.005"
+          },
+          "todaySpend": {
+            "amount": "5000",
+            "displayAmount": "0.005"
+          },
+          "capUsage": 0.0025,
+          "status": "active",
+          "attention": [],
+          "sessionKeys": {
+            "active": 1,
+            "total": 1
+          },
+          "allowListCount": 1,
+          "totalSpent": {
+            "amount": "5000",
+            "displayAmount": "0.005"
+          },
+          "settlementCount": "1",
+          "createdAt": "2026-09-29T17:03:09.000Z"
+        }
+      ]
+    }
+  },
+  "agent": {
+    "request": {
+      "method": "GET",
+      "path": "/v1/agents/3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ",
+      "headers": {
+        "cookie": "turnstile_session=<token>"
+      }
+    },
+    "status": 200,
+    "response": {
+      "agent": {
+        "address": "3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ",
+        "id": "1",
+        "label": null,
+        "mint": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
+        "vault": "GRvhgDTgK692tDCS8HiPzZg13eM6N7ribHawCC1gTqra",
+        "vaultBalance": {
+          "amount": "4965000",
+          "displayAmount": "4.965"
+        },
+        "perCallCap": {
+          "amount": "10000",
+          "displayAmount": "0.01"
+        },
+        "dailyCap": {
+          "amount": "1000000",
+          "displayAmount": "1"
+        },
+        "rollingSpend": {
+          "amount": "35000",
+          "displayAmount": "0.035"
+        },
+        "todaySpend": {
+          "amount": "35000",
+          "displayAmount": "0.035"
+        },
+        "capUsage": 0.035,
+        "status": "active",
+        "attention": [],
+        "sessionKeys": {
+          "active": 1,
+          "total": 2
+        },
+        "allowListCount": 1,
+        "totalSpent": {
+          "amount": "35000",
+          "displayAmount": "0.035"
+        },
+        "settlementCount": "7",
+        "createdAt": "2026-09-29T17:04:44.000Z",
+        "owner": "3V5wQrL6roGqSZN4gTfnYdeWpp3BGjyeKEbuMrLA4Tqw",
+        "sessionKeyList": [
+          {
+            "key": "61urDfhnQNrDdvLiS2GcSAWmEHJvdoybVeczKz3dc5Jo",
+            "expiresAt": null,
+            "active": false,
+            "status": "revoked"
+          },
+          {
+            "key": "3tM3fxPm5FnVtVxHMLYcrt4KjZxVrEaMr23EWaMzCxHT",
+            "expiresAt": "2026-10-29T17:19:01.000Z",
+            "active": true,
+            "status": "active"
+          }
+        ],
+        "allowList": [
+          {
+            "resourceId": "afc9180ee712e5f2284923779a7710ef472232d95a2dccfd7268565ccbbf682c",
+            "resource": "http://127.0.0.1:4030/v1/summarize",
+            "recipient": "3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m"
+          }
+        ]
+      }
+    }
+  },
+  "agentLabel": {
+    "request": {
+      "method": "PUT",
+      "path": "/v1/agents/3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ/label",
+      "headers": {
+        "cookie": "turnstile_session=<token>"
+      },
+      "body": {
+        "label": "research bot"
+      }
+    },
+    "status": 200,
+    "response": {
+      "agentWallet": "3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ",
+      "label": "research bot"
+    }
+  },
+  "apiKeyNotAllowed": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/tx/update-policy",
+      "headers": {
+        "authorization": "Bearer tsk_FW4274btfUCjJ9g3pvNKkZtVsX2sRbEf8ubvLcJXq5Xd"
+      },
+      "body": {}
+    },
+    "status": 403,
+    "response": {
+      "error": {
+        "code": "api_key_not_allowed",
+        "message": "API keys can only read receipts, spend and the summary. Sign in to the console to make this change."
+      }
+    }
+  },
+  "txUpdatePolicy": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/tx/update-policy",
+      "headers": {
+        "cookie": "turnstile_session=<token>"
+      },
+      "body": {
+        "agentWallet": "3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ",
+        "perCallCap": "0.01",
+        "dailyCap": "2",
+        "allowList": [
+          {
+            "resource": "http://127.0.0.1:4030/v1/summarize",
+            "recipient": "3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m"
+          }
+        ]
+      }
+    },
+    "status": 200,
+    "response": {
+      "action": "update-policy",
+      "network": "localnet",
+      "agentWallet": "3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ",
+      "feePayer": "3V5wQrL6roGqSZN4gTfnYdeWpp3BGjyeKEbuMrLA4Tqw",
+      "recentBlockhash": "F4RUsQA7siYLiX2ncKdhH8R4YyTtzDz1uLZuneppkTNR",
+      "lastValidBlockHeight": 933,
+      "transactions": [
+        {
+          "transaction": "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAEDJOk4VfmWwc8p1p0thmfkdJP8WSiotqZ5RIj0ZAmDX+YoBpsKrvO6O7xn01bXhSFELQQAFHsc0FGhSgjP2IJi4QG+ZNCgqmmH6Aq2MGpPFBfEsFbL7nvEgmA3BCfc0pVs0OQKIjtP3Skn61jTvMrtdVDAoeYCb0oSzqQY9Cz33UoBAgIAAVzU9fYHo5cSORAnAAAAAAAAgIQeAAAAAAABAAAAr8kYDucS5fIoSSN3mncQ70ciMtlaLcz9cmhWXMu/aCwsI0HNAV8ZedoI1bJHR/FUr1BSgIdEYxGjqGMepV8eHg==",
+          "description": "Replace the caps and the allow-list",
+          "instructions": [
+            "update_policy"
+          ]
+        }
+      ]
+    }
+  },
+  "txConfirm": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/tx/confirm",
+      "headers": {
+        "cookie": "turnstile_session=<token>"
+      },
+      "body": {
+        "signature": "4tvJ9u3Q8GH6FcbCRKjrULjczgvKW1Sm4QFFz174Bp17zM7dPYoV5Lqmam3VfwJbfvBSW8cbfAHkxDfxKVZBSi49"
+      }
+    },
+    "status": 200,
+    "response": {
+      "signature": "4tvJ9u3Q8GH6FcbCRKjrULjczgvKW1Sm4QFFz174Bp17zM7dPYoV5Lqmam3VfwJbfvBSW8cbfAHkxDfxKVZBSi49",
+      "status": "confirmed",
+      "slot": 784,
+      "error": null,
+      "explorerUrl": "https://explorer.solana.com/tx/4tvJ9u3Q8GH6FcbCRKjrULjczgvKW1Sm4QFFz174Bp17zM7dPYoV5Lqmam3VfwJbfvBSW8cbfAHkxDfxKVZBSi49?cluster=custom&customUrl=http%3A%2F%2F127.0.0.1%3A48899"
+    }
+  },
+  "txConfirmPayment": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/tx/confirm",
+      "headers": {
+        "cookie": "turnstile_session=<token>"
+      },
+      "body": {
+        "signature": "3rs6p43wxUAnL26TLXN88Hp8PfDMtocECyF2D8QJmanumbhYoC5bFFG1Qh4ZtGQZCeqP9AuMvoz7muamFKUvSQn5"
+      }
+    },
+    "status": 200,
+    "response": {
+      "signature": "3rs6p43wxUAnL26TLXN88Hp8PfDMtocECyF2D8QJmanumbhYoC5bFFG1Qh4ZtGQZCeqP9AuMvoz7muamFKUvSQn5",
+      "status": "pending",
+      "slot": null,
+      "error": null,
+      "explorerUrl": "https://explorer.solana.com/tx/3rs6p43wxUAnL26TLXN88Hp8PfDMtocECyF2D8QJmanumbhYoC5bFFG1Qh4ZtGQZCeqP9AuMvoz7muamFKUvSQn5?cluster=custom&customUrl=http%3A%2F%2F127.0.0.1%3A48899",
+      "message": "The network has not seen this transaction yet. Ask again in a few seconds, or rebuild and resend it if the blockhash expired."
+    }
+  },
+  "apiKeyRevoke": {
+    "request": {
+      "method": "DELETE",
+      "path": "/v1/api-keys/key_de7fcf9a-3543-464b-8912-ed9618f1e552",
+      "headers": {
+        "cookie": "turnstile_session=<token>"
+      }
+    },
+    "status": 200,
+    "response": {
+      "apiKey": {
+        "id": "key_de7fcf9a-3543-464b-8912-ed9618f1e552",
+        "name": "reporting job",
+        "prefix": "tsk_FW4274",
+        "createdAt": "2026-09-29T17:29:16.864Z",
+        "lastUsedAt": "2026-09-29T17:29:17.136Z",
+        "revokedAt": "2026-09-29T17:29:50.422Z",
+        "status": "revoked"
+      }
+    }
+  },
+  "apiKeyRevoked": {
+    "request": {
+      "method": "GET",
+      "path": "/v1/receipts?limit=1",
+      "headers": {
+        "authorization": "Bearer tsk_FW4274btfUCjJ9g3pvNKkZtVsX2sRbEf8ubvLcJXq5Xd"
+      }
+    },
+    "status": 401,
+    "response": {
+      "error": {
+        "code": "api_key_revoked",
+        "message": "This API key was revoked. Create a new key in console settings and use it instead."
+      }
+    }
+  },
+  "receiptsCsv": {
+    "request": {
+      "method": "GET",
+      "path": "/v1/receipts.csv?agent=3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ"
+    },
+    "status": 200,
+    "headers": {
+      "content-type": "text/csv; charset=utf-8",
+      "content-disposition": "attachment; filename=\"turnstile-receipts-2026-09-29.csv\""
+    },
+    "response": "block_time,receipt_address,signature,agent_wallet,agent_label,resource,resource_id,recipient,mint,amount,amount_base_units,nonce,slot,network,status\r\n2026-09-29T17:05:46.000Z,HYAxpPot7txWFm1M51NEj1irvaduZTJVbM7fo6izGegg,iQVUXrBS3VUgmNJv6LUXGNMhA4KvNRTobNHcubYCxaf8MFqEMS2GxzDc52baQ23RGEsw46mJR8Ma5y2GV6F9PF3,3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ,research bot,http://127.0.0.1:4030/v1/summarize,afc9180ee712e5f2284923779a7710ef472232d95a2dccfd7268565ccbbf682c,3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m,2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr,0.005,5000,4cc69ec4c65e2997428ad4cbc5b9e0fe00735858fd85a75b47e5b4e7b9ac5e77,578,solana:localnet,settled\r\n2026-09-29T17:05:45.000Z,FHgR118t2E32ASKFYqCGRogdQRXhfo5P6Xa1ePFh8FDc,5ygKusDSFseNbUeQNm4GNMfhRShRWguSNejtqbdwf1r5zU64gzffuJuMPgyWxDoLv6crypGXraa47RT8R3QNJQ5H,3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ,research bot,http://127.0.0.1:4030/v1/summarize,afc9180ee712e5f2284923779a7710ef472232d95a2dccfd7268565ccbbf682c,3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m,2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr,0.005,5000,ca541a88cfb0231af5b4a99941ddab6483db7b270e27471b0adb7fd7eae5f6f6,577,solana:localnet,settled\r\n2026-09-29T17:05:27.000Z,CGphzed8rb1WG86JZtquGHwhj3nWY8xBrVkLemb5SM9r,46CLavFUVpo3ixbCrW9Y17cmxggKJQ6GR6giCraFTtFuKCf3JKu1ZS4EKKwrPWismDtgxZhdck2qgJCbi6br9gKo,3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ,research bot,http://127.0.0.1:4030/v1/summarize,afc9180ee712e5f2284923779a7710ef472232d95a2dccfd7268565ccbbf682c,3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m,2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr,0.005,5000,b45e9ac7e8e32c4d6f488755176864c7829cba9d4c25cb486227c9ee264d7cfb,559,solana:localnet,settled\r\n2026-09-29T17:05:26.000Z,6wsexb4C7kWW1oRoJZAB8h4VatxyzXPq9PsStnxahDbB,fWsV4ethynDy2PUKLMbtHKPPBRYda7cfXCE5t94XZLW4M8BVxqCFuajXNnVAgjCBbsYdp9tdK5L1zmg1LxgBihD,3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ,research bot,http://127.0.0.1:4030/v1/summarize,afc9180ee712e5f2284923779a7710ef472232d95a2dccfd7268565ccbbf682c,3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m,2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr,0.005,5000,85c493e2ed803bb219aafb791beac5cfd6f81f8ed2a78ccb9363d57b09c7154c,558,solana:localnet,settled\r\n2026-09-29T17:05:07.000Z,GFW2uTetLrqki7x3yxWuL68dukj3B3eqqhKMSzeJyrZm,2gaZ7JZJhqSNWne2xxbUQDwmZnD8i5yYb7C5kawdbJShmYqEDDjbzGtuyMeLmrVTSygMeTrZXwW4s7B5Da6EGWZi,3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ,research bot,http://127.0.0.1:4030/v1/summarize,afc9180ee712e5f2284923779a7710ef472232d95a2dccfd7268565ccbbf682c,3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m,2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr,0.005,5000,9bc9b782856024f41be10699da844cec9f118819aa77f39f4f70f549a35d5f78,539,solana:localnet,settled\r\n2026-09-29T17:05:06.000Z,ZP2gWnNT5qxKua8YTE4CzWHnz3EMLQ1theTngZoUqBe,46y5ARWuUwoom4tkgt1xLmDgJYzmW6TMCQk32iBydBw6dSUWsVn2XefBfZkD1yPs4BuGm6zRvTjcp6tseFPk3rZc,3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ,research bot,http://127.0.0.1:4030/v1/summarize,afc9180ee712e5f2284923779a7710ef472232d95a2dccfd7268565ccbbf682c,3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m,2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr,0.005,5000,b60a99031c87e752531cc85e1ab0fba494aeb0ac2e3fd71e912bc9fcf9291529,538,solana:localnet,settled\r\n2026-09-29T17:04:57.000Z,AZGngq1z9dVkQqKesbuNR9KPcf8dYXRzzh4m9jmWaWMq,4e4QM9QFpL3Royrkfoqpoi6xXeFaD69tqCCjeGXv9U2KmfCcAmEEpgJuaNTbU6ovmoVtCZ9E2VHYwGycXBhepfek,3hF9hUubBWfyT6f5CqtBiu9YTdRfR5CRBWA5WexedAxQ,research bot,http://127.0.0.1:4030/v1/summarize,afc9180ee712e5f2284923779a7710ef472232d95a2dccfd7268565ccbbf682c,3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m,2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr,0.005,5000,afd37abd3263a3993ef4aff0f0b25d5a27067420579d6aee791bfce129f4d371,529,solana:localnet,settled\r\n"
+  }
+}

@@ -289,23 +289,17 @@ describe.skipIf(validator === null)("chain operations against a local validator"
     expect(await res.json()).toMatchObject({
       signature: s2,
       status: "failed",
-      error: { name: "InsufficientFunds" },
+      error: {
+        code: 6007,
+        name: "InsufficientFunds",
+        message: "The vault does not hold enough tokens. Deposit more before paying or withdrawing",
+      },
     });
   });
 
   it("answers pending for a signature the network has not seen", async () => {
-    const fake = Keypair.generate();
-    const tx = new Transaction({
-      feePayer: fake.publicKey,
-      blockhash: (await v.connection.getLatestBlockhash()).blockhash,
-      lastValidBlockHeight: 1,
-    });
-    tx.sign(fake);
-    const sig = tx.signatures[0]?.signature;
-    const res = await post("/v1/tx/confirm", {
-      signature: bs58.encode(sig ?? new Uint8Array(64)),
-      timeoutMs: 300,
-    });
+    const unseen = bs58.encode(crypto.getRandomValues(new Uint8Array(64)));
+    const res = await post("/v1/tx/confirm", { signature: unseen, timeoutMs: 300 });
     expect(await res.json()).toMatchObject({ status: "pending", slot: null, error: null });
   });
 

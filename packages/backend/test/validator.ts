@@ -1,5 +1,6 @@
 import { type ChildProcess, spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import {
@@ -47,7 +48,7 @@ async function waitForRpc(connection: Connection, ms: number): Promise<void> {
 
 /**
  * Uses TEST_RPC_URL when set. Otherwise starts solana-test-validator with both programs on
- * ports 38899 and up. Returns the reason to skip when neither is possible.
+ * port 47899. Returns the reason to skip when neither is possible.
  */
 export async function startValidator(): Promise<LocalValidator | { skip: string }> {
   const given = process.env.TEST_RPC_URL;
@@ -62,6 +63,11 @@ export async function startValidator(): Promise<LocalValidator | { skip: string 
   if (!existsSync(programs.agentWallet) || !existsSync(programs.settlement)) {
     return { skip: "target/deploy has no program builds. Run anchor build or cargo build-sbf" };
   }
+  if (!(await portFree(47899))) {
+    throw new Error(
+      "Port 47899 is taken, so the chain tests cannot start their own validator. Stop what uses it or set TEST_RPC_URL.",
+    );
+  }
   const ledger = mkdtempSync(join(tmpdir(), "turnstile-backend-ledger-"));
   const child: ChildProcess = spawn(
     "solana-test-validator",
@@ -71,13 +77,13 @@ export async function startValidator(): Promise<LocalValidator | { skip: string 
       "--ledger",
       ledger,
       "--rpc-port",
-      "38899",
+      "47899",
       "--faucet-port",
-      "39900",
+      "47898",
       "--gossip-port",
-      "38000",
+      "47000",
       "--dynamic-port-range",
-      "38001-38030",
+      "47001-47030",
       "--bpf-program",
       AGENT_WALLET_PROGRAM_ID.toBase58(),
       programs.agentWallet,
@@ -87,7 +93,7 @@ export async function startValidator(): Promise<LocalValidator | { skip: string 
     ],
     { stdio: "ignore" },
   );
-  const url = "http://127.0.0.1:38899";
+  const url = "http://127.0.0.1:47899";
   const connection = new Connection(url, "confirmed");
   await waitForRpc(connection, 60_000);
   return {
@@ -98,6 +104,14 @@ export async function startValidator(): Promise<LocalValidator | { skip: string 
       rmSync(ledger, { recursive: true, force: true });
     },
   };
+}
+
+function portFree(port: number): Promise<boolean> {
+  return new Promise((done) => {
+    const server = createServer();
+    server.once("error", () => done(false));
+    server.listen(port, "0.0.0.0", () => server.close(() => done(true)));
+  });
 }
 
 export async function send(

@@ -1,0 +1,26 @@
+{
+  "name": "@turnstile/e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@noble/curves": "2.4.0",
+    "@solana/spl-token": "0.4.15",
+    "@solana/web3.js": "1.99.0",
+    "@turnstile/sdk-agent": "workspace:*",
+    "@turnstile/shared": "workspace:*",
+    "bs58": "6.0.0",
+    "pg": "8.23.0"
+  },
+  "devDependencies": {
+    "@turnstile/backend": "workspace:*",
+    "@turnstile/demo-api": "workspace:*",
+    "@turnstile/facilitator": "workspace:*",
+    "@turnstile/indexer": "workspace:*",
+    "@types/pg": "8.23.1"
+  }
+}

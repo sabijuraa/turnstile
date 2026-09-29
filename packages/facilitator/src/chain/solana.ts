@@ -169,7 +169,7 @@ export function createSolanaChain(opts: SolanaChainOptions): SettlementChain {
       const info = await rpc("getAccountInfo", () =>
         connection.getAccountInfo(address, COMMITMENT),
       );
-      if (!info || !info.owner.equals(opts.agentWalletProgram)) return null;
+      if (!info?.owner.equals(opts.agentWalletProgram)) return null;
       let decoded: WalletSnapshot;
       try {
         decoded = opts.codec.decodeWallet(address, info.data);
@@ -189,7 +189,7 @@ export function createSolanaChain(opts: SolanaChainOptions): SettlementChain {
       const info = await rpc("getAccountInfo", () =>
         connection.getAccountInfo(address, COMMITMENT),
       );
-      if (!info || !info.owner.equals(opts.settlementProgram) || info.data.length === 0) {
+      if (!info?.owner.equals(opts.settlementProgram) || info.data.length === 0) {
         return null;
       }
       return opts.codec.decodeReceipt(info.data);

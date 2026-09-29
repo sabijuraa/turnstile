@@ -1,4 +1,11 @@
 export { type AppDeps, createApp, type FacilitatorApp } from "./app.js";
+export { turnstileCodec } from "./chain/codec.js";
+export {
+  classifyError,
+  createSolanaChain,
+  type ProgramCodec,
+  type SolanaChainOptions,
+} from "./chain/solana.js";
 export type {
   ReceiptSnapshot,
   SettlementChain,
@@ -6,7 +13,13 @@ export type {
   SubmitOutcome,
   WalletSnapshot,
 } from "./chain/types.js";
-export { type Config, ConfigError, type Deployment, loadConfig } from "./config.js";
+export {
+  type Config,
+  ConfigError,
+  type Deployment,
+  type LoadedConfig,
+  loadConfig,
+} from "./config.js";
 export type { AppEnv, Services } from "./context.js";
 export { createLogger, type Logger } from "./logger.js";
 export { createMetrics, type Metrics } from "./metrics.js";

@@ -1,0 +1,633 @@
+{
+  "address": "6FrY43zorjSv8wCuarPL3z8ZnyBTyyC86xRjBqgu1K9z",
+  "metadata": {
+    "name": "settlement",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Turnstile settlement of signed payment authorizations"
+  },
+  "instructions": [
+    {
+      "name": "settle",
+      "discriminator": [
+        175,
+        42,
+        185,
+        87,
+        144,
+        131,
+        102,
+        212
+      ],
+      "accounts": [
+        {
+          "name": "fee_payer",
+          "docs": [
+            "Pays the transaction fee and the receipt rent. Has no authority over any funds."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "settlement_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  116,
+                  116,
+                  108,
+                  101,
+                  109,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "agent_wallet",
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "recipient_token",
+          "writable": true
+        },
+        {
+          "name": "receipt",
+          "docs": [
+            "creates it otherwise."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  99,
+                  101,
+                  105,
+                  112,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "authorization.agent_wallet"
+              },
+              {
+                "kind": "arg",
+                "path": "authorization.nonce"
+              }
+            ]
+          }
+        },
+        {
+          "name": "instructions",
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        },
+        {
+          "name": "agent_wallet_program",
+          "address": "7onzUVc1HGc9oBDUspBdP8dz1QW6uXrSdBn4NH6aiLb"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "authorization",
+          "type": {
+            "defined": {
+              "name": "PaymentAuthorization"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "verify_receipt",
+      "docs": [
+        "Read only check that the receipt for `authorization` exists and records exactly that",
+        "payment. Fails with `AccountMismatch` when any field differs. Meant for simulation by a",
+        "facilitator that wants the chain to confirm an earlier settlement."
+      ],
+      "discriminator": [
+        202,
+        144,
+        21,
+        149,
+        181,
+        189,
+        23,
+        170
+      ],
+      "accounts": [
+        {
+          "name": "receipt",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  99,
+                  101,
+                  105,
+                  112,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "authorization.agent_wallet"
+              },
+              {
+                "kind": "arg",
+                "path": "authorization.nonce"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "authorization",
+          "type": {
+            "defined": {
+              "name": "PaymentAuthorization"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Receipt",
+      "discriminator": [
+        39,
+        154,
+        73,
+        106,
+        80,
+        102,
+        145,
+        153
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "PaymentSettled",
+      "discriminator": [
+        158,
+        182,
+        152,
+        76,
+        105,
+        23,
+        232,
+        135
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6100,
+      "name": "AuthorizationExpired",
+      "msg": "The payment authorization has expired. Ask the agent to sign a fresh one"
+    },
+    {
+      "code": 6101,
+      "name": "MissingSignatureVerification",
+      "msg": "The instruction before settle must be an Ed25519 signature check. Add it with ed25519VerifyInstruction"
+    },
+    {
+      "code": 6102,
+      "name": "SignatureMismatch",
+      "msg": "The Ed25519 check does not cover this authorization with its session key. Sign the exact authorization message"
+    },
+    {
+      "code": 6103,
+      "name": "NonceAlreadyUsed",
+      "msg": "This nonce has already settled. Use a new nonce for a new payment"
+    },
+    {
+      "code": 6104,
+      "name": "AccountMismatch",
+      "msg": "An account does not match the authorization. Pass the wallet, vault, mint and recipient it names"
+    }
+  ],
+  "types": [
+    {
+      "name": "AgentWallet",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "vault_bump",
+            "type": "u8"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "per_call_cap",
+            "type": "u64"
+          },
+          {
+            "name": "daily_cap",
+            "type": "u64"
+          },
+          {
+            "name": "session_keys",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "SessionKey"
+                }
+              }
+            }
+          },
+          {
+            "name": "allow_list",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "AllowListEntry"
+                }
+              }
+            }
+          },
+          {
+            "name": "spend_buckets",
+            "docs": [
+              "Ring of 97 buckets. The slot for bucket index `i` is `i mod 97`."
+            ],
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "SpendBucket"
+                }
+              }
+            }
+          },
+          {
+            "name": "total_spent",
+            "type": "u64"
+          },
+          {
+            "name": "settlement_count",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AllowListEntry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "resource_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "recipient",
+            "docs": [
+              "Owner of the recipient token account."
+            ],
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PaymentAuthorization",
+      "docs": [
+        "A payment the agent's session key agreed to. Borsh layout is the 208 byte body of the",
+        "signed message and matches `encodeAuthorizationBody` in packages/shared."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent_wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "session_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "docs": [
+              "Owner of the recipient token account."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "docs": [
+              "Base units of the mint."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "resource_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "nonce",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "expires_at",
+            "docs": [
+              "Unix seconds."
+            ],
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PaymentSettled",
+      "docs": [
+        "Emitted with `emit!` so it lands in the program logs as `Program data: <base64>`.",
+        "Carries every receipt field plus the receipt address."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "receipt",
+            "type": "pubkey"
+          },
+          {
+            "name": "agent_wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "session_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient_token",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "resource_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "nonce",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          },
+          {
+            "name": "unix_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "fee_payer",
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Receipt",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent_wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "session_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient_token",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "resource_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "nonce",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          },
+          {
+            "name": "unix_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "fee_payer",
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SessionKey",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": "pubkey"
+          },
+          {
+            "name": "expires_at",
+            "docs": [
+              "Unix seconds. 0 means no expiry."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "active",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SpendBucket",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "index",
+            "docs": [
+              "`floor(unix_timestamp / 900)`."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ],
+  "constants": [
+    {
+      "name": "AUTHORIZATION_DOMAIN",
+      "docs": [
+        "Domain prefix of every signed authorization. Exactly 20 ASCII bytes."
+      ],
+      "type": "bytes",
+      "value": "[84, 85, 82, 78, 83, 84, 73, 76, 69, 95, 80, 65, 89, 77, 69, 78, 84, 95, 86, 49]"
+    },
+    {
+      "name": "SEED_RECEIPT",
+      "type": "bytes",
+      "value": "[114, 101, 99, 101, 105, 112, 116]"
+    },
+    {
+      "name": "SEED_SETTLEMENT_AUTHORITY",
+      "type": "bytes",
+      "value": "[115, 101, 116, 116, 108, 101, 109, 101, 110, 116, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]"
+    }
+  ]
+}

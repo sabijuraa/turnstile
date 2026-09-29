@@ -13,6 +13,10 @@
     "./db": {
       "types": "./dist/db.d.ts",
       "default": "./dist/db.js"
+    },
+    "./programs": {
+      "types": "./dist/programs/index.d.ts",
+      "default": "./dist/programs/index.js"
     }
   },
   "files": [
@@ -27,8 +31,10 @@
     "migrate": "node dist/migrate-cli.js"
   },
   "dependencies": {
+    "@anchor-lang/core": "1.2.0",
     "@noble/curves": "2.4.0",
     "@noble/hashes": "2.4.0",
+    "@solana/spl-token": "0.4.15",
     "@solana/web3.js": "1.99.0",
     "bs58": "6.0.0",
     "pg": "8.23.0"

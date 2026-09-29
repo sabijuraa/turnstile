@@ -26,6 +26,10 @@ pub const SEED_SETTLEMENT_AUTHORITY: &[u8] = b"settlement_authority";
 pub const AUTHORIZATION_DOMAIN: &[u8] = b"TURNSTILE_PAYMENT_V1";
 pub const AUTHORIZATION_BODY_LEN: usize = 208;
 pub const AUTHORIZATION_MESSAGE_LEN: usize = 20 + 32 + AUTHORIZATION_BODY_LEN;
+/// How long a receipt stays on chain after its authorization expires before the fee payer may
+/// close it and take the rent back. Seven days.
+#[constant]
+pub const RECEIPT_RETENTION_SECONDS: i64 = 7 * 24 * 60 * 60;
 
 /// A payment the agent's session key agreed to. Borsh layout is the 208 byte body of the
 /// signed message and matches `encodeAuthorizationBody` in packages/shared.
@@ -85,6 +89,9 @@ pub struct Receipt {
     pub unix_timestamp: i64,
     pub fee_payer: Pubkey,
     pub bump: u8,
+    /// `expires_at` of the settled authorization. `close_receipt` waits until
+    /// `RECEIPT_RETENTION_SECONDS` after it.
+    pub expires_at: i64,
 }
 
 /// Emitted with `emit!` so it lands in the program logs as `Program data: <base64>`.
@@ -105,6 +112,9 @@ pub struct PaymentSettled {
     pub unix_timestamp: i64,
     pub fee_payer: Pubkey,
     pub bump: u8,
+    /// `expires_at` of the settled authorization. `close_receipt` waits until
+    /// `RECEIPT_RETENTION_SECONDS` after it.
+    pub expires_at: i64,
 }
 
 #[program]
@@ -170,6 +180,7 @@ pub mod settlement {
             unix_timestamp: clock.unix_timestamp,
             fee_payer: ctx.accounts.fee_payer.key(),
             bump: receipt_bump,
+            expires_at: authorization.expires_at,
         };
         {
             let mut data = receipt_info.try_borrow_mut_data()?;
@@ -192,6 +203,7 @@ pub mod settlement {
             unix_timestamp: receipt.unix_timestamp,
             fee_payer: receipt.fee_payer,
             bump: receipt.bump,
+            expires_at: receipt.expires_at,
         });
         Ok(())
     }
@@ -213,6 +225,24 @@ pub mod settlement {
                 && r.resource_id == authorization.resource_id
                 && r.nonce == authorization.nonce,
             SettlementError::AccountMismatch
+        );
+        Ok(())
+    }
+
+    /// Closes a receipt and returns its rent to the fee payer that paid it. Allowed only once
+    /// `RECEIPT_RETENTION_SECONDS` have passed since the authorization expired. `settle` refuses
+    /// an expired authorization before it looks at the receipt, so a closed receipt never lets
+    /// its nonce settle again.
+    pub fn close_receipt(ctx: Context<CloseReceipt>) -> Result<()> {
+        let now = Clock::get()?.unix_timestamp;
+        let reclaimable_after = ctx
+            .accounts
+            .receipt
+            .expires_at
+            .saturating_add(RECEIPT_RETENTION_SECONDS);
+        require!(
+            now > reclaimable_after,
+            SettlementError::RetentionNotElapsed
         );
         Ok(())
     }
@@ -335,6 +365,21 @@ pub struct VerifyReceipt<'info> {
         bump = receipt.bump,
     )]
     pub receipt: Account<'info, Receipt>,
+}
+
+#[derive(Accounts)]
+pub struct CloseReceipt<'info> {
+    #[account(
+        mut,
+        seeds = [SEED_RECEIPT, receipt.agent_wallet.as_ref(), receipt.nonce.as_ref()],
+        bump = receipt.bump,
+        has_one = fee_payer @ SettlementError::NotFeePayer,
+        close = fee_payer,
+    )]
+    pub receipt: Account<'info, Receipt>,
+    /// The fee payer that paid the receipt rent. It signs and receives the lamports.
+    #[account(mut)]
+    pub fee_payer: Signer<'info>,
 }
 
 #[cfg(test)]

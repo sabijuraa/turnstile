@@ -49,6 +49,7 @@ fn settles_moves_funds_writes_receipt_and_emits_event() {
     assert_eq!(receipt.unix_timestamp, T0);
     assert_eq!(receipt.fee_payer, env.payer.pubkey());
     assert_eq!(receipt.bump, receipt_address(&env.wallet, &auth.nonce).1);
+    assert_eq!(receipt.expires_at, auth.expires_at);
 
     let wallet = env.wallet_state();
     assert_eq!(wallet.total_spent, 40_000);

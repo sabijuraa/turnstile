@@ -460,6 +460,44 @@ impl Env {
         self.send(&[ed, settle], &[&payer])
     }
 
+    pub fn close_receipt_ix(&self, auth: &PaymentAuthorization, fee_payer: &Pubkey) -> Instruction {
+        Instruction::new_with_bytes(
+            settlement::ID,
+            &settlement::instruction::CloseReceipt {}.data(),
+            settlement::accounts::CloseReceipt {
+                receipt: receipt_address(&auth.agent_wallet, &auth.nonce).0,
+                fee_payer: *fee_payer,
+            }
+            .to_account_metas(None),
+        )
+    }
+
+    /// Sends `close_receipt` for the receipt of `auth`, signed and paid by `signer`.
+    pub fn close_receipt(&mut self, auth: &PaymentAuthorization, signer: &Keypair) -> TxResult {
+        let ix = self.close_receipt_ix(auth, &signer.pubkey());
+        self.send(&[ix], &[signer])
+    }
+
+    pub fn verify_receipt(&mut self, auth: &PaymentAuthorization) -> TxResult {
+        let ix = Instruction::new_with_bytes(
+            settlement::ID,
+            &settlement::instruction::VerifyReceipt {
+                authorization: *auth,
+            }
+            .data(),
+            settlement::accounts::VerifyReceipt {
+                receipt: receipt_address(&auth.agent_wallet, &auth.nonce).0,
+            }
+            .to_account_metas(None),
+        );
+        let payer = self.payer.insecure_clone();
+        self.send(&[ix], &[&payer])
+    }
+
+    pub fn lamports(&self, address: &Pubkey) -> u64 {
+        self.svm.get_account(address).map_or(0, |a| a.lamports)
+    }
+
     pub fn receipt(&self, auth: &PaymentAuthorization) -> Option<settlement::Receipt> {
         let (address, _) = receipt_address(&auth.agent_wallet, &auth.nonce);
         let account = self.svm.get_account(&address)?;

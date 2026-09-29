@@ -14,4 +14,8 @@ pub enum SettlementError {
     NonceAlreadyUsed,
     #[msg("An account does not match the authorization. Pass the wallet, vault, mint and recipient it names")]
     AccountMismatch,
+    #[msg("This receipt is still inside its retention period. Close it after 7 days past the authorization expiry")]
+    RetentionNotElapsed,
+    #[msg("Only the fee payer that paid for this receipt can close it. Sign with that key")]
+    NotFeePayer,
 }

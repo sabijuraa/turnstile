@@ -4,7 +4,7 @@ import { join, relative } from "node:path";
 
 const root = new URL("../..", import.meta.url).pathname;
 const scanDirs = ["programs", "packages", "apps", "infra", ".github"];
-const skip = new Set(["node_modules", "target", "dist", ".next", "coverage", "idl"]);
+const skip = new Set(["node_modules", "target", "dist", ".next", "coverage", "idl", "results"]);
 const exts = [
   ".rs",
   ".ts",
@@ -35,7 +35,7 @@ const markers = [
 const hits = [];
 function walk(dir) {
   for (const name of readdirSync(dir)) {
-    if (skip.has(name)) continue;
+    if (skip.has(name) || name.startsWith(".next-")) continue;
     const full = join(dir, name);
     const st = statSync(full);
     if (st.isDirectory()) walk(full);

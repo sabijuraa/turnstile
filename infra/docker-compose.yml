@@ -226,7 +226,7 @@ services:
     environment:
       <<: *node-env
       PORT: "4022"
-      CONSOLE_ORIGIN: http://localhost:3000
+      WEB_ORIGIN: http://localhost:3000
     healthcheck:
       <<: *http-healthcheck
       test:

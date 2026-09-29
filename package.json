@@ -11,7 +11,11 @@
     "test": "pnpm -r run test",
     "lint": "biome ci --error-on-warnings .",
     "format": "biome format --write .",
-    "check:stubs": "node infra/ci/check-stubs.mjs"
+    "check:stubs": "node infra/ci/check-stubs.mjs",
+    "stack:up": "bash infra/scripts/stack.sh up",
+    "stack:down": "bash infra/scripts/stack.sh down",
+    "dev:up": "bash infra/scripts/dev-up.sh",
+    "e2e": "bash infra/scripts/e2e.sh"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.14",

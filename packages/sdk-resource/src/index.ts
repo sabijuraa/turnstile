@@ -1,6 +1,6 @@
 export {
-  getSettlement,
   expressPaywall,
+  getSettlement,
   type NodeMiddleware,
   type NodeNext,
   type NodeRequest,

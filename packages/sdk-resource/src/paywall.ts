@@ -12,8 +12,8 @@ import {
   parseUnits,
   resourceId,
   SCHEME,
-  STABLECOIN_DECIMALS,
   type SettlementResponse,
+  STABLECOIN_DECIMALS,
   validatePaymentPayloadShape,
   X402_VERSION,
 } from "@turnstile/shared";

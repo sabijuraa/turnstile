@@ -149,7 +149,7 @@ pre {
   transform: none;
 }
 
-.label {
+:where(.label) {
   font-family: var(--font-text);
   font-size: var(--text-xs);
   font-weight: 600;

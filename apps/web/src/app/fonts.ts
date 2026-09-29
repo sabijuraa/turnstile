@@ -1,11 +1,10 @@
 import { Hanken_Grotesk, IBM_Plex_Mono, Newsreader } from "next/font/google";
 
-/** Display. A newspaper serif with optical sizes. Presence at large sizes, calm and serious. */
+/** Display. A newspaper serif with presence at large sizes, calm and serious. Two static weights keep it light. */
 export const display = Newsreader({
   subsets: ["latin"],
-  weight: "variable",
+  weight: ["500", "600"],
   style: ["normal"],
-  axes: ["opsz"],
   display: "swap",
   variable: "--font-newsreader",
   adjustFontFallback: true,
@@ -27,5 +26,6 @@ export const mono = IBM_Plex_Mono({
   weight: ["400", "500"],
   display: "swap",
   variable: "--font-plex-mono",
+  preload: false,
   fallback: ["ui-monospace", "Menlo", "Consolas", "monospace"],
 });

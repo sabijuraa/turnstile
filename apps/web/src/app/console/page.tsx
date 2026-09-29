@@ -1,15 +1,8 @@
 import type { Metadata } from "next";
-import { PageIntro } from "@/components/PageIntro";
+import { Dashboard } from "./Dashboard";
 
-export const metadata: Metadata = {
-  title: "Console",
-  description: "Create agent wallets, set their limits and watch every paid request settle.",
-};
+export const metadata: Metadata = { title: "Dashboard" };
 
 export default function Page() {
-  return (
-    <PageIntro eyebrow="Console" title="Console">
-      Create agent wallets, set their limits and watch every paid request settle.
-    </PageIntro>
-  );
+  return <Dashboard />;
 }

@@ -128,7 +128,9 @@ pub mod agent_wallet {
         )
     }
 
-    /// Revokes a session key. A revoked key can never authorize a payment again.
+    /// Revokes a session key. A revoked key cannot authorize a payment while it stays revoked.
+    /// Re-adding the same key later revives any of its unexpired, unsettled authorizations, so rotate
+    /// to a new key instead.
     pub fn revoke_session_key(ctx: Context<OwnerOnly>, key: Pubkey) -> Result<()> {
         policy::revoke_session_key(&mut ctx.accounts.agent_wallet.session_keys, &key)
     }

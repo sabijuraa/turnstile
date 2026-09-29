@@ -233,7 +233,11 @@ export const agentWalletIdl = {
     },
     {
       name: "revoke_session_key",
-      docs: ["Revokes a session key. A revoked key can never authorize a payment again."],
+      docs: [
+        "Revokes a session key. A revoked key cannot authorize a payment while it stays revoked.",
+        "Re-adding the same key later revives any of its unexpired, unsettled authorizations, so rotate",
+        "to a new key instead.",
+      ],
       discriminator: [81, 192, 32, 110, 104, 116, 144, 151],
       accounts: [
         {

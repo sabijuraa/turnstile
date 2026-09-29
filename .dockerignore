@@ -1,0 +1,23 @@
+# Keep the build context small and free of secrets.
+**/node_modules
+**/.next
+**/dist
+**/coverage
+**/*.tsbuildinfo
+**/.turbo
+**/.vercel
+.pnpm-store
+.git
+.github
+.anchor
+target
+test-ledger
+keys
+**/*-keypair.json
+deployments
+.env
+.env.*
+!.env.example
+**/*.log
+playwright-report
+test-results

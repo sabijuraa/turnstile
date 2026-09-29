@@ -1,0 +1,268 @@
+# Runs the whole Turnstile product on one machine.
+#
+#   pnpm stack:up      build and start everything, then wait until it is healthy
+#   pnpm stack:down    stop everything and keep the volumes
+#
+# Every service uses host networking, so the ports below are host ports and must
+# be free: 8899 and 8900 (validator), 5433 (postgres), 3000 (web), 4020 to 4024
+# (services). Program binaries come from target/deploy, keys from keys/localnet
+# and the deployment file from deployments/localnet.json. Run infra/scripts/dev-up.sh
+# or pnpm stack:up rather than calling compose directly, so those folders exist
+# and are owned by you before the containers start.
+
+name: turnstile
+
+x-node-build: &node-build
+  context: ..
+  dockerfile: infra/docker/node.Dockerfile
+  network: host
+
+x-node-service: &node-service
+  network_mode: host
+  init: true
+  restart: unless-stopped
+  user: "${TURNSTILE_UID:-1000}:${TURNSTILE_GID:-1000}"
+  volumes:
+    - ../deployments:/deployments:ro
+
+x-node-env: &node-env
+  NODE_ENV: production
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+  TURNSTILE_NETWORK: localnet
+  DATABASE_URL: postgres://turnstile:turnstile@127.0.0.1:${POSTGRES_PORT:-5433}/turnstile
+  SOLANA_RPC_URL: http://127.0.0.1:${VALIDATOR_RPC_PORT:-8899}
+  SOLANA_WS_URL: ws://127.0.0.1:${VALIDATOR_WS_PORT:-8900}
+  DEPLOYMENT_FILE: /deployments/localnet.json
+  FACILITATOR_URL: http://127.0.0.1:4020
+
+x-healthcheck: &http-healthcheck
+  interval: 5s
+  timeout: 5s
+  start_period: 30s
+  retries: 30
+
+services:
+  validator:
+    build:
+      context: ..
+      dockerfile: infra/docker/validator.Dockerfile
+      network: host
+    image: turnstile/validator:agave-4.0.2
+    network_mode: host
+    init: true
+    restart: unless-stopped
+    # Agave 4 needs io_uring, which the default Docker seccomp profile blocks.
+    security_opt:
+      - seccomp=unconfined
+    ulimits:
+      nofile:
+        soft: 1000000
+        hard: 1000000
+    environment:
+      RPC_PORT: ${VALIDATOR_RPC_PORT:-8899}
+      FAUCET_PORT: ${VALIDATOR_FAUCET_PORT:-9900}
+      GOSSIP_PORT: ${VALIDATOR_GOSSIP_PORT:-8001}
+      DYNAMIC_PORT_RANGE: ${VALIDATOR_DYNAMIC_PORT_RANGE:-8002-8030}
+      REQUIRE_PROGRAMS: ${REQUIRE_PROGRAMS:-1}
+      VALIDATOR_RESET: ${VALIDATOR_RESET:-0}
+      AGENT_WALLET_PROGRAM_ID: 7onzUVc1HGc9oBDUspBdP8dz1QW6uXrSdBn4NH6aiLb
+      SETTLEMENT_PROGRAM_ID: 6FrY43zorjSv8wCuarPL3z8ZnyBTyyC86xRjBqgu1K9z
+    volumes:
+      - validator-ledger:/ledger
+      - ${TURNSTILE_PROGRAMS_DIR:-../target/deploy}:/programs:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "solana cluster-version -u http://127.0.0.1:$${RPC_PORT} >/dev/null",
+        ]
+      interval: 5s
+      timeout: 5s
+      start_period: 60s
+      retries: 36
+
+  postgres:
+    image: postgres:16-alpine
+    network_mode: host
+    restart: unless-stopped
+    command: ["postgres", "-p", "${POSTGRES_PORT:-5433}", "-c", "listen_addresses=127.0.0.1"]
+    environment:
+      POSTGRES_USER: turnstile
+      POSTGRES_PASSWORD: turnstile
+      POSTGRES_DB: turnstile
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -h 127.0.0.1 -p ${POSTGRES_PORT:-5433} -U turnstile -d turnstile",
+        ]
+      interval: 3s
+      timeout: 3s
+      start_period: 10s
+      retries: 30
+
+  # One-shot job. Applies migrations, then creates the test mint, the local keys
+  # and deployments/localnet.json. Every service below waits for it to succeed.
+  bootstrap:
+    build:
+      <<: *node-build
+      args:
+        SERVICE_DIR: packages/shared
+    image: turnstile/shared:local
+    network_mode: host
+    init: true
+    restart: "no"
+    user: "${TURNSTILE_UID:-1000}:${TURNSTILE_GID:-1000}"
+    command:
+      ["sh", "-c", "node dist/migrate-cli.js && node dist/cli/bootstrap-localnet.js"]
+    environment:
+      <<: *node-env
+      KEYS_DIR: /keys/localnet
+    volumes:
+      - ../deployments:/deployments
+      - ../keys/localnet:/keys/localnet
+    depends_on:
+      validator:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  facilitator:
+    <<: *node-service
+    build:
+      <<: *node-build
+      args:
+        SERVICE_DIR: packages/facilitator
+    image: turnstile/facilitator:local
+    environment:
+      <<: *node-env
+      PORT: "4020"
+      FACILITATOR_KEYPAIR: /keys/localnet/facilitator.json
+    volumes:
+      - ../deployments:/deployments:ro
+      - ../keys/localnet:/keys/localnet:ro
+    healthcheck:
+      <<: *http-healthcheck
+      test:
+        ["CMD", "node", "/usr/local/lib/turnstile/healthcheck.mjs", "http://127.0.0.1:4020/readyz"]
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+
+  demo-api:
+    <<: *node-service
+    build:
+      <<: *node-build
+      args:
+        SERVICE_DIR: packages/demo-api
+    image: turnstile/demo-api:local
+    environment:
+      <<: *node-env
+      PORT: "4021"
+      DEMO_API_PUBLIC_URL: http://127.0.0.1:4021
+    healthcheck:
+      <<: *http-healthcheck
+      test:
+        ["CMD", "node", "/usr/local/lib/turnstile/healthcheck.mjs", "http://127.0.0.1:4021/readyz"]
+    depends_on:
+      facilitator:
+        condition: service_healthy
+
+  # Same image as demo-api, different entry point. Holds only the demo agent's
+  # scoped session key, which it reads from keys/localnet.
+  demo-agent:
+    <<: *node-service
+    build:
+      <<: *node-build
+      args:
+        SERVICE_DIR: packages/demo-api
+    image: turnstile/demo-agent:local
+    command: ["node", "dist/agent-main.js"]
+    environment:
+      <<: *node-env
+      PORT: "4024"
+      DEMO_API_URL: http://127.0.0.1:4021
+      DEMO_OWNER_KEYPAIR: /keys/localnet/demo-owner.json
+      DEMO_SESSION_KEYPAIR: /keys/localnet/demo-session.json
+    volumes:
+      - ../deployments:/deployments:ro
+      - ../keys/localnet:/keys/localnet:ro
+    healthcheck:
+      <<: *http-healthcheck
+      test:
+        ["CMD", "node", "/usr/local/lib/turnstile/healthcheck.mjs", "http://127.0.0.1:4024/readyz"]
+    depends_on:
+      demo-api:
+        condition: service_healthy
+
+  indexer:
+    <<: *node-service
+    build:
+      <<: *node-build
+      args:
+        SERVICE_DIR: packages/indexer
+    image: turnstile/indexer:local
+    environment:
+      <<: *node-env
+      PORT: "4023"
+    healthcheck:
+      <<: *http-healthcheck
+      test:
+        ["CMD", "node", "/usr/local/lib/turnstile/healthcheck.mjs", "http://127.0.0.1:4023/readyz"]
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+
+  # The console backend never receives an agent key or an owner key.
+  backend:
+    <<: *node-service
+    build:
+      <<: *node-build
+      args:
+        SERVICE_DIR: packages/backend
+    image: turnstile/backend:local
+    environment:
+      <<: *node-env
+      PORT: "4022"
+      CONSOLE_ORIGIN: http://localhost:3000
+    healthcheck:
+      <<: *http-healthcheck
+      test:
+        ["CMD", "node", "/usr/local/lib/turnstile/healthcheck.mjs", "http://127.0.0.1:4022/readyz"]
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+      indexer:
+        condition: service_healthy
+
+  web:
+    <<: *node-service
+    build:
+      <<: *node-build
+      args:
+        SERVICE_DIR: apps/web
+    image: turnstile/web:local
+    command: ["node", "node_modules/next/dist/bin/next", "start", "--port", "3000"]
+    environment:
+      <<: *node-env
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+      TURNSTILE_BACKEND_URL: http://127.0.0.1:4022
+      TURNSTILE_DEMO_API_URL: http://127.0.0.1:4021
+      TURNSTILE_DEMO_AGENT_URL: http://127.0.0.1:4024
+    healthcheck:
+      <<: *http-healthcheck
+      test: ["CMD", "node", "/usr/local/lib/turnstile/healthcheck.mjs", "http://127.0.0.1:3000/"]
+    depends_on:
+      backend:
+        condition: service_healthy
+      demo-api:
+        condition: service_healthy
+      demo-agent:
+        condition: service_healthy
+
+volumes:
+  validator-ledger:
+  postgres-data:

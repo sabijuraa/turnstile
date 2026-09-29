@@ -1,0 +1,12 @@
+# Optional override. Builds the validator image from an Agave 4.0.2 install that
+# is already on this machine instead of downloading the 218 MB release tarball.
+# The image build still checks that the binaries report version 4.0.2.
+#
+#   AGAVE_HOME=$HOME/.local/share/solana/install/active_release \
+#     docker compose -f infra/docker-compose.yml -f infra/docker-compose.agave-local.yml build validator
+
+services:
+  validator:
+    build:
+      additional_contexts:
+        agave-release: ${AGAVE_HOME:?Set AGAVE_HOME to an Agave 4.0.2 install folder that contains bin/solana-test-validator}

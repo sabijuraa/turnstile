@@ -1,0 +1,145 @@
+.page {
+  display: grid;
+  place-items: start center;
+  padding: clamp(2.5rem, 1.5rem + 5vw, 6rem) var(--gutter) var(--space-9);
+}
+
+.card {
+  display: grid;
+  gap: var(--space-5);
+  width: 100%;
+  max-width: 30rem;
+  padding: clamp(1.25rem, 0.75rem + 2vw, 2rem);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.head {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius);
+  background: var(--color-accent-weak);
+  color: var(--color-accent);
+}
+
+.title {
+  font-size: var(--text-3xl);
+}
+
+.lead {
+  color: var(--color-ink-muted);
+}
+
+.wallets {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.legend {
+  margin-bottom: var(--space-2);
+  padding: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.wallet {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 3.25rem;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition:
+    border-color var(--duration-1) var(--ease-out),
+    background var(--duration-1) var(--ease-out);
+}
+
+.wallet:hover {
+  background: var(--color-paper);
+}
+
+.wallet:has(input:checked) {
+  border-color: var(--color-accent);
+  background: var(--color-accent-weak);
+}
+
+.wallet:has(input:focus-visible) {
+  box-shadow: var(--focus-ring);
+}
+
+.wallet input {
+  accent-color: var(--color-accent);
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+}
+
+.wallet input:focus-visible {
+  outline: none;
+}
+
+.walletIcon {
+  border-radius: var(--radius-sm);
+}
+
+.walletName {
+  font-weight: 600;
+}
+
+.walletNote {
+  margin-left: auto;
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+}
+
+.walletsLoading {
+  height: 3.25rem;
+  border-radius: var(--radius);
+  background: var(--color-sunken);
+}
+
+.none {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px dashed var(--color-line-strong);
+  border-radius: var(--radius);
+}
+
+.noneTitle {
+  font-weight: 600;
+}
+
+.noneText {
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+}
+
+.primary {
+  width: 100%;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+
+.foot {
+  color: var(--color-ink-faint);
+  font-size: var(--text-sm);
+}

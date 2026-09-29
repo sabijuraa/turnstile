@@ -43,6 +43,7 @@ The same ids are used on the local validator and on devnet.
 - A session key entry is `{ key, expires_at, active }`. An `expires_at` of 0 means no expiry.
 - An allow-list entry is `{ resource_id: [u8; 32], recipient: Pubkey }`. A payment is allowed only when the pair `(resource_id, recipient)` is on the list. Binding the recipient stops a compromised resource server from pointing an allowed resource at its own address.
 - An empty allow-list allows nothing.
+- The account holds up to 16 entries, but one `update_policy` transaction fits at most 15 under the 1232 byte transaction limit. The client builders and the console therefore cap the allow-list at 15.
 
 `Vault` is an SPL token account PDA with seeds `["vault", agent_wallet]`. Its authority is the agent wallet PDA.
 

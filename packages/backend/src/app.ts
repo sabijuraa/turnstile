@@ -15,6 +15,7 @@ import { authRoutes, meRoutes } from "./routes/auth.js";
 import { healthRoutes } from "./routes/health.js";
 import { receiptCsvRoute, receiptRoutes } from "./routes/receipts.js";
 import { spendRoutes, summaryRoutes } from "./routes/spend.js";
+import { txRoutes } from "./routes/tx.js";
 
 export interface AppDeps {
   pool: Pool;
@@ -115,6 +116,7 @@ export function createApp(deps: AppDeps): BackendApp {
   app.route("/v1/spend", spendRoutes(s));
   app.route("/v1/summary", summaryRoutes(s));
   app.route("/v1/agents", agentRoutes(s));
+  app.route("/v1/tx", txRoutes(s));
 
   return { app, services };
 }

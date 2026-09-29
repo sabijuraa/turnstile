@@ -64,6 +64,8 @@ export interface SettlementResponse {
   /** Receipt account address, present on success. */
   receipt?: string;
   errorReason?: string;
+  /** Plain sentence that explains the failure and what to do next. */
+  errorMessage?: string;
   /** True when the receipt already existed and this response is a replay of the first settlement. */
   alreadySettled?: boolean;
 }

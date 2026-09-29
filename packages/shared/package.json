@@ -1,0 +1,39 @@
+{
+  "name": "@turnstile/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./db": {
+      "types": "./dist/db.d.ts",
+      "default": "./dist/db.js"
+    }
+  },
+  "files": [
+    "dist",
+    "migrations",
+    "idl"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "migrate": "node dist/migrate-cli.js"
+  },
+  "dependencies": {
+    "@noble/curves": "2.4.0",
+    "@noble/hashes": "2.4.0",
+    "@solana/web3.js": "1.99.0",
+    "bs58": "6.0.0",
+    "pg": "8.23.0"
+  },
+  "devDependencies": {
+    "@types/pg": "8.23.1"
+  }
+}

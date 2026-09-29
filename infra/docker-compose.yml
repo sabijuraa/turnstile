@@ -139,6 +139,7 @@ services:
     environment:
       <<: *node-env
       PORT: "4020"
+      FACILITATOR_PUBLIC_URL: http://127.0.0.1:4020
       FACILITATOR_KEYPAIR: /keys/localnet/facilitator.json
     volumes:
       - ../deployments:/deployments:ro
@@ -186,6 +187,7 @@ services:
       DEMO_API_URL: http://127.0.0.1:4021
       DEMO_OWNER_KEYPAIR: /keys/localnet/demo-owner.json
       DEMO_SESSION_KEYPAIR: /keys/localnet/demo-session.json
+      WEB_ORIGIN: http://localhost:3000
     volumes:
       - ../deployments:/deployments:ro
       - ../keys/localnet:/keys/localnet:ro

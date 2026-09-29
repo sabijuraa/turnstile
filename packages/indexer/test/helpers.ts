@@ -1,5 +1,6 @@
 import { SETTLEMENT_PROGRAM_ID } from "@turnstile/shared";
 import { createPool, migrate } from "@turnstile/shared/db";
+import { testDatabaseUrl } from "@turnstile/shared/testing";
 import type { Pool, PoolClient, QueryResult } from "pg";
 import { createIndexer, type Indexer, type IndexerDeps } from "../src/indexer.js";
 import { createLogger } from "../src/logger.js";
@@ -7,9 +8,7 @@ import { createMetrics, type IndexerMetrics } from "../src/metrics.js";
 import type { ReceiptSource } from "../src/source.js";
 import { createCheckpointStore, type Queryable } from "../src/store.js";
 
-export const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL ??
-  "postgres://turnstile_indexer_test:turnstile_indexer_test@127.0.0.1:5432/turnstile_indexer_test";
+export const TEST_DATABASE_URL = testDatabaseUrl("indexer");
 
 export const STREAM = "settlement:localnet";
 export const NETWORK = "solana:localnet";

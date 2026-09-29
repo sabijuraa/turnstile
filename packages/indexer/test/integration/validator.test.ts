@@ -38,6 +38,7 @@ import {
   settleInstructions,
   updatePolicyInstruction,
 } from "@turnstile/shared/programs";
+import { testDatabaseAdminUrl } from "@turnstile/shared/testing";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
@@ -47,8 +48,7 @@ const repoRoot = join(pkgDir, "..", "..");
 const RPC_PORT = Number(process.env.IT_RPC_PORT ?? 8999);
 const RPC_URL = `http://127.0.0.1:${RPC_PORT}`;
 const HTTP_PORT = Number(process.env.IT_INDEXER_PORT ?? 14023);
-const ADMIN_URL =
-  process.env.IT_ADMIN_DATABASE_URL ?? "postgres://turnstile:turnstile@127.0.0.1:5433/turnstile";
+const ADMIN_URL = process.env.IT_ADMIN_DATABASE_URL ?? testDatabaseAdminUrl();
 const IT_DB = "turnstile_indexer_it";
 const DATABASE_URL = ADMIN_URL.replace(/\/[^/]+$/, `/${IT_DB}`);
 const RESOURCE = "https://demo.turnstile.dev/v1/summarize";

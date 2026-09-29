@@ -101,9 +101,11 @@ The signed message is `"TURNSTILE_PAYMENT_V1"` (20 ASCII bytes) followed by the 
 
 ### Errors
 
-agent_wallet errors are `SessionKeyNotFound`, `SessionKeyRevoked`, `SessionKeyExpired`, `PerCallCapExceeded`, `DailyCapExceeded`, `ResourceNotAllowed`, `UnauthorizedCaller`, `InsufficientFunds`, `ZeroAmount`, `InvalidPolicy`, `TooManySessionKeys`, `AllowListTooLong`, `DuplicateSessionKey`, `VaultNotEmpty`, `MintMismatch`, `RecipientMismatch`.
+agent_wallet errors are `SessionKeyNotFound`, `SessionKeyRevoked`, `SessionKeyExpired`, `PerCallCapExceeded`, `DailyCapExceeded`, `ResourceNotAllowed`, `UnauthorizedCaller`, `InsufficientFunds`, `ZeroAmount`, `InvalidPolicy`, `TooManySessionKeys`, `AllowListTooLong`, `DuplicateSessionKey`, `VaultNotEmpty`, `MintMismatch`, `RecipientMismatch`, `AccountMismatch`, `ArithmeticOverflow`. Codes are 6000 to 6017 in that order.
 
-settlement errors are `AuthorizationExpired`, `MissingSignatureVerification`, `SignatureMismatch`, `NonceAlreadyUsed`, `AccountMismatch`.
+settlement errors are `AuthorizationExpired`, `MissingSignatureVerification`, `SignatureMismatch`, `NonceAlreadyUsed`, `AccountMismatch`. Codes are 6100 to 6104 in that order, so they never collide with agent_wallet codes that surface through the debit CPI.
+
+`PaymentSettled` is emitted with `emit!`. It is a `Program data:` log line inside the settlement invocation and carries every receipt field plus the receipt address.
 
 ## x402 interface
 

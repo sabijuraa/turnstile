@@ -82,6 +82,7 @@ interface RawReceipt {
   unix_timestamp: BN;
   fee_payer: PublicKey;
   bump: number;
+  expires_at: BN;
 }
 interface RawPaymentSettled extends RawReceipt {
   receipt: PublicKey;
@@ -117,6 +118,8 @@ export interface ReceiptAccount {
   unixTimestamp: bigint;
   feePayer: PublicKey;
   bump: number;
+  /** Unix seconds. `expiresAt` of the settled authorization. */
+  expiresAt: bigint;
 }
 
 export interface PaymentSettledEvent extends ReceiptAccount {
@@ -147,6 +150,7 @@ function toReceipt(raw: RawReceipt): ReceiptAccount {
     unixTimestamp: big(raw.unix_timestamp),
     feePayer: raw.fee_payer,
     bump: raw.bump,
+    expiresAt: big(raw.expires_at),
   };
 }
 
@@ -234,6 +238,35 @@ export async function fetchReceipt(
     throw new Error(`${address.toBase58()} is not owned by the settlement program`);
   }
   return decodeReceipt(info.data);
+}
+
+function idlConstant(constants: readonly { name: string; value: string }[], name: string): bigint {
+  const found = constants.find((c) => c.name === name);
+  if (!found) throw new Error(`The settlement IDL has no ${name} constant. Run sync-idl again.`);
+  return BigInt(found.value);
+}
+
+/**
+ * Seconds a receipt stays on chain after its authorization expires. After that the fee payer
+ * that paid its rent may close it with `closeReceiptInstruction`.
+ */
+export const RECEIPT_RETENTION_SECONDS: bigint = idlConstant(
+  settlementIdl.constants,
+  "RECEIPT_RETENTION_SECONDS",
+);
+
+/** Size of a Receipt account in bytes, discriminator included. */
+export const RECEIPT_ACCOUNT_SIZE = 329;
+
+/** Byte offset of `fee_payer` in Receipt account data, for a getProgramAccounts memcmp filter. */
+export const RECEIPT_FEE_PAYER_OFFSET = 288;
+
+/** True when `close_receipt` accepts this receipt at chain time `now` (unix seconds). */
+export function receiptReclaimable(
+  receipt: Pick<ReceiptAccount, "expiresAt">,
+  now: bigint,
+): boolean {
+  return now > receipt.expiresAt + RECEIPT_RETENTION_SECONDS;
 }
 
 // Instruction builders.
@@ -456,6 +489,21 @@ export function settleInstructions(
     }),
   });
   return [ed25519VerifyInstruction(a, p.signature), settle];
+}
+
+/**
+ * Closes a receipt once its retention period has passed and returns its rent to the fee payer
+ * that paid it. `feePayer` must sign. `receipt` is the receipt PDA address.
+ */
+export function closeReceiptInstruction(p: {
+  receipt: PublicKey;
+  feePayer: PublicKey;
+}): TransactionInstruction {
+  return new TransactionInstruction({
+    programId: SETTLEMENT_PROGRAM_ID,
+    keys: [meta(p.receipt, false, true), meta(p.feePayer, true, true)],
+    data: settlementCoder.instruction.encode("close_receipt", {}),
+  });
 }
 
 // Errors.

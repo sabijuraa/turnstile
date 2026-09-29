@@ -260,6 +260,7 @@ describe("decoders", () => {
     expect(r.amount).toBe(777n);
     expect(r.nonce).toEqual(new Uint8Array(32).fill(9));
     expect(r.unixTimestamp).toBe(1_800_000_123n);
+    expect(r.expiresAt).toBe(1_800_000_400n);
   });
 
   it("decodes PaymentSettled only from settlement program logs", () => {
@@ -285,6 +286,7 @@ describe("decoders", () => {
     const events = decodePaymentSettledEvents(logs);
     expect(events).toHaveLength(1);
     expect(events[0]?.amount).toBe(777n);
+    expect(events[0]?.expiresAt).toBe(1_800_000_400n);
     expect(events[0]?.receipt.equals(fields.receipt)).toBe(true);
     expect(
       decodePaymentSettledEvents([`Program ${a} invoke [1]`, line, `Program ${a} success`]),
@@ -332,6 +334,7 @@ function receiptFields() {
     unix_timestamp: new BN(1_800_000_123),
     fee_payer: Keypair.generate().publicKey,
     bump: 255,
+    expires_at: new BN(1_800_000_400),
   };
 }
 
@@ -341,7 +344,9 @@ describe("program errors", () => {
     expect(programErrorName(6103)).toBe("NonceAlreadyUsed");
     expect(programErrorName(6104)).toBe("AccountMismatch");
     expect(PROGRAM_ERRORS.get(6016)?.program).toBe("agent_wallet");
-    expect(PROGRAM_ERRORS.size).toBe(18 + 5);
+    expect(programErrorName(6105)).toBe("RetentionNotElapsed");
+    expect(programErrorName(6106)).toBe("NotFeePayer");
+    expect(PROGRAM_ERRORS.size).toBe(18 + 7);
     expect(programErrorName(1)).toBeNull();
   });
 

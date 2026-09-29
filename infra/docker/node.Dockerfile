@@ -18,12 +18,18 @@ RUN npm install --global --no-fund --no-audit "pnpm@${PNPM_VERSION}" \
   && pnpm --version
 WORKDIR /repo
 
-# Download every package in the lockfile into the store. This layer only
-# changes when the lockfile or workspace settings change.
+# Download every package in the lockfile into the store. The store lives in a
+# BuildKit cache mount, so a build that fails on a flaky network resumes where
+# it stopped instead of downloading everything again.
 FROM base AS fetch
+ENV npm_config_store_dir=/pnpm/store \
+  npm_config_fetch_retries=6 \
+  npm_config_fetch_retry_mintimeout=10000 \
+  npm_config_fetch_retry_maxtimeout=120000 \
+  npm_config_fetch_timeout=300000
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN pnpm config set store-dir /pnpm/store \
-  && pnpm fetch --frozen-lockfile
+RUN --mount=type=cache,id=turnstile-pnpm-store,target=/pnpm/store \
+  pnpm fetch --frozen-lockfile
 
 FROM fetch AS build
 ARG SERVICE_DIR
@@ -31,10 +37,14 @@ RUN test -n "${SERVICE_DIR}" || { echo "Set the SERVICE_DIR build arg, for examp
 COPY . .
 RUN test -f "${SERVICE_DIR}/package.json" \
   || { echo "${SERVICE_DIR}/package.json is missing. SERVICE_DIR must point at a workspace package." >&2; exit 1; }
-RUN pnpm install --offline --frozen-lockfile
+RUN --mount=type=cache,id=turnstile-pnpm-store,target=/pnpm/store \
+  pnpm install --offline --frozen-lockfile
+# The trailing ... builds the workspace packages this one depends on first, in
+# dependency order.
 RUN pnpm --filter "./${SERVICE_DIR}..." run build
 # Keep production dependencies only, for the package and its workspace deps.
-RUN find . -name node_modules -type d -prune -exec rm -rf {} + \
+RUN --mount=type=cache,id=turnstile-pnpm-store,target=/pnpm/store \
+  find . -name node_modules -type d -prune -exec rm -rf {} + \
   && pnpm install --offline --frozen-lockfile --prod --filter "./${SERVICE_DIR}..."
 # Collect the package, its workspace dependencies and the root node_modules.
 RUN mkdir -p /out \

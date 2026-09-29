@@ -28,7 +28,9 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "migrate": "node dist/migrate-cli.js"
+    "migrate": "node dist/migrate-cli.js",
+    "bootstrap:localnet": "node dist/cli/bootstrap-localnet.js",
+    "sync-idl": "tsx src/cli/sync-idl.ts"
   },
   "dependencies": {
     "@anchor-lang/core": "1.2.0",

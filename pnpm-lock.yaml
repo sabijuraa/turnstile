@@ -186,6 +186,46 @@ importers:
         specifier: 4.23.15
         version: 4.23.15
 
+  packages/e2e:
+    dependencies:
+      '@noble/curves':
+        specifier: 2.4.0
+        version: 2.4.0
+      '@solana/spl-token':
+        specifier: 0.4.15
+        version: 0.4.15(@solana/web3.js@1.99.0(bufferutil@4.1.0)(typescript@6.0.3)(utf-8-validate@6.0.6))(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@6.0.3)(utf-8-validate@6.0.6)
+      '@solana/web3.js':
+        specifier: 1.99.0
+        version: 1.99.0(bufferutil@4.1.0)(typescript@6.0.3)(utf-8-validate@6.0.6)
+      '@turnstile/sdk-agent':
+        specifier: workspace:*
+        version: link:../sdk-agent
+      '@turnstile/shared':
+        specifier: workspace:*
+        version: link:../shared
+      bs58:
+        specifier: 6.0.0
+        version: 6.0.0
+      pg:
+        specifier: 8.23.0
+        version: 8.23.0
+    devDependencies:
+      '@turnstile/backend':
+        specifier: workspace:*
+        version: link:../backend
+      '@turnstile/demo-api':
+        specifier: workspace:*
+        version: link:../demo-api
+      '@turnstile/facilitator':
+        specifier: workspace:*
+        version: link:../facilitator
+      '@turnstile/indexer':
+        specifier: workspace:*
+        version: link:../indexer
+      '@types/pg':
+        specifier: 8.23.1
+        version: 8.23.1
+
   packages/facilitator:
     dependencies:
       '@hono/node-server':

@@ -102,3 +102,16 @@ sudo -u postgres psql -c "CREATE ROLE turnstile_indexer_test LOGIN PASSWORD 'tur
 sudo -u postgres psql -c "CREATE DATABASE turnstile_indexer_test OWNER turnstile_indexer_test"
 pnpm --filter @turnstile/indexer test
 ```
+
+### Integration test against a real validator
+
+`test/integration/validator.test.ts` starts `solana-test-validator` with the programs from `target/deploy` on port 8999 (set `IT_RPC_PORT` to change it). It creates the database `turnstile_indexer_it` on the compose Postgres at 5433 and lands real settlements with the shared client, some of them failed on purpose. It runs `dist/main.js` as a separate process, kills it with SIGKILL while settlements keep landing, and restarts it. Then it checks that the receipts table matches the receipt accounts on chain in count and in every field. A second case restarts the validator on a new ledger and checks that the stream starts over.
+
+```sh
+anchor build   # or cargo build-sbf, so target/deploy holds agent_wallet.so and settlement.so
+pnpm --filter @turnstile/shared build
+pnpm --filter @turnstile/indexer build
+pnpm --filter @turnstile/indexer test:integration
+```
+
+Set `IT_KEEP=1` to keep the ledgers and the indexer logs in the temp directory it prints.

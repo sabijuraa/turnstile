@@ -56,3 +56,28 @@ export interface SettlementChain {
   /** Signs as fee payer, sends and waits for `confirmed`. */
   submitSettle(auth: PaymentAuthorization, signature: Uint8Array): Promise<SubmitOutcome>;
 }
+
+/** A receipt this facilitator paid rent for, as the reclaim job sees it. */
+export interface FeePayerReceipt {
+  address: PublicKey;
+  /** Unix seconds. Expiry of the authorization the receipt settled. */
+  expiresAt: bigint;
+  /** Lamports the account holds. Closing it returns all of them to the fee payer. */
+  lamports: bigint;
+}
+
+/** Result of one close transaction. A failure carries the program error name when known. */
+export type CloseOutcome =
+  | { ok: true; signature: string }
+  | { ok: false; detail: string; signature?: string };
+
+/** The chain calls the receipt rent reclaim job makes. The fee payer is the only signer. */
+export interface ReclaimChain {
+  readonly feePayer: PublicKey;
+  /** Unix seconds from the Clock sysvar, the time `close_receipt` compares against. */
+  chainTime(): Promise<bigint>;
+  /** Every receipt whose `fee_payer` is this facilitator. */
+  listFeePayerReceipts(): Promise<FeePayerReceipt[]>;
+  /** Closes all of `receipts` in one transaction and waits for `confirmed`. */
+  closeReceipts(receipts: PublicKey[]): Promise<CloseOutcome>;
+}

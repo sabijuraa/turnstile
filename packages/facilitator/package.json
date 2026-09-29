@@ -16,6 +16,7 @@
     "start": "node dist/main.js",
     "dev": "tsx src/main.ts",
     "replay": "node dist/replay-main.js",
+    "reclaim": "node dist/reclaim-main.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },

@@ -13,6 +13,7 @@ import {
   signAuthorization,
 } from "@turnstile/shared";
 import { createPool, migrate, type Pool } from "@turnstile/shared/db";
+import { testDatabaseUrl } from "@turnstile/shared/testing";
 import bs58 from "bs58";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { buildCatalog } from "../src/catalog.js";
@@ -31,9 +32,7 @@ import { DemoRunner } from "../src/runner/run.js";
 import { RunStore } from "../src/runner/store.js";
 import { summarize } from "../src/text/summarize.js";
 
-const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL ??
-  "postgres://turnstile_demo_test:turnstile_demo_test@127.0.0.1:5432/turnstile_demo_test";
+const TEST_DATABASE_URL = testDatabaseUrl("demo_api");
 
 const owner = Keypair.generate();
 const session = Keypair.generate();

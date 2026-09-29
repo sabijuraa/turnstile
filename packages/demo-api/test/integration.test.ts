@@ -15,6 +15,7 @@ import { createPaywall } from "@turnstile/sdk-resource";
 import { vaultAddress } from "@turnstile/shared";
 import { createPool, migrate, type Pool } from "@turnstile/shared/db";
 import { fetchReceipt, parseProgramError } from "@turnstile/shared/programs";
+import { testDatabaseUrl } from "@turnstile/shared/testing";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createApp, paywallRoutes } from "../src/app.js";
 import { loadDeployment } from "../src/config.js";
@@ -31,9 +32,7 @@ const env = (name: string): string => {
   if (!v) throw new Error(`${name} must be set for the integration test.`);
   return v;
 };
-const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL ??
-  "postgres://turnstile_demo_test:turnstile_demo_test@127.0.0.1:5432/turnstile_demo_test";
+const TEST_DATABASE_URL = testDatabaseUrl("demo_api");
 
 describe.skipIf(!enabled)("demo run against validator and facilitator", () => {
   let pool: Pool;

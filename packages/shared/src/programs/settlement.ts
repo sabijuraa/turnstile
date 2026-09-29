@@ -14,6 +14,48 @@ export type Settlement = {
   };
   instructions: [
     {
+      name: "closeReceipt";
+      docs: [
+        "Closes a receipt and returns its rent to the fee payer that paid it. Allowed only once",
+        "`RECEIPT_RETENTION_SECONDS` have passed since the authorization expired. `settle` refuses",
+        "an expired authorization before it looks at the receipt, so a closed receipt never lets",
+        "its nonce settle again.",
+      ];
+      discriminator: [126, 254, 244, 203, 124, 164, 134, 89];
+      accounts: [
+        {
+          name: "receipt";
+          writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [114, 101, 99, 101, 105, 112, 116];
+              },
+              {
+                kind: "account";
+                path: "receipt.agentWallet";
+                account: "receipt";
+              },
+              {
+                kind: "account";
+                path: "receipt.nonce";
+                account: "receipt";
+              },
+            ];
+          };
+        },
+        {
+          name: "feePayer";
+          docs: ["The fee payer that paid the receipt rent. It signs and receives the lamports."];
+          writable: true;
+          signer: true;
+          relations: ["receipt"];
+        },
+      ];
+      args: [];
+    },
+    {
       name: "settle";
       discriminator: [175, 42, 185, 87, 144, 131, 102, 212];
       accounts: [
@@ -194,6 +236,16 @@ export type Settlement = {
       code: 6104;
       name: "accountMismatch";
       msg: "An account does not match the authorization. Pass the wallet, vault, mint and recipient it names";
+    },
+    {
+      code: 6105;
+      name: "retentionNotElapsed";
+      msg: "This receipt is still inside its retention period. Close it after 7 days past the authorization expiry";
+    },
+    {
+      code: 6106;
+      name: "notFeePayer";
+      msg: "Only the fee payer that paid for this receipt can close it. Sign with that key";
     },
   ];
   types: [
@@ -419,6 +471,14 @@ export type Settlement = {
             name: "bump";
             type: "u8";
           },
+          {
+            name: "expiresAt";
+            docs: [
+              "`expires_at` of the settled authorization. `close_receipt` waits until",
+              "`RECEIPT_RETENTION_SECONDS` after it.",
+            ];
+            type: "i64";
+          },
         ];
       };
     },
@@ -483,6 +543,14 @@ export type Settlement = {
             name: "bump";
             type: "u8";
           },
+          {
+            name: "expiresAt";
+            docs: [
+              "`expires_at` of the settled authorization. `close_receipt` waits until",
+              "`RECEIPT_RETENTION_SECONDS` after it.",
+            ];
+            type: "i64";
+          },
         ];
       };
     },
@@ -531,6 +599,15 @@ export type Settlement = {
       docs: ["Domain prefix of every signed authorization. Exactly 20 ASCII bytes."];
       type: "bytes";
       value: "[84, 85, 82, 78, 83, 84, 73, 76, 69, 95, 80, 65, 89, 77, 69, 78, 84, 95, 86, 49]";
+    },
+    {
+      name: "receiptRetentionSeconds";
+      docs: [
+        "How long a receipt stays on chain after its authorization expires before the fee payer may",
+        "close it and take the rent back. Seven days.",
+      ];
+      type: "i64";
+      value: "604800";
     },
     {
       name: "seedReceipt";

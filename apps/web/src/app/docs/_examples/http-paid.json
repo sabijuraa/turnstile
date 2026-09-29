@@ -1,0 +1,62 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "http://127.0.0.1:3581/v1/summarize",
+    "headers": {
+      "PAYMENT-SIGNATURE": "eyJ4NDAyVmVyc2lvbiI6MiwicmVzb3VyY2UiOiJodHRwOi8vMTI3LjAuMC4xOjM1ODEvdjEvc3VtbWFyaXplIiwiYWNjZXB0ZWQiOnsic2NoZW1lIjoidHVybnN0aWxlLXBvbGljeSIsIm5ldHdvcmsiOiJzb2xhbmE6bG9jYWxuZXQiLCJhbW91bnQiOiI1MDAwIiwiYXNzZXQiOiIyU2lMc1M2dkdLZVlWSm5tMU45d29DcWVScGhReUxFOE1vQm1nbzI3N2VnciIsInBheVRvIjoiM3lKN3lNazRQOVFFOTZhRWZhODVWU3BVVmR2RUw5ZXljdmEzUmZIRTN4OG0iLCJtYXhUaW1lb3V0U2Vjb25kcyI6NjAsInJlc291cmNlIjoiaHR0cDovLzEyNy4wLjAuMTozNTgxL3YxL3N1bW1hcml6ZSIsImRlc2NyaXB0aW9uIjoiU3VtbWFyaXplIGEgdGV4dCIsIm1pbWVUeXBlIjoiYXBwbGljYXRpb24vanNvbiIsImV4dHJhIjp7InJlc291cmNlSWQiOiJlMDFjZjhjOThhMDEyNDQ1NjgzMGQ1ZmQ4NzFkODFmY2UzOWQyMzhlN2Q2ZTlkOWM4YTM5MjYyZmViMTBjZDk4Iiwibm9uY2UiOiJhZmViMTQwNjdlNmRjZmMzMzU4YzZhOTdiMDVjZGUyYWY2ODVkZjEzZWQzNTBhZTRhOGI2NmYxOTI5MGY5MTZhIiwic2V0dGxlbWVudFByb2dyYW0iOiI2RnJZNDN6b3JqU3Y4d0N1YXJQTDN6OFpueUJUeXlDODZ4UmpCcWd1MUs5eiIsImFnZW50V2FsbGV0UHJvZ3JhbSI6IjdvbnpVVmMxSEdjOW9CRFVzcEJkUDhkejFRVzZ1WHJTZEJuNE5INmFpTGIiLCJmYWNpbGl0YXRvciI6Imh0dHA6Ly8xMjcuMC4wLjE6MzU4MCIsImV4cGlyZXNBdCI6IjE3OTA3MDE2NzgiLCJkaXNwbGF5QW1vdW50IjoiMC4wMDUgdFVTREMifX0sInBheWxvYWQiOnsiYXV0aG9yaXphdGlvbiI6eyJhZ2VudFdhbGxldCI6IkN4bWQ0M29TU2h5U1V1a1hDU1BMU1FybzU5ZVdDQVVQdHBjemJWYzQzdW9tIiwic2Vzc2lvbktleSI6IjYxdXJEZmhuUU5yRGR2TGlTMkdjU0FXbUVISnZkb3liVmVjekt6M2RjNUpvIiwicmVjaXBpZW50IjoiM3lKN3lNazRQOVFFOTZhRWZhODVWU3BVVmR2RUw5ZXljdmEzUmZIRTN4OG0iLCJtaW50IjoiMlNpTHNTNnZHS2VZVkpubTFOOXdvQ3FlUnBoUXlMRThNb0JtZ28yNzdlZ3IiLCJhbW91bnQiOiI1MDAwIiwicmVzb3VyY2VJZCI6ImUwMWNmOGM5OGEwMTI0NDU2ODMwZDVmZDg3MWQ4MWZjZTM5ZDIzOGU3ZDZlOWQ5YzhhMzkyNjJmZWIxMGNkOTgiLCJub25jZSI6ImFmZWIxNDA2N2U2ZGNmYzMzNThjNmE5N2IwNWNkZTJhZjY4NWRmMTNlZDM1MGFlNGE4YjY2ZjE5MjkwZjkxNmEiLCJleHBpcmVzQXQiOiIxNzkwNzAxNjc4In0sInNpZ25hdHVyZSI6IjRvcldjVG1GZlA1QmVicWs4UzlNZUF1UjI2bnZrdExZUmZlWHRmSk5nblV5ckJ6RGJmcGJ0eDhNVVNTd3RHZHB4OW00dlROYnREeEFyMzFGTllkWld0VzMifX0="
+    },
+    "decodedHeader": {
+      "x402Version": 2,
+      "resource": "http://127.0.0.1:3581/v1/summarize",
+      "accepted": {
+        "scheme": "turnstile-policy",
+        "network": "solana:localnet",
+        "amount": "5000",
+        "asset": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
+        "payTo": "3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m",
+        "maxTimeoutSeconds": 60,
+        "resource": "http://127.0.0.1:3581/v1/summarize",
+        "description": "Summarize a text",
+        "mimeType": "application/json",
+        "extra": {
+          "resourceId": "e01cf8c98a0124456830d5fd871d81fce39d238e7d6e9d9c8a39262feb10cd98",
+          "nonce": "afeb14067e6dcfc3358c6a97b05cde2af685df13ed350ae4a8b66f19290f916a",
+          "settlementProgram": "6FrY43zorjSv8wCuarPL3z8ZnyBTyyC86xRjBqgu1K9z",
+          "agentWalletProgram": "7onzUVc1HGc9oBDUspBdP8dz1QW6uXrSdBn4NH6aiLb",
+          "facilitator": "http://127.0.0.1:3580",
+          "expiresAt": "1790701678",
+          "displayAmount": "0.005 tUSDC"
+        }
+      },
+      "payload": {
+        "authorization": {
+          "agentWallet": "Cxmd43oSShySUukXCSPLSQro59eWCAUPtpczbVc43uom",
+          "sessionKey": "61urDfhnQNrDdvLiS2GcSAWmEHJvdoybVeczKz3dc5Jo",
+          "recipient": "3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m",
+          "mint": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
+          "amount": "5000",
+          "resourceId": "e01cf8c98a0124456830d5fd871d81fce39d238e7d6e9d9c8a39262feb10cd98",
+          "nonce": "afeb14067e6dcfc3358c6a97b05cde2af685df13ed350ae4a8b66f19290f916a",
+          "expiresAt": "1790701678"
+        },
+        "signature": "4orWcTmFfP5Bebqk8S9MeAuR26nvktLYRfeXtfJNgnUyrBzDbfpbtx8MUSSwtGdpx9m4vTNbtDxAr31FNYdZWtW3"
+      }
+    }
+  },
+  "status": 200,
+  "headers": {
+    "PAYMENT-RESPONSE": "eyJzdWNjZXNzIjp0cnVlLCJ0cmFuc2FjdGlvbiI6IjNyczZwNDN3eFVBbkwyNlRMWE44OEhwOFBmRE10b2NFQ3lGMkQ4UUptYW51bWJoWW9DNWJGRkcxUWg0WnRHUVpDZXFQOUF1TXZvejdtdWFtRktVdlNRbjUiLCJuZXR3b3JrIjoic29sYW5hOmxvY2FsbmV0IiwicGF5ZXIiOiJDeG1kNDNvU1NoeVNVdWtYQ1NQTFNRcm81OWVXQ0FVUHRwY3piVmM0M3VvbSIsInJlY2VpcHQiOiJGcWUxekpaVnNMSHl5U1Z5NERhOFU0YUg2WGJSb0xGY3p6b0F2Z3daR2RSZCJ9"
+  },
+  "decodedHeader": {
+    "success": true,
+    "transaction": "3rs6p43wxUAnL26TLXN88Hp8PfDMtocECyF2D8QJmanumbhYoC5bFFG1Qh4ZtGQZCeqP9AuMvoz7muamFKUvSQn5",
+    "network": "solana:localnet",
+    "payer": "Cxmd43oSShySUukXCSPLSQro59eWCAUPtpczbVc43uom",
+    "receipt": "Fqe1zJZVsLHyySVy4Da8U4aH6XbRoLFczzoAvgwZGdRd"
+  },
+  "body": {
+    "summary": "Turnstile settles one payment per request",
+    "receipt": "Fqe1zJZVsLHyySVy4Da8U4aH6XbRoLFczzoAvgwZGdRd"
+  },
+  "elapsedMs": 3243
+}

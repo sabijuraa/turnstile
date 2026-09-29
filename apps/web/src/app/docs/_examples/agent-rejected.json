@@ -1,0 +1,7 @@
+{
+  "name": "PaymentRejectedError",
+  "code": "payment_rejected",
+  "reason": "PerCallCapExceeded",
+  "status": 402,
+  "message": "The price is above the agent wallet's per-call cap. Ask the owner to raise the cap, or use a cheaper resource."
+}

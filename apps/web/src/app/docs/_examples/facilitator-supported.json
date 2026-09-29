@@ -1,0 +1,19 @@
+{
+  "method": "GET",
+  "path": "/supported",
+  "status": 200,
+  "response": {
+    "kinds": [
+      {
+        "x402Version": 2,
+        "scheme": "turnstile-policy",
+        "network": "solana:localnet",
+        "extra": {
+          "settlementProgram": "6FrY43zorjSv8wCuarPL3z8ZnyBTyyC86xRjBqgu1K9z",
+          "agentWalletProgram": "7onzUVc1HGc9oBDUspBdP8dz1QW6uXrSdBn4NH6aiLb",
+          "asset": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr"
+        }
+      }
+    ]
+  }
+}

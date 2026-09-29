@@ -1,0 +1,17 @@
+{
+  "method": "POST",
+  "path": "/requirements",
+  "request": {
+    "resource": "http://127.0.0.1:3581/v1/summarize",
+    "price": "0.005",
+    "payTo": "not-an-address",
+    "description": "Summarize a text"
+  },
+  "status": 400,
+  "response": {
+    "error": {
+      "code": "invalid_request",
+      "message": "payTo must be a base58 Solana address."
+    }
+  }
+}

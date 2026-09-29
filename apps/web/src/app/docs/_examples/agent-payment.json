@@ -1,0 +1,10 @@
+{
+  "receipt": "Fqe1zJZVsLHyySVy4Da8U4aH6XbRoLFczzoAvgwZGdRd",
+  "transaction": "3rs6p43wxUAnL26TLXN88Hp8PfDMtocECyF2D8QJmanumbhYoC5bFFG1Qh4ZtGQZCeqP9AuMvoz7muamFKUvSQn5",
+  "amount": "5000",
+  "resource": "http://127.0.0.1:3581/v1/summarize",
+  "network": "solana:localnet",
+  "payer": "Cxmd43oSShySUukXCSPLSQro59eWCAUPtpczbVc43uom",
+  "nonce": "afeb14067e6dcfc3358c6a97b05cde2af685df13ed350ae4a8b66f19290f916a",
+  "alreadySettled": false
+}

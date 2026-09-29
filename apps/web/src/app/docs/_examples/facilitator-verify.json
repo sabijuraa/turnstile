@@ -1,0 +1,68 @@
+{
+  "method": "POST",
+  "path": "/verify",
+  "request": {
+    "paymentPayload": {
+      "x402Version": 2,
+      "resource": "http://127.0.0.1:3581/v1/summarize",
+      "accepted": {
+        "scheme": "turnstile-policy",
+        "network": "solana:localnet",
+        "amount": "5000",
+        "asset": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
+        "payTo": "3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m",
+        "maxTimeoutSeconds": 60,
+        "resource": "http://127.0.0.1:3581/v1/summarize",
+        "description": "Summarize a text",
+        "mimeType": "application/json",
+        "extra": {
+          "resourceId": "e01cf8c98a0124456830d5fd871d81fce39d238e7d6e9d9c8a39262feb10cd98",
+          "nonce": "afeb14067e6dcfc3358c6a97b05cde2af685df13ed350ae4a8b66f19290f916a",
+          "settlementProgram": "6FrY43zorjSv8wCuarPL3z8ZnyBTyyC86xRjBqgu1K9z",
+          "agentWalletProgram": "7onzUVc1HGc9oBDUspBdP8dz1QW6uXrSdBn4NH6aiLb",
+          "facilitator": "http://127.0.0.1:3580",
+          "expiresAt": "1790701678",
+          "displayAmount": "0.005 tUSDC"
+        }
+      },
+      "payload": {
+        "authorization": {
+          "agentWallet": "Cxmd43oSShySUukXCSPLSQro59eWCAUPtpczbVc43uom",
+          "sessionKey": "61urDfhnQNrDdvLiS2GcSAWmEHJvdoybVeczKz3dc5Jo",
+          "recipient": "3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m",
+          "mint": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
+          "amount": "5000",
+          "resourceId": "e01cf8c98a0124456830d5fd871d81fce39d238e7d6e9d9c8a39262feb10cd98",
+          "nonce": "afeb14067e6dcfc3358c6a97b05cde2af685df13ed350ae4a8b66f19290f916a",
+          "expiresAt": "1790701678"
+        },
+        "signature": "4orWcTmFfP5Bebqk8S9MeAuR26nvktLYRfeXtfJNgnUyrBzDbfpbtx8MUSSwtGdpx9m4vTNbtDxAr31FNYdZWtW3"
+      }
+    },
+    "paymentRequirements": {
+      "scheme": "turnstile-policy",
+      "network": "solana:localnet",
+      "amount": "5000",
+      "asset": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
+      "payTo": "3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m",
+      "maxTimeoutSeconds": 60,
+      "resource": "http://127.0.0.1:3581/v1/summarize",
+      "description": "Summarize a text",
+      "mimeType": "application/json",
+      "extra": {
+        "resourceId": "e01cf8c98a0124456830d5fd871d81fce39d238e7d6e9d9c8a39262feb10cd98",
+        "nonce": "afeb14067e6dcfc3358c6a97b05cde2af685df13ed350ae4a8b66f19290f916a",
+        "settlementProgram": "6FrY43zorjSv8wCuarPL3z8ZnyBTyyC86xRjBqgu1K9z",
+        "agentWalletProgram": "7onzUVc1HGc9oBDUspBdP8dz1QW6uXrSdBn4NH6aiLb",
+        "facilitator": "http://127.0.0.1:3580",
+        "expiresAt": "1790701678",
+        "displayAmount": "0.005 tUSDC"
+      }
+    }
+  },
+  "status": 200,
+  "response": {
+    "isValid": true,
+    "payer": "Cxmd43oSShySUukXCSPLSQro59eWCAUPtpczbVc43uom"
+  }
+}

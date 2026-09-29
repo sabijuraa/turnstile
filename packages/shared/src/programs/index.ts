@@ -4,7 +4,7 @@
  * Everything here encodes and decodes through the Anchor IDL coder built from the program IDLs
  * in ./idl.ts. These builders and decoders are the only program encoders used off chain.
  */
-import { BN, BorshCoder, EventParser, type Idl } from "@anchor-lang/core";
+import anchor, { type BN, type Idl } from "@anchor-lang/core";
 import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {
   type AccountMeta,
@@ -29,6 +29,10 @@ import { agentWalletIdl, settlementIdl } from "./idl.js";
 export type { AgentWallet as AgentWalletIdlType } from "./agent_wallet.js";
 export { agentWalletIdl, settlementIdl } from "./idl.js";
 export type { Settlement as SettlementIdlType } from "./settlement.js";
+
+// @anchor-lang/core is CommonJS. Node ESM only exposes its default export, so read the
+// classes from there. Named value imports work under bundlers but fail under plain node.
+const { BorshCoder, EventParser } = anchor;
 
 export const agentWalletCoder = new BorshCoder(agentWalletIdl as unknown as Idl);
 export const settlementCoder = new BorshCoder(settlementIdl as unknown as Idl);
@@ -121,7 +125,7 @@ export interface PaymentSettledEvent extends ReceiptAccount {
 }
 
 const big = (v: BN): bigint => BigInt(v.toString());
-const bn = (v: bigint): BN => new BN(v.toString());
+const bn = (v: bigint): BN => new anchor.BN(v.toString());
 const bytes = (v: number[]): Uint8Array => Uint8Array.from(v);
 const toBytes32 = (v: Uint8Array, name: string): number[] => {
   if (v.length !== 32) throw new Error(`${name} must be 32 bytes`);

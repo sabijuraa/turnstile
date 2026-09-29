@@ -49,23 +49,33 @@ export function summaryRoutes(s: Services): Hono<AppEnv> {
     );
     const t = totals.rows[0] ?? { amount: "0", count: "0", agents: "0" };
     const recent = await listReceipts(s.pool, network, owner, { sort: "newest" }, { limit: 8 });
-    const wallets = await s.directory.walletsOf(owner);
+    const wallets = new Set(await s.directory.walletsOf(owner));
+    const notices: string[] = [];
+    try {
+      for (const w of await s.directory.chainWalletsOf(owner)) wallets.add(w);
+    } catch (err) {
+      c.get("log").warn({ err }, "could not list agent wallets from chain for the summary");
+      notices.push(
+        "Solana did not answer, so failures show only for agents that already have receipts or labels. Refresh in a moment.",
+      );
+    }
     const failures = await s.pool.query<DeadLetterRow>(
       `SELECT id::text AS id, agent_wallet, nonce, error, attempts, created_at, updated_at,
               requirements->>'amount' AS amount, requirements->>'resource' AS resource
        FROM settlement_dead_letters
        WHERE status = 'pending' AND agent_wallet = ANY($1::text[])
        ORDER BY created_at DESC LIMIT 20`,
-      [wallets],
+      [[...wallets]],
     );
     const pendingCount = await s.pool.query<{ n: string }>(
       `SELECT count(*)::text AS n FROM settlement_dead_letters
        WHERE status = 'pending' AND agent_wallet = ANY($1::text[])`,
-      [wallets],
+      [[...wallets]],
     );
     const amount = BigInt(t.amount);
     return c.json({
       range: w.range,
+      notices,
       from: w.from.toISOString(),
       to: w.to.toISOString(),
       totalSpend: { amount: amount.toString(), displayAmount: formatUnits(amount) },

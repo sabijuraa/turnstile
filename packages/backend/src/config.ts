@@ -1,10 +1,24 @@
 import { existsSync, readFileSync } from "node:fs";
-import { NETWORKS, type NetworkName } from "@turnstile/shared";
+import { PublicKey } from "@solana/web3.js";
+import {
+  AGENT_WALLET_PROGRAM_ID,
+  NETWORKS,
+  type NetworkName,
+  SETTLEMENT_PROGRAM_ID,
+} from "@turnstile/shared";
 import { z } from "zod";
 
 const deploymentSchema = z.looseObject({
   network: z.string().optional(),
+  caip2: z.string().optional(),
+  programs: z.looseObject({ agentWallet: z.string(), settlement: z.string() }).optional(),
   mint: z.string().optional(),
+  mintDecimals: z.number().int().min(0).max(18).optional(),
+  facilitator: z.string().optional(),
+  demoOwner: z.string().optional(),
+  demoSession: z.string().optional(),
+  demoRecipient: z.string().optional(),
+  createdAt: z.string().optional(),
 });
 
 export type Deployment = z.infer<typeof deploymentSchema>;
@@ -48,6 +62,8 @@ export interface Config {
   challengeTtlSeconds: number;
   /** How long a console session lasts. */
   sessionTtlSeconds: number;
+  /** How long POST /v1/tx/confirm waits before it answers pending. */
+  confirmTimeoutMs: number;
 }
 
 export class ConfigError extends Error {
@@ -72,7 +88,25 @@ function loadDeployment(path: string): Deployment {
   if (!parsed.success) {
     throw new ConfigError(`DEPLOYMENT_FILE ${path} is not a deployment object. Redeploy.`);
   }
-  return parsed.data;
+  const d = parsed.data;
+  const programs = d.programs;
+  if (
+    programs &&
+    (programs.agentWallet !== AGENT_WALLET_PROGRAM_ID.toBase58() ||
+      programs.settlement !== SETTLEMENT_PROGRAM_ID.toBase58())
+  ) {
+    throw new ConfigError(
+      `DEPLOYMENT_FILE ${path} lists program ids that differ from the ones this build uses. Rebuild @turnstile/shared or redeploy.`,
+    );
+  }
+  if (d.mint !== undefined) {
+    try {
+      new PublicKey(d.mint);
+    } catch {
+      throw new ConfigError(`DEPLOYMENT_FILE ${path} has a mint that is not a Solana address.`);
+    }
+  }
+  return d;
 }
 
 /** Reads and validates the environment. Throws a ConfigError that names every bad variable. */
@@ -96,5 +130,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     logLevel: e.LOG_LEVEL,
     challengeTtlSeconds: 300,
     sessionTtlSeconds: 12 * 60 * 60,
+    confirmTimeoutMs: 30_000,
   };
 }

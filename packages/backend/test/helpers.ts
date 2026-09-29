@@ -29,19 +29,30 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
     logLevel: "silent",
     challengeTtlSeconds: 300,
     sessionTtlSeconds: 12 * 60 * 60,
+    confirmTimeoutMs: 30_000,
     ...overrides,
   };
 }
 
 /** A chain stand-in for tests that do not touch the programs. It knows no accounts. */
 export function fakeRpc(opts: { slotError?: Error } = {}): SolanaRpc {
-  return {
+  const offline = async (): Promise<never> => {
+    throw new Error("This test runs without a validator");
+  };
+  const rpc = {
     getSlot: async () => {
       if (opts.slotError) throw opts.slotError;
       return 1234;
     },
     getAccountInfo: async () => null,
+    getProgramAccounts: async () => [],
+    getMultipleAccountsInfo: async (keys: unknown[]) => keys.map(() => null),
+    getLatestBlockhash: offline,
+    getSignatureStatuses: offline,
+    getTransaction: offline,
   };
+  // The stand-in covers the overloads of Connection only as far as these tests call them.
+  return rpc as unknown as SolanaRpc;
 }
 
 export interface Harness {
@@ -77,7 +88,7 @@ export async function resetDb(pool: Pool): Promise<void> {
 }
 
 export async function harness(
-  opts: { now?: Date; rpc?: SolanaRpc; config?: Partial<Config> } = {},
+  opts: { now?: Date; realTime?: boolean; rpc?: SolanaRpc; config?: Partial<Config> } = {},
 ): Promise<Harness> {
   const pool = await testPool();
   const clock = { now: opts.now ?? new Date("2026-09-29T12:30:00.000Z") };
@@ -86,7 +97,7 @@ export async function harness(
     pool,
     rpc: opts.rpc ?? fakeRpc(),
     config: testConfig(opts.config),
-    clock: () => clock.now,
+    clock: () => (opts.realTime ? new Date() : clock.now),
     logger: createLogger("silent"),
     metrics,
   });

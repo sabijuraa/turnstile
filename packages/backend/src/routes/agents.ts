@@ -1,6 +1,16 @@
+import { PublicKey } from "@solana/web3.js";
 import { Hono } from "hono";
 import { z } from "zod";
 import { requireOwner } from "../auth/middleware.js";
+import {
+  detailAgent,
+  labelsFor,
+  listOwnerWalletAccounts,
+  loadOwnedWallet,
+  summarizeAgent,
+  vaultBalances,
+} from "../chain/agents.js";
+import { mintDecimals } from "../chain/amounts.js";
 import type { AppEnv, Services } from "../context.js";
 import { ApiError } from "../errors.js";
 import { readAddressParam, readJson } from "../validation.js";
@@ -15,6 +25,47 @@ const labelBody = z.object({
 
 export function agentRoutes(s: Services): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
+  const decimals = mintDecimals(s.config);
+
+  app.get("/", requireOwner(s, { apiKey: true }), async (c) => {
+    const owner = c.get("owner");
+    const wallets = await listOwnerWalletAccounts(s.rpc, new PublicKey(owner));
+    const balances = await vaultBalances(
+      s.rpc,
+      wallets.map((w) => w.address),
+    );
+    const labels = await labelsFor(s.pool, owner);
+    const now = s.clock();
+    return c.json({
+      agents: wallets.map((w, i) =>
+        summarizeAgent(
+          w,
+          balances[i] ?? 0n,
+          labels.get(w.address.toBase58()) ?? null,
+          now,
+          decimals,
+        ),
+      ),
+    });
+  });
+
+  app.get("/:address", requireOwner(s, { apiKey: true }), async (c) => {
+    const address = readAddressParam(c, "address");
+    const owner = c.get("owner");
+    const wallet = await loadOwnedWallet(s.rpc, address, owner);
+    const [balance] = await vaultBalances(s.rpc, [wallet.address]);
+    const labels = await labelsFor(s.pool, owner);
+    return c.json({
+      agent: await detailAgent(
+        s.pool,
+        wallet,
+        balance ?? 0n,
+        labels.get(address) ?? null,
+        s.clock(),
+        decimals,
+      ),
+    });
+  });
 
   app.put("/:address/label", requireOwner(s, { apiKey: false }), async (c) => {
     const address = readAddressParam(c, "address");

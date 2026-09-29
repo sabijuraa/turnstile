@@ -2,6 +2,7 @@ import { ed25519 } from "@noble/curves/ed25519.js";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { bytesToHex, randomNonce, resourceId } from "@turnstile/shared";
 import { createPool, migrate } from "@turnstile/shared/db";
+import { testDatabaseUrl } from "@turnstile/shared/testing";
 import bs58 from "bs58";
 import type { Pool } from "pg";
 import { createApp } from "../src/app.js";
@@ -10,9 +11,7 @@ import type { Config } from "../src/config.js";
 import { createLogger } from "../src/logger.js";
 import { createMetrics } from "../src/metrics.js";
 
-export const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL ??
-  "postgres://turnstile_backend_test:turnstile_backend_test@127.0.0.1:5432/turnstile_backend_test";
+export const TEST_DATABASE_URL = testDatabaseUrl("backend");
 
 export const WEB_ORIGIN = "http://localhost:3000";
 

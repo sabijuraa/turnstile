@@ -20,7 +20,7 @@ import { SourceError } from "./source.js";
 export interface SettlementDecoder {
   /** Every `PaymentSettled` event the settlement program itself emitted in these logs. */
   eventsFromLogs(logs: string[]): SettledReceipt[];
-  /** A receipt account, or null when the data is not a receipt. */
+  /** A receipt account owned by the settlement program. Null or a throw when the data is not a receipt. */
   receiptFromAccount(address: string, data: Uint8Array): SettledReceipt | null;
 }
 

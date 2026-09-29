@@ -1,5 +1,6 @@
 export { type AppDeps, createApp } from "./app.js";
 export { type Config, ConfigError, loadConfig } from "./config.js";
+export { createSettlementDecoder } from "./decoder.js";
 export {
   createIndexer,
   type Indexer,
@@ -13,6 +14,12 @@ export {
 } from "./indexer.js";
 export { createLogger, type Logger } from "./logger.js";
 export { createMetrics, type IndexerMetrics } from "./metrics.js";
+export {
+  createRpcSource,
+  type RpcSourceOptions,
+  type SettlementDecoder,
+  type SolanaRpc,
+} from "./rpc-source.js";
 export { createRunner, nextDelay, type Runner, type RunnerOptions } from "./runner.js";
 export {
   type ReceiptSource,

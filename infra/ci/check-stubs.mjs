@@ -3,9 +3,24 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
 const root = new URL("../..", import.meta.url).pathname;
-const scanDirs = ["programs", "packages", "apps"];
+const scanDirs = ["programs", "packages", "apps", "infra", ".github"];
 const skip = new Set(["node_modules", "target", "dist", ".next", "coverage", "idl"]);
-const exts = [".rs", ".ts", ".tsx", ".js", ".mjs", ".css"];
+const exts = [
+  ".rs",
+  ".ts",
+  ".tsx",
+  ".js",
+  ".mjs",
+  ".css",
+  ".sql",
+  ".sh",
+  ".yml",
+  ".yaml",
+  ".toml",
+  "Dockerfile",
+];
+// This file lists the markers, so it would always match itself.
+const self = new URL(import.meta.url).pathname;
 const markers = [
   /\bTODO\b/,
   /\bFIXME\b/,
@@ -24,7 +39,7 @@ function walk(dir) {
     const full = join(dir, name);
     const st = statSync(full);
     if (st.isDirectory()) walk(full);
-    else if (exts.some((e) => name.endsWith(e))) {
+    else if (full !== self && exts.some((e) => name.endsWith(e))) {
       const lines = readFileSync(full, "utf8").split("\n");
       lines.forEach((line, i) => {
         if (markers.some((m) => m.test(line)))

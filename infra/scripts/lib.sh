@@ -70,24 +70,32 @@ require_programs() {
     [[ -f "${REPO_ROOT}/target/deploy/${name}.so" ]] || missing+=("target/deploy/${name}.so")
   done
   if ((${#missing[@]} > 0)); then
-    die "missing ${missing[*]}. Build the programs first with 'anchor build' or 'cargo build-sbf'."
+    die "missing ${missing[*]}. Build the programs first with 'cargo build-sbf --manifest-path programs/<program>/Cargo.toml'."
   fi
+  check_program_sizes
 }
 
-# Builds the Solana programs into target/deploy with Anchor when it is
-# installed, and with cargo build-sbf otherwise.
+# Builds each Solana program on its own into target/deploy. A workspace wide
+# build (anchor build or cargo build-sbf at the root) unifies features and turns
+# on agent_wallet's cpi feature, which produces a broken agent_wallet.so.
 build_programs() {
-  if command -v anchor >/dev/null 2>&1 && [[ -f "${REPO_ROOT}/Anchor.toml" ]]; then
-    log "building programs with anchor build"
-    (cd "${REPO_ROOT}" && anchor build)
-  else
-    require_cmd cargo-build-sbf "Install the Agave ${AGAVE_VERSION} release so cargo build-sbf is on PATH."
-    local program
-    for program in agent-wallet settlement; do
-      [[ -f "${REPO_ROOT}/programs/${program}/Cargo.toml" ]] \
-        || die "programs/${program}/Cargo.toml is missing, so the program cannot be built."
-      log "building programs/${program} with cargo build-sbf"
-      (cd "${REPO_ROOT}" && cargo build-sbf --manifest-path "programs/${program}/Cargo.toml" --sbf-out-dir target/deploy)
-    done
-  fi
+  require_cmd cargo-build-sbf "Install the Agave ${AGAVE_VERSION} release so cargo build-sbf is on PATH."
+  local program
+  for program in agent-wallet settlement; do
+    [[ -f "${REPO_ROOT}/programs/${program}/Cargo.toml" ]] \
+      || die "programs/${program}/Cargo.toml is missing, so the program cannot be built."
+    log "building programs/${program} with cargo build-sbf"
+    (cd "${REPO_ROOT}" && cargo build-sbf --manifest-path "programs/${program}/Cargo.toml" --sbf-out-dir target/deploy)
+  done
+  check_program_sizes
+}
+
+# A program built with the wrong features comes out as a stub of a few hundred
+# bytes that the loader rejects. Catch it here instead of at genesis.
+check_program_sizes() {
+  local name size
+  for name in agent_wallet settlement; do
+    size="$(stat -c %s "${REPO_ROOT}/target/deploy/${name}.so")"
+    ((size > 16384)) || die "target/deploy/${name}.so is only ${size} bytes, so the build is broken. Rebuild it with cargo build-sbf --manifest-path programs/<program>/Cargo.toml."
+  done
 }

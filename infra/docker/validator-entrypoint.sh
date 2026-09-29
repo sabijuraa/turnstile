@@ -28,7 +28,7 @@ for name in agent_wallet settlement; do
   if [[ -f "${so}" ]]; then
     present+=("${so}")
   elif [[ "${REQUIRE_PROGRAMS}" == "1" ]]; then
-    echo "validator: ${so} is missing. Build the programs with 'anchor build' or 'cargo build-sbf' so target/deploy holds agent_wallet.so and settlement.so." >&2
+    echo "validator: ${so} is missing. Build each program with 'cargo build-sbf --manifest-path programs/<program>/Cargo.toml' so target/deploy holds agent_wallet.so and settlement.so." >&2
     exit 1
   else
     echo "validator: ${so} is missing. Starting without it because REQUIRE_PROGRAMS=${REQUIRE_PROGRAMS}." >&2

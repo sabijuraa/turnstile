@@ -4,7 +4,7 @@
   "request": {
     "resource": "http://127.0.0.1:3581/v1/summarize",
     "price": "0.005",
-    "payTo": "3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m",
+    "payTo": "4F7ro2NGHWvMxaQKMKVchZy3cWU1cD2C1rZztAbxzkEq",
     "description": "Summarize a text",
     "mimeType": "application/json"
   },
@@ -13,19 +13,19 @@
     "scheme": "turnstile-policy",
     "network": "solana:localnet",
     "amount": "5000",
-    "asset": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
-    "payTo": "3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m",
+    "asset": "5XFeDTQutPnAauoehcKFZF4TeMaiL9rA1omk2UMB6m7G",
+    "payTo": "4F7ro2NGHWvMxaQKMKVchZy3cWU1cD2C1rZztAbxzkEq",
     "maxTimeoutSeconds": 60,
     "resource": "http://127.0.0.1:3581/v1/summarize",
     "description": "Summarize a text",
     "mimeType": "application/json",
     "extra": {
       "resourceId": "e01cf8c98a0124456830d5fd871d81fce39d238e7d6e9d9c8a39262feb10cd98",
-      "nonce": "163ab68e767b449f1b0582719fdb305ee1045ca3b1076ebf08f01bd17aec87c9",
+      "nonce": "df377fc9743c0a7eee496747df78db2fc9cdbcc8d828ce5e685cb679aa738b97",
       "settlementProgram": "6FrY43zorjSv8wCuarPL3z8ZnyBTyyC86xRjBqgu1K9z",
       "agentWalletProgram": "7onzUVc1HGc9oBDUspBdP8dz1QW6uXrSdBn4NH6aiLb",
       "facilitator": "http://127.0.0.1:3580",
-      "expiresAt": "1790701678",
+      "expiresAt": "1790768211",
       "displayAmount": "0.005 tUSDC"
     }
   }

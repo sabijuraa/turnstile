@@ -1,13 +1,13 @@
 {
-  "capturedAt": "2026-09-29T17:07:02.266Z",
+  "capturedAt": "2026-09-30T11:35:54.739Z",
   "rpcUrl": "http://127.0.0.1:48899",
-  "genesisHash": "DgpALz8vAF99151vrRTyJShU7Y2QmLJsrW7yXj5Si2Yr",
+  "genesisHash": "2jgvqcFofPy8AREQW2s3hd63oKBTjxVoFTHGohmzEYjC",
   "facilitatorUrl": "http://127.0.0.1:3580",
   "resourceServer": "http://127.0.0.1:3581",
-  "agentWallet": "Cxmd43oSShySUukXCSPLSQro59eWCAUPtpczbVc43uom",
-  "sessionKey": "61urDfhnQNrDdvLiS2GcSAWmEHJvdoybVeczKz3dc5Jo",
-  "setupTransaction": "5mvKhCiYyx1ozJZ5pnkXvvW1M8GTrpWJLTbTg8pR65UwJKapfyfbjUXVDhfe1nUjRmyzUQzVeB9XB1HZDv5C3a8A",
-  "paymentTransaction": "3rs6p43wxUAnL26TLXN88Hp8PfDMtocECyF2D8QJmanumbhYoC5bFFG1Qh4ZtGQZCeqP9AuMvoz7muamFKUvSQn5",
-  "receipt": "Fqe1zJZVsLHyySVy4Da8U4aH6XbRoLFczzoAvgwZGdRd",
-  "paidRequestMs": 3243
+  "agentWallet": "8zzPesK3gwLhJKeA8rxTYEfmP3eUxhbcBVdxEFQweBXS",
+  "sessionKey": "4asLnPoBJDKekDRyiGhrZNMx8pTPAJ51WSk5WEG8eaTz",
+  "setupTransaction": "7UfMFe7Lr31eoGiTth1ruwGHFBqR9bqoYW87BqGUbivbVz5cwBJS9YJfWrAGXc9xcW8ZKwFy6aKn1kdk9JF4aqF",
+  "paymentTransaction": "38WfThMUpH5dXnaPTc2BFES6ShxNyY9Gy6RUJyTpLYaMSB7GXLhM4hLJv23T2X8Zss5S72mqm978KcJ8trQ9h8Ah",
+  "receipt": "8pCifTALuYB24cwq4o8BQ3p4mzqzxsk4aKJ6dSGrwzuh",
+  "paidRequestMs": 2279
 }

@@ -9,19 +9,19 @@
         "scheme": "turnstile-policy",
         "network": "solana:localnet",
         "amount": "20000",
-        "asset": "2SiLsS6vGKeYVJnm1N9woCqeRphQyLE8MoBmgo277egr",
-        "payTo": "3yJ7yMk4P9QE96aEfa85VSpUVdvEL9eycva3RfHE3x8m",
+        "asset": "5XFeDTQutPnAauoehcKFZF4TeMaiL9rA1omk2UMB6m7G",
+        "payTo": "4F7ro2NGHWvMxaQKMKVchZy3cWU1cD2C1rZztAbxzkEq",
         "maxTimeoutSeconds": 60,
         "resource": "http://127.0.0.1:3581/v1/report",
         "description": "Write a long report",
         "mimeType": "application/json",
         "extra": {
           "resourceId": "4d81e8519e17dbc69b66da7ce4070370a8cd00f5ab793e5abe3d7ebc2e9f94a5",
-          "nonce": "39c8e74fb3221670aabe3a31868187bf7185f17dece1f114818a54a640857298",
+          "nonce": "3951b94a6af64f1c18b3abade76dd5d5a94594943dad730bc8280f10020b5f0e",
           "settlementProgram": "6FrY43zorjSv8wCuarPL3z8ZnyBTyyC86xRjBqgu1K9z",
           "agentWalletProgram": "7onzUVc1HGc9oBDUspBdP8dz1QW6uXrSdBn4NH6aiLb",
           "facilitator": "http://127.0.0.1:3580",
-          "expiresAt": "1790701682",
+          "expiresAt": "1790768214",
           "displayAmount": "0.02 tUSDC"
         }
       }

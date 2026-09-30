@@ -270,6 +270,7 @@ async function main(): Promise<void> {
     slot: receiptAccount.slot,
     unixTimestamp: receiptAccount.unixTimestamp,
     feePayer: receiptAccount.feePayer.toBase58(),
+    expiresAt: receiptAccount.expiresAt,
   });
 
   // 3. The same payment settled again. The facilitator answers with the first receipt.

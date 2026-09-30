@@ -1,0 +1,5 @@
+{
+  "command": "node packages/facilitator/dist/reclaim-main.js --dry-run",
+  "capturedAt": "2026-09-30T11:37:00Z",
+  "output": "found 1, past retention 0, retained 1 (next one closable at unix 1791373012)\ndry run, nothing sent\n"
+}

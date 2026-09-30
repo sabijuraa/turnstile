@@ -143,8 +143,9 @@ jobs:
         run: pnpm typecheck
       - name: Migrate
         run: pnpm --filter @turnstile/shared migrate
+      # The e2e suite needs a running stack, so the e2e job runs it.
       - name: Test
-        run: pnpm test
+        run: pnpm -r --filter '!@turnstile/e2e' run test
 
   docker:
     name: docker (${{ matrix.image.name }})

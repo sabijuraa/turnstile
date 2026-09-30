@@ -2,7 +2,12 @@ import { PublicKey } from "@solana/web3.js";
 import { hexToBytes, receiptAddress } from "@turnstile/shared";
 import type { Logger } from "./logger.js";
 import type { IndexerMetrics, TickOutcome } from "./metrics.js";
-import type { ReceiptSource, SettledReceipt, SignatureInfo } from "./source.js";
+import {
+  type ReceiptSource,
+  type SettledReceipt,
+  type SignatureInfo,
+  UntilSignatureUnavailableError,
+} from "./source.js";
 import {
   type Checkpoint,
   CheckpointConflictError,
@@ -13,7 +18,7 @@ import {
 export type { TickOutcome };
 
 /** How a tick found where to start. */
-export type ResumeMode = "signature" | "slot" | "start";
+export type ResumeMode = "signature" | "slot" | "start" | "backfill";
 
 export type TickErrorKind = "rpc" | "database" | "integrity" | "conflict";
 
@@ -31,7 +36,15 @@ export interface TickResult {
   receiptsSeen: number;
   /** Receipts that were new to Postgres. */
   receiptsInserted: number;
-  /** Signatures found past the checkpoint and left for the next tick. */
+  /**
+   * Set when the node had purged part of the history this tick needed. The receipts in it were
+   * restored from the receipt accounts still on chain.
+   */
+  gap?: { fromSlot: number; toSlot: number; restored: number };
+  /**
+   * Signatures found past the checkpoint and left for the next tick. After a backfill it is 1,
+   * since the walk from the new checkpoint still has to run.
+   */
   remaining: number;
   checkpoint: { lastSignature: string | null; lastSlot: number } | null;
   tipSlot: number | null;
@@ -109,7 +122,13 @@ async function rpc<T>(what: string, fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
   } catch (err) {
-    if (err instanceof RpcStageError || err instanceof IntegrityError) throw err;
+    if (
+      err instanceof RpcStageError ||
+      err instanceof IntegrityError ||
+      err instanceof UntilSignatureUnavailableError
+    ) {
+      throw err;
+    }
     const msg = err instanceof Error ? err.message : String(err);
     throw new RpcStageError(
       `${what} failed (${msg}). Check SOLANA_RPC_URL and that the node is up.`,
@@ -138,7 +157,7 @@ export function createIndexer(deps: IndexerDeps): Indexer {
   /** The last signature this process committed. The node just listed it, so it is known. */
   let committedSignature: string | null = null;
 
-  function checkReceipt(signature: string, slot: number, r: SettledReceipt): void {
+  function checkReceipt(signature: string, slot: number | null, r: SettledReceipt): void {
     let expected: PublicKey;
     try {
       [expected] = receiptAddress(
@@ -157,7 +176,7 @@ export function createIndexer(deps: IndexerDeps): Indexer {
         `PaymentSettled in ${signature} names receipt ${r.receiptAddress}, but the receipt PDA for agent wallet ${r.agentWallet} and nonce ${r.nonce} is ${expected.toBase58()}. The batch was not written. Check that the indexer points at the right settlement program.`,
       );
     }
-    if (r.slot !== BigInt(slot)) {
+    if (slot !== null && r.slot !== BigInt(slot)) {
       throw new IntegrityError(
         `PaymentSettled in ${signature} says slot ${r.slot} but the transaction landed in slot ${slot}. The batch was not written.`,
       );
@@ -165,7 +184,7 @@ export function createIndexer(deps: IndexerDeps): Indexer {
   }
 
   function crossCheck(
-    signature: string,
+    signature: string | null,
     event: SettledReceipt,
     account: SettledReceipt | null,
   ): boolean {
@@ -283,6 +302,67 @@ export function createIndexer(deps: IndexerDeps): Indexer {
     return { cp: fresh, reset: true };
   }
 
+  /**
+   * The node purged history the stream still needs. Every receipt account still on chain from
+   * the checkpoint slot on is written, and the checkpoint moves to the first slot the node
+   * still serves. Rows get their signature later if the walk sees their transaction.
+   */
+  async function backfill(
+    started: number,
+    cp: Checkpoint,
+    available: number,
+    genesis: string,
+    tip: number,
+    reset: boolean,
+  ): Promise<TickResult> {
+    const live = await rpc("getProgramAccounts", () => source.liveReceipts());
+    const restored = live.filter((r) => r.slot >= BigInt(cp.lastSlot));
+    for (const r of restored) checkReceipt(`receipt account ${r.receiptAddress}`, null, r);
+    restored.sort((a, b) => (a.slot < b.slot ? -1 : a.slot > b.slot ? 1 : 0));
+    const next = { lastSignature: null, lastSlot: available };
+    const { inserted } = await store.commit({
+      stream,
+      expectedSignature: cp.lastSignature,
+      expectedSlot: cp.lastSlot,
+      genesisHash: genesis,
+      network: deps.network,
+      receipts: restored.map((r) => ({ ...r, signature: null })),
+      next,
+    });
+    committedSignature = null;
+    const inGap = restored.filter((r) => r.slot < BigInt(available)).length;
+    metrics?.historyGaps.inc({ stream });
+    metrics?.historyGapSlots.inc({ stream }, available - cp.lastSlot);
+    metrics?.receiptsBackfilled.inc({ stream }, inserted);
+    metrics?.receiptsIndexed.inc({ stream }, inserted);
+    log.error(
+      {
+        fromSlot: cp.lastSlot,
+        toSlot: available,
+        liveReceipts: live.length,
+        restoredInGap: inGap,
+        inserted,
+      },
+      "HISTORY GAP. The RPC node no longer serves transactions between these slots, so their signatures cannot be listed. Restored every receipt account still on chain from the checkpoint slot on. Receipts in the gap that were already closed with close_receipt cannot be recovered and their transaction signatures stay unknown. Run the validator with a larger --limit-ledger-size or point SOLANA_RPC_URL at a node with full history to avoid this.",
+    );
+    return {
+      stream,
+      outcome: "progress",
+      resumedBy: "backfill",
+      reset,
+      processed: 0,
+      skippedFailed: 0,
+      receiptsSeen: restored.length,
+      receiptsInserted: inserted,
+      remaining: 1,
+      checkpoint: next,
+      tipSlot: tip,
+      lagSlots: Math.max(0, tip - available),
+      durationMs: clock() - started,
+      gap: { fromSlot: cp.lastSlot, toSlot: available, restored: inserted },
+    };
+  }
+
   async function run(started: number): Promise<TickResult> {
     const genesis = await rpc("getGenesisHash", () => source.genesisHash());
     const tip = await rpc("getSlot", () => source.tipSlot());
@@ -305,7 +385,30 @@ export function createIndexer(deps: IndexerDeps): Indexer {
       }
     }
 
-    const pending = await collectPending(cp, mode);
+    let pending: SignatureInfo[];
+    try {
+      pending = await collectPending(cp, mode);
+    } catch (err) {
+      if (!(err instanceof UntilSignatureUnavailableError) || mode !== "signature") throw err;
+      mode = "slot";
+      committedSignature = null;
+      metrics?.slotResumes.inc({ stream });
+      log.warn(
+        { signature: cp.lastSignature, slot: cp.lastSlot, error: err.message },
+        "the RPC node refused to page back to the checkpoint signature, most likely because it purged that part of the ledger. Resuming from the checkpoint slot instead.",
+      );
+      pending = [];
+    }
+    if (mode !== "signature") {
+      // Without a signature to stop at, make sure the node still holds everything from the
+      // checkpoint slot on. If it purged part of it, restore that part from the live receipt
+      // accounts before walking forward.
+      const available = await rpc("getMinimumLedgerSlot", () => source.historyStartSlot());
+      if (available > cp.lastSlot) {
+        return backfill(started, cp, available, genesis, tip, reset);
+      }
+      if (pending.length === 0) pending = await collectPending(cp, mode);
+    }
     const batch = pending.slice(0, deps.batchSize);
     const base = {
       stream,
@@ -353,6 +456,7 @@ export function createIndexer(deps: IndexerDeps): Indexer {
     const { inserted } = await store.commit({
       stream,
       expectedSignature: cp.lastSignature,
+      expectedSlot: cp.lastSlot,
       genesisHash: genesis,
       network: deps.network,
       receipts,

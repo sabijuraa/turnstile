@@ -12,24 +12,30 @@ export interface Checkpoint {
   updatedAt: Date;
 }
 
-/** A receipt ready to insert, with the transaction that produced it. */
+/**
+ * A receipt ready to insert, with the transaction that produced it. The signature is null for a
+ * receipt restored from its account after the node purged the transaction.
+ */
 export interface ReceiptRecord extends SettledReceipt {
-  signature: string;
+  signature: string | null;
 }
 
 export interface CommitInput {
   stream: string;
-  /** The checkpoint signature the batch was computed from. The commit refuses if it moved. */
+  /** The checkpoint the batch was computed from. The commit refuses if it moved. */
   expectedSignature: string | null;
+  expectedSlot: number;
   genesisHash: string;
   network: string;
   receipts: ReceiptRecord[];
-  next: { lastSignature: string; lastSlot: number };
+  next: { lastSignature: string | null; lastSlot: number };
 }
 
 export interface CommitResult {
   /** Receipts actually inserted. Rows that already existed are skipped and not counted. */
   inserted: number;
+  /** Rows restored earlier without a signature that now got theirs. */
+  signaturesFilled: number;
 }
 
 export interface ResetResult {
@@ -86,7 +92,9 @@ function toCheckpoint(r: CheckpointRow): Checkpoint {
 const SELECT_CHECKPOINT =
   "SELECT stream, last_signature, last_slot, genesis_hash, updated_at FROM indexer_checkpoints WHERE stream = $1";
 
-/** 17 columns per row keeps a batch of 1000 receipts well under the Postgres parameter limit. */
+/**
+ * An existing row is left alone, except that a row restored without a signature gets one.
+ * 17 columns per row keeps a batch of 1000 receipts well under the Postgres parameter limit. */
 const INSERT_RECEIPTS = `
 INSERT INTO receipts (receipt_address, signature, slot, block_time, agent_wallet, owner,
   session_key, recipient, recipient_token, mint, amount, resource_id, resource, nonce,
@@ -101,7 +109,9 @@ FROM unnest($1::text[], $2::text[], $3::bigint[], $4::bigint[], $5::text[], $6::
     recipient, recipient_token, mint, amount, resource_id, nonce, fee_payer, ord)
 LEFT JOIN resources res ON res.resource_id = r.resource_id
 ORDER BY r.ord
-ON CONFLICT (receipt_address) DO NOTHING`;
+ON CONFLICT (receipt_address) DO UPDATE SET signature = EXCLUDED.signature
+  WHERE receipts.signature IS NULL AND EXCLUDED.signature IS NOT NULL
+RETURNING (xmax = 0) AS inserted`;
 
 async function inTransaction<T>(db: Queryable, fn: (client: PoolClient) => Promise<T>): Promise<T> {
   const client = await db.connect();
@@ -187,6 +197,7 @@ export function createCheckpointStore(db: Queryable): CheckpointStore {
         }
         if (
           current.last_signature !== input.expectedSignature ||
+          Number(current.last_slot) !== input.expectedSlot ||
           current.genesis_hash !== input.genesisHash
         ) {
           throw new CheckpointConflictError(
@@ -194,9 +205,16 @@ export function createCheckpointStore(db: Queryable): CheckpointStore {
           );
         }
         let inserted = 0;
-        if (input.receipts.length > 0) {
-          const rs = input.receipts;
-          const res = await client.query(INSERT_RECEIPTS, [
+        let signaturesFilled = 0;
+        // One statement may not touch a row twice, so keep the first record per address.
+        const seen = new Set<string>();
+        const rs = input.receipts.filter((r) => {
+          if (seen.has(r.receiptAddress)) return false;
+          seen.add(r.receiptAddress);
+          return true;
+        });
+        if (rs.length > 0) {
+          const res = await client.query<{ inserted: boolean }>(INSERT_RECEIPTS, [
             rs.map((r) => r.receiptAddress),
             rs.map((r) => r.signature),
             rs.map((r) => r.slot.toString()),
@@ -214,14 +232,15 @@ export function createCheckpointStore(db: Queryable): CheckpointStore {
             input.network,
             input.genesisHash,
           ]);
-          inserted = res.rowCount ?? 0;
+          inserted = res.rows.filter((r) => r.inserted).length;
+          signaturesFilled = res.rows.length - inserted;
         }
         await client.query(
           `UPDATE indexer_checkpoints SET last_signature = $2, last_slot = $3, updated_at = now()
            WHERE stream = $1`,
           [input.stream, input.next.lastSignature, input.next.lastSlot],
         );
-        return { inserted };
+        return { inserted, signaturesFilled };
       });
     },
   };

@@ -8,9 +8,10 @@ import {
   type VersionedTransactionResponse,
 } from "@solana/web3.js";
 import { SETTLEMENT_PROGRAM_ID } from "@turnstile/shared";
+import bs58 from "bs58";
 import { describe, expect, it } from "vitest";
 import { createRpcSource, type SettlementDecoder, type SolanaRpc } from "../src/rpc-source.js";
-import type { SettledReceipt } from "../src/source.js";
+import { type SettledReceipt, UntilSignatureUnavailableError } from "../src/source.js";
 import { makeReceipt } from "./fake-source.js";
 
 const program = SETTLEMENT_PROGRAM_ID;
@@ -18,6 +19,7 @@ const program = SETTLEMENT_PROGRAM_ID;
 /** Decoder stand-in. Logs of the form "event <address>" and account data holding the address. */
 function testDecoder(known: Map<string, SettledReceipt>): SettlementDecoder {
   return {
+    receiptDiscriminator: Uint8Array.from([1, 2, 3, 4, 5, 6, 7, 8]),
     eventsFromLogs: (logs) =>
       logs.flatMap((l) => {
         const m = /^event (\w+)$/.exec(l);
@@ -66,6 +68,18 @@ function fakeRpc(over: Partial<SolanaRpc>): { rpc: SolanaRpc; calls: Calls } {
     getMultipleAccountsInfo: record(
       "getMultipleAccountsInfo",
       over.getMultipleAccountsInfo ?? missing("getMultipleAccountsInfo"),
+    ),
+    getProgramAccounts: record(
+      "getProgramAccounts",
+      over.getProgramAccounts ?? missing("getProgramAccounts"),
+    ),
+    getMinimumLedgerSlot: record(
+      "getMinimumLedgerSlot",
+      over.getMinimumLedgerSlot ?? missing("getMinimumLedgerSlot"),
+    ),
+    getFirstAvailableBlock: record(
+      "getFirstAvailableBlock",
+      over.getFirstAvailableBlock ?? missing("getFirstAvailableBlock"),
     ),
   } as SolanaRpc;
   return { rpc, calls };
@@ -224,5 +238,68 @@ describe("rpc source", () => {
     const src = createRpcSource({ rpc, settlementProgram: program, decoder: testDecoder(known) });
     const tx = await src.transaction("sig");
     expect(tx?.receipts).toEqual([r1, r2]);
+  });
+
+  it("turns a refused until into UntilSignatureUnavailableError and passes other errors on", async () => {
+    let message = "failed to get signatures for address: Transaction 5xyz not found";
+    const { rpc } = fakeRpc({
+      getSignaturesForAddress: (async () => {
+        throw new Error(message);
+      }) as SolanaRpc["getSignaturesForAddress"],
+    });
+    const src = createRpcSource({
+      rpc,
+      settlementProgram: program,
+      decoder: testDecoder(new Map()),
+    });
+    await expect(src.signatures({ until: "5xyz", limit: 10 })).rejects.toBeInstanceOf(
+      UntilSignatureUnavailableError,
+    );
+    // Without until the same text is an ordinary RPC failure.
+    await expect(src.signatures({ limit: 10 })).rejects.not.toBeInstanceOf(
+      UntilSignatureUnavailableError,
+    );
+    message = "fetch failed";
+    await expect(src.signatures({ until: "5xyz", limit: 10 })).rejects.toThrow("fetch failed");
+    await expect(src.signatures({ until: "5xyz", limit: 10 })).rejects.not.toBeInstanceOf(
+      UntilSignatureUnavailableError,
+    );
+  });
+
+  it("reports history from the later of the minimum ledger slot and the first block", async () => {
+    const { rpc } = fakeRpc({
+      getMinimumLedgerSlot: (async () => 700) as SolanaRpc["getMinimumLedgerSlot"],
+      getFirstAvailableBlock: (async () => 712) as SolanaRpc["getFirstAvailableBlock"],
+    });
+    const src = createRpcSource({
+      rpc,
+      settlementProgram: program,
+      decoder: testDecoder(new Map()),
+    });
+    expect(await src.historyStartSlot()).toBe(712);
+  });
+
+  it("lists live receipts with a discriminator filter", async () => {
+    const r1 = makeReceipt(3);
+    const r2 = makeReceipt(4);
+    const known = new Map([r1, r2].map((r) => [r.receiptAddress, r]));
+    const { rpc, calls } = fakeRpc({
+      getProgramAccounts: (async () =>
+        [r1, r2].map((r) => ({
+          pubkey: new PublicKey(r.receiptAddress),
+          account: account(program, r.receiptAddress),
+        }))) as unknown as SolanaRpc["getProgramAccounts"],
+    });
+    const src = createRpcSource({ rpc, settlementProgram: program, decoder: testDecoder(known) });
+    expect(await src.liveReceipts()).toEqual([r1, r2]);
+    expect(calls.getProgramAccounts?.[0]).toEqual([
+      program,
+      {
+        commitment: "confirmed",
+        filters: [
+          { memcmp: { offset: 0, bytes: bs58.encode(Uint8Array.from([1, 2, 3, 4, 5, 6, 7, 8])) } },
+        ],
+      },
+    ]);
   });
 });

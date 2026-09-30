@@ -14,12 +14,17 @@ import type {
   SignatureInfo,
   SignaturePage,
 } from "./source.js";
-import { SourceError } from "./source.js";
+import { SourceError, UntilSignatureUnavailableError } from "./source.js";
+
+/** How Agave answers `getSignaturesForAddress` when it no longer holds the `until` signature. */
+const UNTIL_MISSING = /not found|TransactionHistoryNotAvailable|history is not available/i;
 
 /** Turns program output into receipts. Backed by the shared settlement client. */
 export interface SettlementDecoder {
   /** Every `PaymentSettled` event the settlement program itself emitted in these logs. */
   eventsFromLogs(logs: string[]): SettledReceipt[];
+  /** First 8 bytes of every Receipt account. Filters `getProgramAccounts` to receipts. */
+  receiptDiscriminator: Uint8Array;
   /** A receipt account owned by the settlement program. Null or a throw when the data is not a receipt. */
   receiptFromAccount(address: string, data: Uint8Array): SettledReceipt | null;
 }
@@ -33,6 +38,9 @@ export type SolanaRpc = Pick<
   | "getSignatureStatuses"
   | "getTransaction"
   | "getMultipleAccountsInfo"
+  | "getProgramAccounts"
+  | "getMinimumLedgerSlot"
+  | "getFirstAvailableBlock"
 >;
 
 export interface RpcSourceOptions {
@@ -113,15 +121,27 @@ export function createRpcSource(opts: RpcSourceOptions): ReceiptSource {
     },
 
     async signatures(page: SignaturePage): Promise<SignatureInfo[]> {
-      const list = await rpc.getSignaturesForAddress(
-        settlementProgram,
-        {
-          limit: page.limit,
-          ...(page.until ? { until: page.until } : {}),
-          ...(page.before ? { before: page.before } : {}),
-        },
-        commitment,
-      );
+      let list: Awaited<ReturnType<SolanaRpc["getSignaturesForAddress"]>>;
+      try {
+        list = await rpc.getSignaturesForAddress(
+          settlementProgram,
+          {
+            limit: page.limit,
+            ...(page.until ? { until: page.until } : {}),
+            ...(page.before ? { before: page.before } : {}),
+          },
+          commitment,
+        );
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (page.until && UNTIL_MISSING.test(msg)) {
+          throw new UntilSignatureUnavailableError(
+            `The node no longer holds signature ${page.until} (${msg}).`,
+            { cause: err },
+          );
+        }
+        throw err;
+      }
       return list.map((s) => ({ signature: s.signature, slot: s.slot, failed: s.err !== null }));
     },
 
@@ -164,5 +184,27 @@ export function createRpcSource(opts: RpcSourceOptions): ReceiptSource {
     },
 
     receiptAccounts,
+
+    async historyStartSlot() {
+      // The node can list signatures only from the first block it still stores.
+      const [minimum, firstBlock] = await Promise.all([
+        rpc.getMinimumLedgerSlot(),
+        rpc.getFirstAvailableBlock(),
+      ]);
+      return Math.max(minimum, firstBlock);
+    },
+
+    async liveReceipts() {
+      const accounts = await rpc.getProgramAccounts(settlementProgram, {
+        commitment,
+        filters: [{ memcmp: { offset: 0, bytes: bs58.encode(decoder.receiptDiscriminator) } }],
+      });
+      const out: SettledReceipt[] = [];
+      for (const { pubkey, account } of accounts) {
+        const r = decoder.receiptFromAccount(pubkey.toBase58(), account.data);
+        if (r) out.push(r);
+      }
+      return out;
+    },
   };
 }

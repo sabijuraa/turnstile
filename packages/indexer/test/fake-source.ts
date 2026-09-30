@@ -9,6 +9,7 @@ import type {
   SignatureInfo,
   SignaturePage,
 } from "../src/source.js";
+import { UntilSignatureUnavailableError } from "../src/source.js";
 
 export interface FakeTx {
   signature: string;
@@ -62,6 +63,17 @@ export class FakeLedger implements ReceiptSource {
   forgotten = new Set<string>();
   /** Signatures whose transaction the node does not return yet. */
   unavailable = new Set<string>();
+  /** Lowest slot the node still serves. Raised by `purgeBefore`. */
+  historyStart = 0;
+  /** Receipt accounts closed with close_receipt. */
+  closed = new Set<string>();
+  /** Signatures the status cache still reports after the ledger purged them. */
+  statusCache = new Set<string>();
+  /**
+   * What the node does with an `until` it no longer holds. Agave throws. Some nodes ignore it
+   * and page on to the oldest signature they have.
+   */
+  unknownUntil: "throw" | "ignore" = "throw";
   /** Receipt account data that differs from the event, keyed by receipt address. */
   accountOverrides = new Map<string, SettledReceipt | null>();
   calls: Record<Method, number> = {
@@ -71,6 +83,8 @@ export class FakeLedger implements ReceiptSource {
     signatureKnown: 0,
     transaction: 0,
     receiptAccounts: 0,
+    historyStartSlot: 0,
+    liveReceipts: 0,
   };
   fetched: string[] = [];
   private failures = new Map<Method, { remaining: number; after: number; error: Error }>();
@@ -94,6 +108,12 @@ export class FakeLedger implements ReceiptSource {
 
   addMany(n: number, opts: { receipts?: number } = {}): FakeTx[] {
     return Array.from({ length: n }, () => this.add(opts));
+  }
+
+  /** Drops every transaction older than `slot` from the node, as ledger cleanup does. */
+  purgeBefore(slot: number): void {
+    for (const t of this.txs) if (t.slot < slot) this.forgotten.add(t.signature);
+    this.historyStart = Math.max(this.historyStart, slot);
   }
 
   allReceipts(): SettledReceipt[] {
@@ -138,6 +158,13 @@ export class FakeLedger implements ReceiptSource {
       const i = newestFirst.findIndex((t) => t.signature === page.before);
       start = i === -1 ? newestFirst.length : i + 1;
     }
+    if (
+      page.until &&
+      this.unknownUntil === "throw" &&
+      !newestFirst.some((t) => t.signature === page.until)
+    ) {
+      throw new UntilSignatureUnavailableError(`Transaction ${page.until} not found`);
+    }
     const out: SignatureInfo[] = [];
     for (const t of newestFirst.slice(start)) {
       if (page.until && t.signature === page.until) break;
@@ -149,13 +176,26 @@ export class FakeLedger implements ReceiptSource {
 
   async signatureKnown(signature: string): Promise<boolean> {
     this.enter("signatureKnown");
+    if (this.statusCache.has(signature)) return true;
     return this.txs.some((t) => t.signature === signature) && !this.forgotten.has(signature);
+  }
+
+  async historyStartSlot(): Promise<number> {
+    this.enter("historyStartSlot");
+    return this.historyStart;
+  }
+
+  async liveReceipts(): Promise<SettledReceipt[]> {
+    this.enter("liveReceipts");
+    return this.allReceipts()
+      .filter((r) => !this.closed.has(r.receiptAddress))
+      .map((r) => ({ ...r }));
   }
 
   async transaction(signature: string): Promise<SettlementTransaction | null> {
     this.enter("transaction");
     this.fetched.push(signature);
-    if (this.unavailable.has(signature)) return null;
+    if (this.unavailable.has(signature) || this.forgotten.has(signature)) return null;
     const tx = this.txs.find((t) => t.signature === signature);
     if (!tx || tx.failed) return null;
     return { signature, slot: tx.slot, receipts: tx.receipts.map((r) => ({ ...r })) };

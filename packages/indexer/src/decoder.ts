@@ -4,6 +4,7 @@ import {
   decodePaymentSettledEvents,
   decodeReceipt,
   type ReceiptAccount,
+  settlementCoder,
 } from "@turnstile/shared/programs";
 import type { SettlementDecoder } from "./rpc-source.js";
 import type { SettledReceipt } from "./source.js";
@@ -29,6 +30,7 @@ function toSettled(address: string, r: ReceiptAccount): SettledReceipt {
 /** Decodes settlement events and receipt accounts with the shared program client. */
 export function createSettlementDecoder(settlementProgram: PublicKey): SettlementDecoder {
   return {
+    receiptDiscriminator: settlementCoder.accounts.accountDiscriminator("Receipt"),
     eventsFromLogs(logs) {
       return decodePaymentSettledEvents(logs, settlementProgram).map((e) =>
         toSettled(e.receipt.toBase58(), e),

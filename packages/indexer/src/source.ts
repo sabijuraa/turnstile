@@ -68,9 +68,24 @@ export interface ReceiptSource {
    * no receipt account.
    */
   receiptAccounts(addresses: string[]): Promise<(SettledReceipt | null)[]>;
+  /**
+   * Lowest slot the node still serves transaction history for. Anything older was purged, so
+   * `signatures` can no longer list it.
+   */
+  historyStartSlot(): Promise<number>;
+  /** Every receipt account the settlement program still holds. Used to fill a history gap. */
+  liveReceipts(): Promise<SettledReceipt[]>;
 }
 
 /** An RPC call failed. The tick stops without writing anything and the runner backs off. */
 export class SourceError extends Error {
   override name = "SourceError";
+}
+
+/**
+ * The node refused a `signatures` call because it no longer holds the `until` signature, for
+ * example after it purged old ledger data. The indexer then resumes by slot.
+ */
+export class UntilSignatureUnavailableError extends Error {
+  override name = "UntilSignatureUnavailableError";
 }

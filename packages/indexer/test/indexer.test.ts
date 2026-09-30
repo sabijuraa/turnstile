@@ -435,3 +435,118 @@ describe("integrity", () => {
     );
   });
 });
+
+describe("purged history", () => {
+  it("restores receipts from live accounts when a first start finds history purged", async () => {
+    const ledger = new FakeLedger();
+    const txs = ledger.addMany(20);
+    const cut = txs[12];
+    const closedTx = txs[4];
+    if (!cut || !closedTx) throw new Error("fixture");
+    // A receipt in the purged range was closed before the indexer ever saw it.
+    const closed = closedTx.receipts[0]?.receiptAddress ?? "";
+    ledger.closed.add(closed);
+    ledger.purgeBefore(cut.slot);
+
+    const { indexer, metrics } = testIndexer(ledger, pool);
+    const first = await indexer.tick();
+    expect(first).toMatchObject({
+      outcome: "progress",
+      resumedBy: "backfill",
+      gap: { fromSlot: 0, toSlot: cut.slot, restored: 19 },
+      checkpoint: { lastSignature: null, lastSlot: cut.slot },
+    });
+    await drain(indexer);
+
+    const rows = await receiptRows(pool);
+    const expected = ledger
+      .allReceipts()
+      .map((r) => r.receiptAddress)
+      .filter((a) => a !== closed)
+      .sort();
+    expect(rows.map((r) => r.receipt_address).sort()).toEqual(expected);
+    // Transactions the node still serves gave their rows a signature. Purged ones stay null.
+    const bySig = new Map(txs.map((t) => [t.receipts[0]?.receiptAddress, t]));
+    for (const row of rows) {
+      const tx = bySig.get(row.receipt_address);
+      expect(row.signature).toBe(tx && tx.slot >= cut.slot ? tx.signature : null);
+    }
+    expect((await checkpointRow(pool))?.last_signature).toBe(txs[19]?.signature);
+    const text = await metrics.registry.metrics();
+    expect(text).toContain('turnstile_indexer_history_gaps_total{stream="settlement:localnet"} 1');
+    expect(text).toContain(
+      `turnstile_indexer_history_gap_slots_total{stream="settlement:localnet"} ${cut.slot}`,
+    );
+    expect(text).toContain(
+      'turnstile_indexer_receipts_backfilled_total{stream="settlement:localnet"} 19',
+    );
+    expect(text).toContain(
+      'turnstile_indexer_receipts_indexed_total{stream="settlement:localnet"} 19',
+    );
+  });
+
+  it("moves on when the node refuses a purged checkpoint signature it still reports as known", async () => {
+    const ledger = new FakeLedger();
+    const old = ledger.addMany(5);
+    const a = testIndexer(ledger, pool);
+    await drain(a.indexer);
+    const newer = ledger.addMany(10);
+    const cut = newer[3];
+    const checkpoint = old[4];
+    if (!cut || !checkpoint) throw new Error("fixture");
+    ledger.purgeBefore(cut.slot);
+    // The status cache still answers for the purged checkpoint, so only the paging call fails.
+    ledger.statusCache.add(checkpoint.signature);
+
+    const b = testIndexer(ledger, pool);
+    const r = await b.indexer.tick();
+    expect(r).toMatchObject({
+      outcome: "progress",
+      resumedBy: "backfill",
+      gap: { fromSlot: checkpoint.slot, toSlot: cut.slot },
+    });
+    const results = await drain(b.indexer);
+    expect(results.every((x) => x.outcome !== "error")).toBe(true);
+    await expectExactlyOnce(ledger);
+    expect((await checkpointRow(pool))?.last_signature).toBe(newer[9]?.signature);
+    expect(await b.metrics.registry.metrics()).toContain(
+      'turnstile_indexer_slot_resumes_total{stream="settlement:localnet"} 1',
+    );
+  });
+
+  it("resumes by slot without a backfill when only the checkpoint signature is gone", async () => {
+    const ledger = new FakeLedger();
+    const old = ledger.addMany(3);
+    const a = testIndexer(ledger, pool);
+    await drain(a.indexer);
+    const checkpoint = old[2];
+    if (!checkpoint) throw new Error("fixture");
+    ledger.addMany(4);
+    ledger.forgotten.add(checkpoint.signature);
+    ledger.statusCache.add(checkpoint.signature);
+    ledger.historyStart = checkpoint.slot;
+
+    // The same process keeps running. Its cached checkpoint signature is refused too.
+    const r = await a.indexer.tick();
+    expect(r.resumedBy).toBe("slot");
+    expect(r.gap).toBeUndefined();
+    expect(ledger.calls.liveReceipts).toBe(0);
+    await drain(a.indexer);
+    await expectExactlyOnce(ledger);
+  });
+
+  it("does not backfill when the start slot is inside the history the node serves", async () => {
+    const ledger = new FakeLedger();
+    const txs = ledger.addMany(6);
+    const start = txs[3];
+    if (!start) throw new Error("fixture");
+    ledger.purgeBefore(txs[1]?.slot ?? 0);
+    const { indexer } = testIndexer(ledger, pool, { startSlot: start.slot });
+    const r = await indexer.tick();
+    expect(r.resumedBy).toBe("start");
+    expect(ledger.calls.liveReceipts).toBe(0);
+    expect((await receiptRows(pool)).map((row) => row.signature)).toEqual(
+      txs.slice(3).map((t) => t.signature),
+    );
+  });
+});

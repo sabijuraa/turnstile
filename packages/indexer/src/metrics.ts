@@ -17,6 +17,9 @@ export interface IndexerMetrics {
   slotResumes: Counter<"stream">;
   ledgerResets: Counter<"stream">;
   missingReceiptAccounts: Counter<"stream">;
+  historyGaps: Counter<"stream">;
+  historyGapSlots: Counter<"stream">;
+  receiptsBackfilled: Counter<"stream">;
 }
 
 /** Each indexer gets its own registry so several can live in one process, as in tests. */
@@ -102,6 +105,24 @@ export function createMetrics(defaultMetrics = true): IndexerMetrics {
     missingReceiptAccounts: new Counter({
       name: "turnstile_indexer_missing_receipt_accounts_total",
       help: "Receipts indexed from the event alone because the receipt account could not be read.",
+      labelNames: ["stream"],
+      registers,
+    }),
+    historyGaps: new Counter({
+      name: "turnstile_indexer_history_gaps_total",
+      help: "Times the RPC node had purged history the stream still needed. Each one triggers a backfill from the live receipt accounts.",
+      labelNames: ["stream"],
+      registers,
+    }),
+    historyGapSlots: new Counter({
+      name: "turnstile_indexer_history_gap_slots_total",
+      help: "Slots whose transactions the node had purged before the indexer read them. Receipts closed inside them cannot be recovered.",
+      labelNames: ["stream"],
+      registers,
+    }),
+    receiptsBackfilled: new Counter({
+      name: "turnstile_indexer_receipts_backfilled_total",
+      help: "Receipts restored from their accounts because the node had purged their transactions.",
       labelNames: ["stream"],
       registers,
     }),

@@ -31,5 +31,4 @@ export const HEADER_PAYMENT_RESPONSE = "PAYMENT-RESPONSE";
 
 export const RESOURCE_ID_PREFIX = "turnstile:resource:";
 
-/** Stablecoin decimals used by every Turnstile mint. */
-export const STABLECOIN_DECIMALS = 6;
+export { STABLECOIN_DECIMALS } from "./units.js";

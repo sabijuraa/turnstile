@@ -1,4 +1,4 @@
-import { STABLECOIN_DECIMALS } from "./constants.js";
+import { STABLECOIN_DECIMALS } from "./units.js";
 
 /** Formats base units as an exact decimal string, for example 12500n becomes "0.0125". */
 export function formatUnits(value: bigint, decimals: number = STABLECOIN_DECIMALS): string {

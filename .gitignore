@@ -20,3 +20,5 @@ keys/
 *.log
 playwright-report/
 test-results/
+apps/web/AGENTS.md
+apps/web/CLAUDE.md

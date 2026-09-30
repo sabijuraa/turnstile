@@ -258,7 +258,7 @@ Every link in the header and footer resolves. Every page below ships, and the sh
 | `/docs/quickstart` | Built. Paid route quickstart |
 | `/docs/agent-quickstart` | Built. Session key, agent wallet and policy, paying a 402 |
 | `/docs/concepts` | Built. How a paid request works and what you work with |
-| `/docs/reference` | Built. API reference with examples captured from a local run in `docs/_examples` |
+| `/docs/reference` | Built. API reference with examples captured from a local run in `apps/web/src/app/docs/_examples` |
 | `/demo` | Built. Live run against the demo agent, with the policy, the gate, receipts and the on-chain refusal. Shows an offline state when the runner does not answer |
 | `/signin` | Built. Wallet sign in through Wallet Standard |
 | `/console` | Built. Dashboard with totals, spend chart, recent receipts and pending failures |

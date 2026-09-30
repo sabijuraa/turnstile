@@ -78,7 +78,7 @@ An invalid `payTo` or asset is refused.
 
 `POST /settle` takes the same body and returns `{ success, transaction, network, payer, receipt?, errorReason?, errorMessage?, alreadySettled? }`.
 
-- It derives the receipt address first. If the receipt exists and matches the authorization, it returns the original transaction with `alreadySettled: true`. A retry never double spends, even after the authorization expired.
+- It derives the receipt address first. If the receipt exists and matches the authorization, it returns the original transaction with `alreadySettled: true`. A retry never double spends, even after the authorization expired. Once the reclaim job has closed the receipt (at least 7 days after expiry) the retry answers `authorization_expired`, and the chain still refuses it.
 - Otherwise it verifies, sends `[ed25519Ix, settleIx]` with the facilitator as the only signer, and waits for `confirmed`.
 - Concurrent settles of one nonce end with one debit. The losers re-read the receipt and answer as `alreadySettled`.
 - Policy and program rejections are final and returned by name.
@@ -94,6 +94,25 @@ node dist/replay-main.js --limit=500
 ```
 
 Each pending letter goes through the normal settle path. A letter whose payment had already landed is marked `replayed` with no second debit. A letter the program now refuses, or whose authorization expired, is marked `abandoned` with the reason. A letter still failing after 5 attempts is abandoned. The exit code is 1 when letters stay pending.
+
+## Reclaiming receipt rent
+
+Every settlement creates a 329 byte receipt whose rent, 3,180,720 lamports, the fee payer pays. The settlement program lets that same fee payer close a receipt once 7 days have passed since its authorization expired, and the lamports go back to it. The `PaymentSettled` event and the indexer's `receipts` table remain the permanent record.
+
+```sh
+pnpm --filter @turnstile/facilitator reclaim             # close every receipt past retention
+node dist/reclaim-main.js --batch=10 --limit=500 --dry-run
+```
+
+It reads the same environment as the service (`DATABASE_URL` must be set but is not used). It lists the settlement accounts with a `dataSize` filter of 329 and a `memcmp` on `fee_payer` at byte 288, compares each `expires_at` against the chain clock, and closes the ones past retention, oldest first, `--batch` per transaction (default 10, at most 20). `--limit` caps one run. `--dry-run` only reports. It prints each transaction, the lamports reclaimed and when the next receipt becomes closable. The exit code is 1 when any batch failed. Those receipts stay on chain and the next run tries them again, so running it from cron once a day is enough.
+
+Output from a run against a local validator with two receipts past retention, one still retained and one paid by another fee payer.
+
+```
+closed 2 receipts 5bPC3Sdh...LN2JP 6361440 lamports
+found 3, past retention 2, retained 1 (next one closable at unix 1791373184)
+closed 2, failed 0, reclaimed 6361440 lamports (0.006361440 SOL)
+```
 
 ## Metrics
 
@@ -124,4 +143,5 @@ From `packages/sdk-resource/test/integration.test.ts`, 25 sequential paid reques
 
 - `src/service.ts` holds the verify and settle logic. It talks to the chain only through `SettlementChain` in `src/chain/types.ts`.
 - `src/chain/solana.ts` is the real chain. It uses a shared blockhash cache, sends without preflight after its own simulation, polls signature status, and resends until the blockhash expires. `src/chain/codec.ts` plugs in the program client from `@turnstile/shared/programs`.
+- `src/reclaim.ts` selects and batches receipt closes through `ReclaimChain`. `src/chain/reclaim-solana.ts` is its real chain and `src/reclaim-main.ts` the command.
 - Tests in `test/` use a fake chain with the program's policy rules and a real Postgres (`TEST_DATABASE_URL`, default database `turnstile_facilitator_test` on port 5432).

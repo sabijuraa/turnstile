@@ -43,7 +43,7 @@ async function open(width, signedIn = true) {
           at: Math.round(entry.startTime),
           nodes: (entry.sources ?? []).map((s) => {
             const n = s.node;
-            if (!n || !n.tagName) return "text";
+            if (!n?.tagName) return "text";
             return `${n.tagName.toLowerCase()}.${String(n.className).slice(0, 40)}`;
           }),
         });

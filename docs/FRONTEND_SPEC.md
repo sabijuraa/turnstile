@@ -245,21 +245,38 @@ interface StatTileProps {
 
 ## Pages
 
-Every link in the header and footer resolves. Pages owned by another stream show one heading and one sentence until that stream replaces the route file.
+Every link in the header and footer resolves. Every page below ships, and the shell tests in `apps/web/src/lib/site.test.ts` check that each chrome link has a page.
 
-| Route | Status | Owner |
-| --- | --- | --- |
-| `/` | Built in full. Hero, problem, how it works, control, proof, builders and owners, live demo teaser, closing call to action | Design system stream |
-| `/product` | Heading and one sentence | Marketing pages stream |
-| `/solutions` | Heading and one sentence | Marketing pages stream |
-| `/pricing` | Heading and one sentence | Marketing pages stream |
-| `/security` | Heading and one sentence | Marketing pages stream |
-| `/docs` and `/docs/quickstart`, `/docs/agent-quickstart`, `/docs/concepts`, `/docs/reference` | Heading and one sentence | Docs stream |
-| `/demo` | Heading and one sentence | Live demo stream |
-| `/console` and `/signin` | Heading and one sentence | Console stream |
-| `/about` | Heading and one sentence | Unassigned |
-| `/legal/terms` and `/legal/privacy` | Heading and one sentence | Unassigned |
-| Not found | Built. Says what happened and offers the home page and the docs | Design system stream |
+| Route | Status |
+| --- | --- |
+| `/` | Built. Hero, problem, how it works, control, proof, builders and owners, live demo teaser, closing call to action |
+| `/product` | Built. Model, payment flow, policy, records, security posture, closing |
+| `/solutions` | Built. Where it fits, four use cases, what Turnstile takes care of in every case |
+| `/pricing` | Built. Illustrative price model, what is included, FAQ |
+| `/security` | Built. Trust boundaries, threat model, the guarantee, key handling and rotation, with an on-page jump nav |
+| `/docs` | Built. Overview and where to start, inside the docs layout with a sidebar and a narrow screen menu |
+| `/docs/quickstart` | Built. Paid route quickstart |
+| `/docs/agent-quickstart` | Built. Session key, agent wallet and policy, paying a 402 |
+| `/docs/concepts` | Built. How a paid request works and what you work with |
+| `/docs/reference` | Built. API reference with examples captured from a local run in `docs/_examples` |
+| `/demo` | Built. Live run against the demo agent, with the policy, the gate, receipts and the on-chain refusal. Shows an offline state when the runner does not answer |
+| `/signin` | Built. Wallet sign in through Wallet Standard |
+| `/console` | Built. Dashboard with totals, spend chart, recent receipts and pending failures |
+| `/console/agents` | Built. Agent list read from chain with status and cap usage |
+| `/console/agents/new` | Built. Create, fund and set the policy of an agent |
+| `/console/agents/[address]` | Built. Agent detail with vault, spend, session keys, allow-list, deposit and withdraw |
+| `/console/agents/[address]/policy` | Built. Edit caps and allow-list |
+| `/console/receipts` | Built. Filterable, sortable receipts with CSV export |
+| `/console/settings` | Built. Console API keys |
+| `/about` | Heading and one sentence |
+| `/legal/terms` and `/legal/privacy` | Heading and one sentence |
+| Not found | Built. Says what happened and offers the home page and the docs |
+
+Gaps found by the first console audit. Uncommitted console work at the time of writing addresses the first two, so check them again with `console-audit.mjs`.
+
+- `/console` had no `h1`.
+- `/console` and `/signin` answered 502 when no backend was running, instead of a designed error state.
+- A "preloaded but not used" CSS warning appears on every page from link prefetch of the console toast styles.
 
 ### Home sections
 

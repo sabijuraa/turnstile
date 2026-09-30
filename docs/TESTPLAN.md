@@ -115,7 +115,8 @@ Rust tests live in `programs/settlement/tests/{settle,wallet,close_receipt,revie
 - `unit` `rpc-source.test.ts` and `service.test.ts`.
 - `idx-int` `packages/indexer/test/integration/validator.test.ts` "survives a SIGKILL mid-stream with no gap and no duplicate", "starts over when the validator is reset to a new genesis".
 - `e2e` `product-loop.test.ts` and `demo-run.test.ts` check the store against the chain.
-- Open gap. A late started indexer on a test validator missed settlements older than about 100 slots. No test covers a late start yet.
+- `unit` `indexer.test.ts` "purged history" block, for example "restores receipts from live accounts when a first start finds history purged". `rpc-source.test.ts` "lists live receipts with a discriminator filter".
+- A validator test for a late start on a purged ledger (`packages/indexer/test/integration/purge.test.ts`) was still being written and was not committed when this page was written.
 
 ### FR14. Console backend
 

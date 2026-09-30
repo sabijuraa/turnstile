@@ -259,7 +259,7 @@ Re-index from a given slot.
 psql "$DATABASE_URL" -c "UPDATE indexer_checkpoints SET last_signature = NULL, last_slot = 123456 WHERE stream = 'settlement:localnet'"
 ```
 
-Known gap. An indexer started late on a test validator missed settlements older than about 100 slots. It is under investigation and listed in BLOCKERS.md. Start the indexer with the validator, or check the count of `receipts` against the chain after a late start.
+History purged by the node. `solana-test-validator` keeps a limited ledger, so an indexer started late could not list old signatures. Since `15fd636` the indexer detects the gap, logs `HISTORY GAP` at error level, restores every receipt account still on chain with `getProgramAccounts` and moves on. Restored rows have a null `signature` until the walk sees their transaction. A receipt closed with `close_receipt` inside the purged range cannot be recovered. Run the validator with `--limit-ledger-size 50000000`, as the compose stack does, or use a node with full history.
 
 A ledger reset also invalidates `deployments/localnet.json`. Run `pnpm dev:up` again, or `pnpm stack:up`, so the bootstrap writes a new mint and genesis hash. Receipts from builds before `close_receipt` are 321 bytes and only exist on old local ledgers. Reset those ledgers.
 

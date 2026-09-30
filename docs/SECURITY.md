@@ -107,7 +107,7 @@ Every instruction except `debit` requires the owner signature and `has_one = own
 - Revocation is not retroactive. Revoking a key stops its unsettled authorizations only while it stays revoked. See the findings below.
 - The owner key. Whoever holds it controls the wallet. There is no recovery and no way to change the owner.
 - Availability. The facilitator, the RPC node or the backend can refuse service. They cannot redirect funds.
-- The indexer and the console show what the chain said, but they can lag. A late started indexer on a test validator missed settlements older than about 100 slots. That gap is open and listed in BLOCKERS.md.
+- The indexer and the console show what the chain said, but they can lag. When a node has purged history, the indexer restores receipts from the accounts still on chain. A receipt that was closed inside the purged range is lost to the store.
 - `confirmed` is not `finalized`. A confirmed block that is later dropped would leave its receipt in Postgres.
 - The program upgrade authority. Whoever holds it can replace the programs.
 - Rent. The facilitator pays about 0.0032 SOL per receipt until it reclaims it after retention.

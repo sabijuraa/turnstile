@@ -49,8 +49,10 @@ The same ids are used on the local validator and on devnet.
 
 `Receipt` is a PDA of the settlement program with seeds `["receipt", agent_wallet, nonce]`.
 
-- Fields are `agent_wallet`, `owner`, `session_key`, `recipient`, `recipient_token`, `mint`, `amount`, `resource_id`, `nonce`, `slot`, `unix_timestamp`, `fee_payer`, `bump`.
+- Fields are `agent_wallet`, `owner`, `session_key`, `recipient`, `recipient_token`, `mint`, `amount`, `resource_id`, `nonce`, `slot`, `unix_timestamp`, `fee_payer`, `bump`, `expires_at`. `expires_at` is the expiry of the settled authorization.
+- The account is 329 bytes with the discriminator. `fee_payer` starts at byte 288 and `expires_at` at byte 321.
 - A receipt can only be created once per nonce, which is the replay protection.
+- The fee payer that paid its rent may close it once `RECEIPT_RETENTION_SECONDS` (604800, 7 days) have passed since `expires_at`. See Receipt rent below.
 
 `SettlementAuthority` is a PDA of the settlement program with seeds `["settlement_authority"]`. It signs the CPI into `agent_wallet::debit`. The agent_wallet program accepts a debit only when this exact PDA signs.
 
@@ -78,6 +80,16 @@ agent_wallet, all owner-signed except `debit`.
 settlement.
 
 - `settle(authorization)` must be preceded in the same transaction by an Ed25519 program instruction that verifies the session key signature over the authorization message. It checks expiry, checks that signature via the instructions sysvar, refuses a used nonce, CPIs into `debit`, writes the receipt and emits `PaymentSettled`.
+- `verify_receipt(authorization)` is a read only check that the receipt for the authorization exists and records exactly that payment.
+- `close_receipt()` takes the receipt (writable) and the fee payer (writable, signer). The receipt must be the PDA its own `agent_wallet` and `nonce` derive and must name this fee payer, or it fails with `NotFeePayer`. It succeeds only when chain time is greater than `expires_at + RECEIPT_RETENTION_SECONDS`, otherwise `RetentionNotElapsed`. It zeroes the account and returns every lamport to the fee payer.
+
+### Receipt rent
+
+Each receipt holds 3,180,720 lamports of rent, measured in LiteSVM and on a local validator for the 329 byte account. The facilitator fee payer pays it. For a 0.005 USD payment that deposit is far larger than the payment, so it has to come back.
+
+- `pnpm --filter @turnstile/facilitator reclaim` finds the receipts whose `fee_payer` is this facilitator, closes the ones past retention in batches and logs the lamports reclaimed.
+- A closed receipt never lets its nonce settle again. `settle` checks `authorization.expires_at` before it looks at the receipt, and a receipt can only be closed 7 days after that expiry, so a replay fails with `AuthorizationExpired` and moves no funds.
+- The `PaymentSettled` event in the transaction log and the indexer `receipts` table are the permanent record. `verify_receipt` and the facilitator's receipt lookup only work while the receipt is on chain, which is at least 7 days after the authorization expired.
 
 ### Payment authorization
 
@@ -104,9 +116,9 @@ The signed message is `"TURNSTILE_PAYMENT_V1"` (20 ASCII bytes) followed by the 
 
 agent_wallet errors are `SessionKeyNotFound`, `SessionKeyRevoked`, `SessionKeyExpired`, `PerCallCapExceeded`, `DailyCapExceeded`, `ResourceNotAllowed`, `UnauthorizedCaller`, `InsufficientFunds`, `ZeroAmount`, `InvalidPolicy`, `TooManySessionKeys`, `AllowListTooLong`, `DuplicateSessionKey`, `VaultNotEmpty`, `MintMismatch`, `RecipientMismatch`, `AccountMismatch`, `ArithmeticOverflow`. Codes are 6000 to 6017 in that order.
 
-settlement errors are `AuthorizationExpired`, `MissingSignatureVerification`, `SignatureMismatch`, `NonceAlreadyUsed`, `AccountMismatch`. Codes are 6100 to 6104 in that order, so they never collide with agent_wallet codes that surface through the debit CPI.
+settlement errors are `AuthorizationExpired`, `MissingSignatureVerification`, `SignatureMismatch`, `NonceAlreadyUsed`, `AccountMismatch`, `RetentionNotElapsed`, `NotFeePayer`. Codes are 6100 to 6106 in that order, so they never collide with agent_wallet codes that surface through the debit CPI.
 
-`PaymentSettled` is emitted with `emit!`. It is a `Program data:` log line inside the settlement invocation and carries every receipt field plus the receipt address.
+`PaymentSettled` is emitted with `emit!`. It is a `Program data:` log line inside the settlement invocation and carries every receipt field, `expires_at` included, plus the receipt address.
 
 ## x402 interface
 
@@ -121,12 +133,12 @@ Turnstile follows x402 version 2 transport. The scheme is `turnstile-policy` on 
 ## Settlement idempotency and dead letters
 
 - The nonce is part of the receipt address, so the chain refuses a second settlement of the same authorization.
-- Before submitting, the facilitator derives the receipt address. If a receipt already exists and matches the authorization, `settle` returns the existing receipt as a success. A retry never double spends.
+- Before submitting, the facilitator derives the receipt address. If a receipt already exists and matches the authorization, `settle` returns the existing receipt as a success. A retry never double spends. After the receipt has been closed a retry fails as expired.
 - A settlement that fails for a reason other than a policy rejection goes to the `settlement_dead_letters` table with the full payload, the error and the attempt count. `pnpm --filter @turnstile/facilitator replay` replays them. Policy rejections are final and are returned to the caller, not queued.
 
 ## Indexer
 
-- The indexer polls `getSignaturesForAddress` for the settlement program, walks forward from its checkpoint, fetches each transaction, decodes `PaymentSettled` events and reads the receipt account.
+- The indexer polls `getSignaturesForAddress` for the settlement program, walks forward from its checkpoint, fetches each transaction, decodes `PaymentSettled` events and reads the receipt account. A receipt already closed is indexed from the event alone.
 - Each batch writes receipts with `ON CONFLICT (receipt_address) DO NOTHING` and advances the checkpoint in the same database transaction. A crash before commit replays the batch. A crash after commit resumes past it. No gaps, no duplicates.
 
 ## Data

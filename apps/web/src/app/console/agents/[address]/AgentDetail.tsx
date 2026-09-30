@@ -537,7 +537,10 @@ export function AgentDetail({ address }: { address: string }) {
         }
       />
 
-      <div className={styles.stack}>
+      <div
+        className={styles.stack}
+        aria-busy={agent.refreshing || receipts.refreshing || undefined}
+      >
         {a.attention.length > 0 ? (
           <InlineStatus
             tone={a.status === "at_cap" || a.status === "no_active_key" ? "critical" : "caution"}

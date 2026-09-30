@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/Button";
 import { Icon } from "@/components/Icon";
 import { InlineStatus } from "@/components/InlineStatus";
-import { api, ConsoleApiError } from "@/lib/console/api";
+import { api, ConsoleApiError, fetchSession } from "@/lib/console/api";
 import type { Challenge } from "@/lib/console/types";
 import {
   connectWallet,
@@ -84,8 +84,10 @@ export function SignIn() {
   useEffect(() => {
     setSignedOut(new URLSearchParams(window.location.search).has("signedOut"));
     const controller = new AbortController();
-    api("/v1/me", { signal: controller.signal })
-      .then(() => window.location.replace(nextPath()))
+    fetchSession(controller.signal)
+      .then((me) => {
+        if (me) window.location.replace(nextPath());
+      })
       .catch(() => undefined);
     return () => controller.abort();
   }, []);

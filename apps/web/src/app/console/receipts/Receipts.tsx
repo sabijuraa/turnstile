@@ -268,7 +268,7 @@ export function Receipts() {
             onChange={(e) => setDraft({ ...draft, from: e.target.value })}
           />
         </Field>
-        <Field label="To" hint="UTC, included" error={dateError}>
+        <Field label="To" hint="UTC" error={dateError}>
           <Input
             type="date"
             value={draft.to}
@@ -311,7 +311,10 @@ export function Receipts() {
               : "They appear as soon as your agents pay."}
           </EmptyState>
         ) : (
-          <div className={first.refreshing ? styles.refreshing : undefined}>
+          <div
+            className={first.refreshing ? styles.refreshing : undefined}
+            aria-busy={first.refreshing || undefined}
+          >
             <Table
               caption="Receipts"
               columns={columns}

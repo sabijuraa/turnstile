@@ -14,6 +14,10 @@
   grid-column: 1 / -1;
 }
 
+.filters input {
+  min-width: 0;
+}
+
 .select {
   width: 100%;
   min-height: 2.75rem;
@@ -62,6 +66,7 @@
 
 .resource {
   display: inline-block;
+  min-width: 14rem;
   max-width: 22rem;
   font-family: var(--font-mono);
   font-size: var(--text-xs);
@@ -107,10 +112,17 @@
 
 @media (min-width: 64rem) {
   .filters {
-    grid-template-columns: 2fr 1.4fr 1.6fr 1fr 1fr;
+    grid-template-columns: 1.6fr 1.3fr 1.5fr 1.2fr 1.2fr;
   }
 
   .search {
     grid-column: auto;
   }
+}
+
+/* Date inputs move focus between their parts, so the ring follows :focus as well. */
+.filters input:focus {
+  outline: none;
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 1px var(--color-focus);
 }

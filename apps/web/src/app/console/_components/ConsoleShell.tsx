@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 import { Button } from "@/components/Button";
 import { ToastProvider } from "@/components/Toast";
-import { api, errorMessage } from "@/lib/console/api";
+import { api, errorMessage, fetchSession } from "@/lib/console/api";
 import { ConsoleSessionProvider } from "@/lib/console/context";
 import type { DeploymentInfo, Me } from "@/lib/console/types";
-import { useResource } from "@/lib/console/useResource";
+import { redirectToSignIn } from "@/lib/console/useResource";
 import { shortAddress } from "@/lib/format";
 import styles from "./console.module.css";
 import { LoadError, Skeleton } from "./Page";
@@ -53,9 +53,30 @@ function networkLabel(network: string): string {
   return network.charAt(0).toUpperCase() + network.slice(1);
 }
 
+function useSession() {
+  const [me, setMe] = useState<Me | null>(null);
+  const [error, setError] = useState<unknown>(null);
+  const [tick, setTick] = useState(0);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: tick is the retry trigger
+  useEffect(() => {
+    const controller = new AbortController();
+    setError(null);
+    fetchSession<Me>(controller.signal)
+      .then((value) => {
+        if (value) setMe(value);
+        else redirectToSignIn();
+      })
+      .catch((err: unknown) => {
+        if (!controller.signal.aborted) setError(err);
+      });
+    return () => controller.abort();
+  }, [tick]);
+  return { data: me, error, reload: () => setTick((t) => t + 1) };
+}
+
 export function ConsoleShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const me = useResource<Me>("/v1/me");
+  const me = useSession();
   const { deployment, error: deploymentError, retry } = useDeployment();
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState<string | null>(null);
@@ -140,12 +161,9 @@ export function ConsoleShell({ children }: { children: ReactNode }) {
             }}
           />
         ) : (
-          <div aria-busy="true" style={{ display: "grid", gap: "var(--space-5)" }}>
-            <span className="visually-hidden">Loading the console</span>
-            <Skeleton width="14rem" height="2.5rem" />
-            <Skeleton height="8rem" />
-            <Skeleton height="16rem" />
-          </div>
+          <p className="visually-hidden" role="status">
+            Loading the console
+          </p>
         )}
       </div>
     </ToastProvider>

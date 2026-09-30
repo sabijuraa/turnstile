@@ -88,6 +88,24 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
   return (await response.json()) as T;
 }
 
+/** The signed-in owner, or null when nobody is signed in. Never answers 401. */
+export async function fetchSession<T>(signal?: AbortSignal): Promise<T | null> {
+  let response: Response;
+  try {
+    response = await fetch("/api/console/session", { cache: "no-store", signal });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
+    throw new ConsoleApiError(
+      0,
+      "network_error",
+      "The console could not reach the network. Check your connection and try again.",
+    );
+  }
+  if (!response.ok) throw await readError(response);
+  const body = (await response.json()) as { me: T | null };
+  return body.me;
+}
+
 /** Builds a query string from defined, non empty values. */
 export function query(params: Record<string, string | number | undefined | null>): string {
   const search = new URLSearchParams();

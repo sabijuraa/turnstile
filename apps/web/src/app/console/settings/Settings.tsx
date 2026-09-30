@@ -133,19 +133,16 @@ function ApiKeys() {
 
       {created ? (
         <div className={page.reveal}>
-          <InlineStatus
-            tone="caution"
-            title="Copy this key now"
-            action={
-              <Button variant="secondary" size="sm" onClick={() => setCreated(null)}>
-                I saved the key
-              </Button>
-            }
-          >
+          <InlineStatus tone="caution" title="Copy this key now">
             It is shown only once. The console keeps only a hash, so it cannot show it again. Send
             it as <code>Authorization: Bearer</code> followed by the key.
           </InlineStatus>
           <CodeBlock language={`API key, ${created.apiKey.name}`} code={created.key} />
+          <div>
+            <Button variant="secondary" size="sm" onClick={() => setCreated(null)}>
+              I saved the key
+            </Button>
+          </div>
         </div>
       ) : null}
 
@@ -161,7 +158,7 @@ function ApiKeys() {
       ) : (
         <>
           <Table
-            caption="API keys"
+            caption="Your API keys"
             columns={[
               { key: "name", label: "Name" },
               { key: "prefix", label: "Key", mono: true },

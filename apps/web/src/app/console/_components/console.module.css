@@ -102,6 +102,8 @@
 }
 
 .body {
+  /* At least a screen tall, so the footer stays below the fold while data loads. */
+  min-height: calc(100svh - var(--header-height));
   max-width: var(--content-max);
   margin: 0 auto;
   padding: var(--space-6) var(--gutter) var(--space-9);
@@ -167,6 +169,7 @@
 
 .section {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
   min-width: 0;
 }
@@ -401,4 +404,8 @@
 .refreshing {
   opacity: 0.6;
   transition: opacity var(--duration-2) var(--ease-out);
+}
+
+.section > * {
+  min-width: 0;
 }

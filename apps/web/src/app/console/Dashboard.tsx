@@ -30,6 +30,17 @@ import { toReceiptView } from "./_components/receipts";
 import { SpendChart } from "./_components/SpendChart";
 import dash from "./dashboard.module.css";
 
+function plural(n: number, one: string, many: string): string {
+  return `${n} ${n === 1 ? one : many}`;
+}
+
+function attentionText(failed: number, agents: number): string {
+  const parts: string[] = [];
+  if (failed > 0) parts.push(plural(failed, "failed settlement", "failed settlements"));
+  if (agents > 0) parts.push(plural(agents, "agent to check", "agents to check"));
+  return parts.join(", ");
+}
+
 function FailureRow({ failure, agents }: { failure: FailureDto; agents: AgentSummary[] }) {
   const agent = agents.find((a) => a.address === failure.agentWallet);
   return (
@@ -119,7 +130,7 @@ export function Dashboard() {
               tone={needs > 0 ? "critical" : "positive"}
               detail={
                 needs > 0
-                  ? `${failures?.pendingCount ?? 0} failed settlements, ${attention.length} agents`
+                  ? attentionText(failures?.pendingCount ?? 0, attention.length)
                   : "Nothing is waiting on you"
               }
               loading={summary.loading || agents.loading}

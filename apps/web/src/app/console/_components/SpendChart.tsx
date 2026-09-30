@@ -136,6 +136,15 @@ export function SpendChart({
                 </text>
               </g>
             ))}
+            {active !== null ? (
+              <line
+                x1={PAD.left + band * (active + 0.5)}
+                x2={PAD.left + band * (active + 0.5)}
+                y1={PAD.top}
+                y2={y(0)}
+                className={styles.crosshair}
+              />
+            ) : null}
             {points.map((p, i) => {
               const v = values[i] ?? 0;
               const x = PAD.left + band * i + (band - barW) / 2;
@@ -172,15 +181,6 @@ export function SpendChart({
                 </g>
               );
             })}
-            {active !== null ? (
-              <line
-                x1={PAD.left + band * (active + 0.5)}
-                x2={PAD.left + band * (active + 0.5)}
-                y1={PAD.top}
-                y2={y(0)}
-                className={styles.crosshair}
-              />
-            ) : null}
           </svg>
         ) : null}
         {shown ? (

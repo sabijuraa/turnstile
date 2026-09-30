@@ -926,9 +926,7 @@
         {
           "transaction": "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAEDJOk4VfmWwc8p1p0thmfkdJP8WSiotqZ5RIj0ZAmDX+YoBpsKrvO6O7xn01bXhSFELQQAFHsc0FGhSgjP2IJi4QG+ZNCgqmmH6Aq2MGpPFBfEsFbL7nvEgmA3BCfc0pVs0OQKIjtP3Skn61jTvMrtdVDAoeYCb0oSzqQY9Cz33UoBAgIAAVzU9fYHo5cSORAnAAAAAAAAgIQeAAAAAAABAAAAr8kYDucS5fIoSSN3mncQ70ciMtlaLcz9cmhWXMu/aCwsI0HNAV8ZedoI1bJHR/FUr1BSgIdEYxGjqGMepV8eHg==",
           "description": "Replace the caps and the allow-list",
-          "instructions": [
-            "update_policy"
-          ]
+          "instructions": ["update_policy"]
         }
       ]
     }

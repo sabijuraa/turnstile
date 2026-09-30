@@ -39,18 +39,18 @@ RUN test -f "${SERVICE_DIR}/package.json" \
   || { echo "${SERVICE_DIR}/package.json is missing. SERVICE_DIR must point at a workspace package." >&2; exit 1; }
 RUN --mount=type=cache,id=turnstile-pnpm-store,target=/pnpm/store \
   pnpm install --offline --frozen-lockfile
-# The trailing ... builds the workspace packages this one depends on first, in
-# dependency order.
-RUN pnpm --filter "./${SERVICE_DIR}..." run build
+# {path}... selects the package and every workspace package it depends on, and
+# pnpm builds them in dependency order. A bare path with ... skips the deps.
+RUN pnpm --filter "{./${SERVICE_DIR}}..." run build
 # Keep production dependencies only, for the package and its workspace deps.
 RUN --mount=type=cache,id=turnstile-pnpm-store,target=/pnpm/store \
   find . -name node_modules -type d -prune -exec rm -rf {} + \
-  && pnpm install --offline --frozen-lockfile --prod --filter "./${SERVICE_DIR}..."
+  && pnpm install --offline --frozen-lockfile --prod --filter "{./${SERVICE_DIR}}..."
 # Collect the package, its workspace dependencies and the root node_modules.
 RUN mkdir -p /out \
   && cp package.json pnpm-workspace.yaml /out/ \
   && cp -a node_modules /out/node_modules \
-  && pnpm --filter "./${SERVICE_DIR}..." exec pwd > /tmp/dirs \
+  && pnpm --filter "{./${SERVICE_DIR}}..." exec pwd > /tmp/dirs \
   && while read -r dir; do \
        rel="${dir#/repo/}"; \
        mkdir -p "/out/$(dirname "${rel}")"; \

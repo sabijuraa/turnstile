@@ -62,7 +62,9 @@ teardown() {
     log "leaving the stack running because E2E_KEEP_STACK=1"
   else
     local started=() service
-    for service in $(compose ps --status running --services 2>/dev/null); do
+    # Every container that exists now, whatever its state, unless it was
+    # already running before this run.
+    for service in $(compose ps --all --services 2>/dev/null); do
       [[ " ${already_running[*]} " == *" ${service} "* ]] || started+=("${service}")
     done
     if ((${#started[@]} > 0)); then

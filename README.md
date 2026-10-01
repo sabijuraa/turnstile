@@ -1,96 +1,201 @@
 # Turnstile
 
-Turnstile lets software pay for what it uses, one HTTP request at a time, inside limits its owner sets in advance.
-Payments settle in a stablecoin on Solana, follow the x402 v2 transport, and the spending policy is enforced by the Solana programs, not by any server.
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![ci](https://github.com/sabijuraa/turnstile/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/sabijuraa/turnstile/actions/workflows/ci.yml)
+[![Solana programs](https://img.shields.io/badge/solana-anchor%201.2-9945FF.svg)](programs)
 
-## How the pieces fit
+Turnstile lets software pay for what it uses, one HTTP request at a time, inside limits its owner sets in advance. An API answers an unpaid request with HTTP 402. The calling agent signs a stablecoin payment with a scoped session key and retries. Two Solana programs check the payment against the owner's policy, move the funds and write a receipt in a single instruction. The per-call cap, the rolling daily cap and the allow-list live on chain, so no server and no SDK can spend past them.
 
-An agent calls a paid route. The route answers 402. The agent signs a payment with a scoped session key and retries. The facilitator settles it on chain and the route serves the answer.
-
-- `programs/agent-wallet` holds the funds in a vault, stores the policy (per-call cap, rolling daily cap, allow-list) and the session keys, and debits only when the settlement program asks.
-- `programs/settlement` checks the session key signature, spends the nonce, calls `debit` and writes a receipt, all in one instruction.
-- `packages/facilitator` issues payment requirements, verifies payloads and submits settlement transactions. Its key pays fees and cannot move agent funds.
-- `packages/sdk-resource` turns a Hono, Express or plain `node:http` route into a paid route.
-- `packages/sdk-agent` pays a 402 automatically and refuses anything outside the policy before it signs.
-- `packages/demo-api` is a metered text API plus the demo agent runner behind the live demo.
-- `packages/indexer` copies receipts from the chain into Postgres and resumes from a checkpoint.
-- `packages/backend` serves the console. It builds unsigned owner transactions, issues API keys and reads the indexer store.
-- `packages/shared` holds program ids, IDLs, the authorization encoding, config and migrations.
-- `apps/web` is the marketing site, the docs, the console and the live demo.
-
-```mermaid
-flowchart LR
-  Agent["Agent + sdk-agent<br/>session key"] -->|"1 request"| Resource["Resource server<br/>sdk-resource"]
-  Resource -->|"2 402 PAYMENT-REQUIRED"| Agent
-  Agent -->|"3 retry with PAYMENT-SIGNATURE"| Resource
-  Resource -->|"4 verify, settle"| Facilitator
-  Facilitator -->|"5 ed25519 + settle tx"| Settlement["settlement program"]
-  Settlement -->|"CPI debit"| Wallet["agent_wallet program<br/>policy + vault"]
-  Settlement -->|"receipt + PaymentSettled"| Indexer
-  Indexer --> Postgres[(Postgres)]
-  Postgres --> Backend["Console backend"]
-  Backend --> Web["apps/web console"]
-  Owner["Owner wallet"] -->|"signs policy and funding"| Wallet
+```
+ agent + sdk-agent              resource server + sdk-resource           facilitator
+ ─────────────────              ──────────────────────────────           ───────────
+ GET /v1/summarize  ─────────▶  402 PAYMENT-REQUIRED
+ sign with session key
+ retry with PAYMENT-SIGNATURE ▶ verify and settle  ──────────────────▶  ed25519 check + settle tx
+                                                                               │
+                                       ┌───────────────────────────────────────┘
+                                       ▼
+                              settlement program ── CPI debit ──▶ agent_wallet program
+                              nonce, receipt, event               policy, session keys, vault
+                                       │
+                                       ▼
+                              indexer ──▶ Postgres ──▶ console backend ──▶ web console
+ 200 + PAYMENT-RESPONSE  ◀───  handler runs with the receipt
 ```
 
-The chain is the source of truth for funds, policy, session keys and receipts. See [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md) for the contract and [docs/SECURITY.md](docs/SECURITY.md) for the trust boundaries.
+## Why this exists
 
-## Repository layout
+Software is starting to buy things on its own. An agent that calls a search API, a model endpoint or a data feed a few thousand times a day needs a way to pay for each call. The usual answers are a shared API key with a monthly invoice or a prepaid credit balance per vendor. Both put the spending limit in the vendor's database and both assume a human signed up first. Neither works when an agent discovers a new paid endpoint at runtime.
 
-| Path | What it holds |
+x402 fixes the transport. A server says what a request costs in a 402 response and the client pays in the retry. What x402 leaves open is the harder question of who stops an agent from spending too much. If the limit lives in the agent's own code, a bug or a prompt injection removes it. If it lives at the payment processor, the owner has to trust that processor with the money.
+
+Turnstile puts the limit where neither the agent nor any server can move it. The owner's funds sit in a program-owned vault. The policy sits next to them on chain. The session key an agent holds can sign payments and nothing else, and the settlement program rejects any payment that breaks the policy before a single token moves. The owner can revoke a key or change the caps with one transaction, and every settled payment leaves a receipt anyone can verify.
+
+## Verified
+
+Every item below is asserted by a test in this repository.
+
+**Programs.** `cargo test -p settlement -p agent-wallet` runs 61 tests in LiteSVM against the compiled programs.
+
+- A payment over the per-call cap, over the rolling daily cap, to a resource off the allow-list, to the wrong recipient or in the wrong mint fails inside the program.
+- A replayed nonce fails with `NonceAlreadyUsed`. An expired authorization or a revoked or unknown session key fails.
+- The ed25519 signature must cover this exact program, message and key, and must sit in the instruction right before `settle`.
+- `debit` called directly, outside settlement, is refused. Every owner instruction refuses a non-owner signer.
+- The rolling daily cap ages out bucket by bucket and never admits more than the cap inside any 24 hour window.
+- A receipt can be closed after its retention period, returns its exact rent to the fee payer, and a replay after the close fails as expired and moves no funds.
+- The program's authorization message matches the TypeScript encoder byte for byte.
+
+**Services and SDKs.** `pnpm -r --filter '!@turnstile/e2e' run test` runs 322 tests across the shared library, facilitator, both SDKs, indexer, console backend, demo API and web app. With `TURNSTILE_INTEGRATION=1`, all 31 `sdk-resource` tests run against a real `solana-test-validator` and facilitator.
+
+**End to end.** `pnpm e2e` brings up the full stack in Docker and runs 19 tests. CI runs it on every push to `main`.
+
+- The full loop from 402 to a receipt on chain that matches the indexer row field by field (`packages/e2e/test/product-loop.test.ts`).
+- An over-cap payment, an off allow-list payment and a replayed nonce are each refused by the program, the facilitator and the SDK.
+- A replayed payment header is answered from the original receipt without a second debit.
+- The console backend signs an owner in with a wallet signature and serves the same receipt, the summary and the CSV export.
+- The demo agent settles six calls and the chain refuses the seventh with `DailyCapExceeded` (`packages/e2e/test/demo-run.test.ts`).
+- Every service answers `/healthz`, `/readyz` and `/metrics`.
+
+## Performance
+
+| Measurement | Result | Conditions |
+| --- | --- | --- |
+| `settle` compute units | 48,907 to 53,407 | LiteSVM, `programs/settlement/tests/settle.rs`. The spread comes from PDA bump searches |
+| `close_receipt` compute units | 4,155 | LiteSVM, `programs/settlement/tests/close_receipt.rs` |
+| Rent reclaimed per closed receipt | 3,180,720 lamports | 329 byte receipt account |
+| Paid request, end to end | median 364 ms, p90 520 ms | 20 sequential requests, full Docker stack on a 4 CPU CI runner, local validator |
+| Paid request, SDK to settlement | median 392 ms, p90 545 ms | 25 requests, `sdk-resource` integration test on a local validator |
+
+## Layout
+
+| Path | What it does |
 | --- | --- |
-| `programs/agent-wallet`, `programs/settlement` | Anchor programs. LiteSVM tests live in `programs/settlement/tests` |
-| `packages/shared` | Program client, IDLs, authorization encoder, policy mirror, migrations, localnet bootstrap |
-| `packages/facilitator` | x402 facilitator service, dead letter replay, receipt rent reclaim |
-| `packages/sdk-resource`, `packages/sdk-agent` | The two SDKs |
-| `packages/demo-api` | Metered demo API (`main.ts`) and demo agent runner (`agent-main.ts`) |
-| `packages/indexer`, `packages/backend` | Receipt indexer and console backend |
-| `packages/e2e` | End to end suite against a running stack |
-| `apps/web` | Next.js site, docs, console and live demo. Browser checks in `apps/web/e2e` |
+| `programs/agent-wallet` | Holds the funds in a vault. Stores the policy (per-call cap, rolling daily cap, allow-list) and the session keys. Debits only when the settlement program asks |
+| `programs/settlement` | Checks the session key signature, spends the nonce, calls `debit` and writes a receipt, all in one instruction |
+| `packages/shared` | Program ids, IDLs, the authorization encoder, the policy mirror, config and migrations |
+| `packages/facilitator` | Issues payment requirements, verifies payloads and submits settlement transactions. Its key pays fees and cannot move agent funds |
+| `packages/sdk-resource` | Turns a Hono, Express or plain `node:http` route into a paid route |
+| `packages/sdk-agent` | Pays a 402 automatically and refuses anything outside the policy before it signs |
+| `packages/indexer` | Copies receipts from the chain into Postgres and resumes from a checkpoint |
+| `packages/backend` | Serves the console. Builds unsigned owner transactions, issues API keys and reads the indexer store |
+| `packages/demo-api` | A metered text API and the demo agent runner behind the live demo |
+| `packages/e2e` | The end to end suite against a running stack |
+| `apps/web` | Next.js marketing site, docs, owner console and live demo |
 | `infra/` | Docker compose, validator and Node images, stack and e2e scripts, CI helpers |
-| `docs/` | System design, API, runbook, security, test plan, frontend spec, ADRs |
-| `keys/`, `deployments/` | Local keypairs (git ignored) and deployment records written by the bootstrap |
+| `docs/` | System design, API reference, runbook, security review, test plan and ADRs |
 
-## Prerequisites
+Program ids.
 
-- Node 22 (CI pins 22.23.2) and pnpm 11 (`npm install -g pnpm@11.24.0`).
-- Rust (CI pins 1.98.1).
-- Agave 4.0.2, which provides `solana-test-validator`, `cargo build-sbf` and the `solana` CLI.
-- Anchor 1.2.0, only if you want `anchor` commands. The scripts use `cargo build-sbf` directly.
-- Docker with the compose plugin, for Postgres on port 5433 and the full stack.
+| Program | Id |
+| --- | --- |
+| agent_wallet | `7onzUVc1HGc9oBDUspBdP8dz1QW6uXrSdBn4NH6aiLb` |
+| settlement | `6FrY43zorjSv8wCuarPL3z8ZnyBTyyC86xRjBqgu1K9z` |
 
-## Fastest local run
+## Usage
 
-Build and run everything in Docker. The script builds the programs first when `target/deploy` is empty.
+### Requirements
+
+- Node 22 and pnpm 11 (`npm install -g pnpm@11.24.0`).
+- Rust 1.98 and Agave 4.0.2, which provides `solana-test-validator`, `cargo build-sbf` and the `solana` CLI.
+- Docker with the compose plugin.
+
+### Run the stack
 
 ```sh
 pnpm install
 pnpm stack:up
 ```
 
-The site is then on http://localhost:3000, the demo on http://localhost:3000/demo and the services on ports 4020 to 4024. Stop it with `pnpm stack:down`.
+The site is on http://localhost:3000, the live demo on http://localhost:3000/demo and the services on ports 4020 to 4024. Stop it with `pnpm stack:down`. To run the services from a shell instead, `pnpm dev:up` starts only the validator and Postgres and prints the variables each service needs.
 
-To run the services from a shell instead, start only the chain and the database, then start each service with the variables the script prints.
+### Charge for a route
 
-```sh
-pnpm dev:up             # validator and postgres in docker
-pnpm dev:up --native    # solana-test-validator on this machine, postgres in docker
+```ts
+import { honoPaywall, type PaywallEnv } from "@turnstile/sdk-resource";
+import { Hono } from "hono";
+
+const app = new Hono<PaywallEnv>();
+
+app.use(
+  "*",
+  honoPaywall({
+    facilitatorUrl: "http://127.0.0.1:4020",
+    payTo: "4F7ro2NGHWvMxaQKMKVchZy3cWU1cD2C1rZztAbxzkEq",
+    routes: {
+      "POST /v1/summarize": { price: "0.005", description: "Summarize a text" },
+    },
+  }),
+);
+
+app.post("/v1/summarize", async (c) => {
+  const payment = c.get("turnstilePayment");
+  return c.json({ summary: "...", receipt: payment?.receipt });
+});
+
+export default app;
 ```
 
-[docs/RUNBOOK.md](docs/RUNBOOK.md) has the ports, every service command and the recovery steps.
+`expressPaywall` does the same for Express and plain `node:http`. `createPaywall` is the framework agnostic core.
 
-## Tests
+### Pay from an agent
+
+```ts
+import { createAgent, PolicyRefusedError, readKeypairFile } from "@turnstile/sdk-agent";
+
+const agent = createAgent({
+  rpcUrl: "http://127.0.0.1:8899",
+  agentWallet: "9mJm7GQ5JkzJ2Lq4bYVd3m1kXyU8cTzQnF1wR6pH2sDa",
+  sessionKey: readKeypairFile("agent-session.json"),
+  maxPerCall: "0.01",
+});
+
+try {
+  const res = await agent.fetch("http://127.0.0.1:4021/v1/summarize", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ text: "Long text to summarize." }),
+  });
+  console.log(res.status, res.payment?.receipt);
+} catch (err) {
+  if (err instanceof PolicyRefusedError) {
+    console.log(`refused before signing: ${err.reason}`);
+  } else {
+    throw err;
+  }
+}
+```
+
+`agent.fetch` behaves like `fetch`. It reads the wallet policy from chain, refuses a payment outside it before the key signs anything, pays a 402 that fits and retries once. The addresses above are illustrative. Use your own wallet PDA and recipient.
+
+### Run the tests
 
 ```sh
-cargo test -p settlement -p agent-wallet              # program tests in LiteSVM, needs target/deploy/*.so
+cargo test -p settlement -p agent-wallet                               # programs in LiteSVM, needs target/deploy/*.so
 pnpm build
-pnpm -r --filter '!@turnstile/e2e' run test           # unit tests, needs Postgres on 5433
-TURNSTILE_INTEGRATION=1 pnpm --filter @turnstile/sdk-resource test   # real validator and facilitator
-pnpm e2e                                              # full stack and the end to end suite
-E2E_STACK=infra pnpm e2e                              # what CI runs
+pnpm -r --filter '!@turnstile/e2e' run test                            # unit tests, needs Postgres on 5433
+TURNSTILE_INTEGRATION=1 pnpm --filter @turnstile/sdk-resource test     # real validator and facilitator
+pnpm e2e                                                               # full stack and the end to end suite
 ```
 
-Root `pnpm test` also runs `@turnstile/e2e`, which needs a running stack. [docs/TESTPLAN.md](docs/TESTPLAN.md) maps every requirement to its tests.
+## CLI and API
+
+The agent SDK ships a small CLI for session keys.
+
+```sh
+node packages/sdk-agent/dist/cli.js keygen --out agent-session.json   # writes mode 0600, prints only the public key
+node packages/sdk-agent/dist/cli.js address agent-session.json
+```
+
+The facilitator speaks x402 version 2 with the `turnstile-policy` scheme.
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /supported` | Schemes, network, program ids and asset this facilitator settles |
+| `POST /requirements` | Builds `PaymentRequirements` for a resource and price |
+| `POST /verify` | Checks a signed payment against the requirements |
+| `POST /settle` | Submits the settlement transaction and returns the receipt |
+
+Headers on the wire are `PAYMENT-REQUIRED` on the 402, `PAYMENT-SIGNATURE` on the retry and `PAYMENT-RESPONSE` on success. [docs/API.md](docs/API.md) has every field, the console backend routes and captured examples.
 
 ## Documentation
 
@@ -104,40 +209,6 @@ Root `pnpm test` also runs `@turnstile/e2e`, which needs a running stack. [docs/
 - [docs/adr](docs/adr) for the decisions behind the design.
 - Package READMEs in `packages/*/README.md` for each service in depth.
 
-## Program ids
+## License
 
-| Program | Id |
-| --- | --- |
-| agent_wallet | `7onzUVc1HGc9oBDUspBdP8dz1QW6uXrSdBn4NH6aiLb` |
-| settlement | `6FrY43zorjSv8wCuarPL3z8ZnyBTyyC86xRjBqgu1K9z` |
-
-The same ids are used on the local validator and on devnet. They are not deployed to devnet yet.
-
-## Status
-
-Everything below was proven on a local `solana-test-validator` (Agave 4.0.2). Nothing has run on a public cluster.
-
-Proven locally.
-
-- The full loop from 402 to a receipt on chain that matches the indexer row field by field (`packages/e2e/test/product-loop.test.ts`).
-- An over-cap payment, an off allow-list payment and a replayed nonce each fail inside the program when sent straight to it, bypassing the facilitator and the SDK.
-- The live demo run settles six calls and the chain refuses the seventh with `DailyCapExceeded`.
-- The indexer survives a SIGKILL mid-stream with no gap and no duplicate, and restarts cleanly after a ledger reset.
-- Receipt rent reclaim with `close_receipt` after the 7 day retention, including a replay after close that fails as expired and moves no funds (LiteSVM).
-
-Measured numbers, with their conditions.
-
-- `settle` uses about 47k to 53k compute units in the LiteSVM tests. The spread comes from PDA bump searches. Runs on 30 Sep 2026 read 48,907, 51,907 and 53,407.
-- `close_receipt` uses 4,155 compute units and returns 3,180,720 lamports of rent.
-- Paid request median about 440 ms (455 ms and 427 ms in two runs of 25) from `packages/sdk-resource/test/integration.test.ts` on a lightly loaded WSL2 host, from the [facilitator README](packages/facilitator/README.md).
-- The e2e latency run (`packages/e2e/test/latency.test.ts`) failed its 2,000 ms budget with a 2.9 s median and a 4.0 s p90. That run had a 1 minute load average of about 87 on 8 CPUs. NFR3 is therefore not proven under load.
-
-UNVERIFIED. Each item and the step that clears it is in [BLOCKERS.md](BLOCKERS.md).
-
-- Devnet deploy of both programs. The deployer has no devnet SOL.
-- The web app on Vercel and public hosting of the services.
-- NFR3 latency under load.
-- Frontend performance on mobile. Lighthouse mobile performance on the home page measured 82 to 88 across runs, and only the home page was measured.
-- The console with a real browser extension wallet. The browser tests use a test-only Wallet Standard wallet.
-- Receipt reclaim on a validator after a real 7 day wait. The validator run used preloaded receipts.
-- The validator image built from the Agave release download.
+MIT. See [LICENSE](LICENSE).

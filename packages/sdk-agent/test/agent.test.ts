@@ -242,6 +242,58 @@ describe("refusal before signing", () => {
     expect(err).toMatchObject({ reason: "AuthorizationExpired" });
     expect(srv.requests).toHaveLength(1);
   });
+
+  it("refuses requirements that ask for a signature valid longer than 300 seconds by default", async () => {
+    const { agent, events, srv } = await setup({
+      tamper: (r) => ({
+        ...r,
+        extra: { ...r.extra, expiresAt: String(Math.floor(Date.now() / 1000) + 3600) },
+      }),
+    });
+    const err = await agent.fetch(`${srv.url}/v1/summarize`).catch((e) => e);
+    expect(err).toBeInstanceOf(PolicyRefusedError);
+    expect(err).toMatchObject({ reason: "AuthorizationTtlTooLong", code: "policy_refused" });
+    expect(err.message).toContain("at most 300 seconds");
+    expect(events).toEqual([expect.objectContaining({ type: "refused", reason: "AuthorizationTtlTooLong" })]);
+    // Nothing was signed, so the server saw only the unpaid request.
+    expect(srv.requests).toHaveLength(1);
+    expect(srv.verified).toHaveLength(0);
+  });
+
+  it("signs an expiry exactly at maxAuthorizationTtlSeconds and refuses one second more", async () => {
+    const fixedNow = 1_800_000_000_000;
+    const nowUnix = fixedNow / 1000;
+    let ahead = 120;
+    const { agent, srv } = await setup(
+      {
+        tamper: (r) => ({ ...r, extra: { ...r.extra, expiresAt: String(nowUnix + ahead) } }),
+      },
+      (paid) => policy({}, [paid]),
+      { maxAuthorizationTtlSeconds: 120, now: () => fixedNow },
+    );
+    const ok = await agent.fetch(`${srv.url}/v1/summarize`);
+    expect(ok.status).toBe(200);
+    expect(srv.verified).toHaveLength(1);
+
+    ahead = 121;
+    const err = await agent.fetch(`${srv.url}/v1/summarize`).catch((e) => e);
+    expect(err).toMatchObject({ reason: "AuthorizationTtlTooLong" });
+    expect(err.message).toContain("valid for 121 seconds");
+    expect(srv.verified).toHaveLength(1);
+  });
+
+  it("rejects a maxAuthorizationTtlSeconds that is not a positive whole number", () => {
+    for (const bad of [0, -5, 1.5, Number.NaN]) {
+      expect(() =>
+        createAgent({
+          agentWallet: walletAddress,
+          sessionKey: session.secretKey,
+          stateSource: { load: async () => snapshot(policy()) },
+          maxAuthorizationTtlSeconds: bad,
+        }),
+      ).toThrow(/maxAuthorizationTtlSeconds must be a positive whole number/);
+    }
+  });
 });
 
 describe("hostile or unusable requirements", () => {

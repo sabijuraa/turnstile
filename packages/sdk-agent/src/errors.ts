@@ -17,6 +17,7 @@ export type RefusalReason =
   | PolicyViolation
   | "LocalCapExceeded"
   | "AuthorizationExpired"
+  | "AuthorizationTtlTooLong"
   | "MintMismatch";
 
 /**

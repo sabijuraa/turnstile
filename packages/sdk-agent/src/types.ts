@@ -12,6 +12,11 @@ export interface AgentOptions {
   sessionKey: Keypair | Uint8Array;
   /** Optional local cap per call, as a decimal token amount such as "0.01". Tighter than the chain. */
   maxPerCall?: string;
+  /**
+   * Longest time a signed authorization may stay valid, in seconds. Requirements whose
+   * `extra.expiresAt` is further ahead are refused with `AuthorizationTtlTooLong`. Default 300.
+   */
+  maxAuthorizationTtlSeconds?: number;
   /** Check the on-chain policy locally before signing. Default true. */
   localPolicyCheck?: boolean;
   /** How long a read of the wallet stays fresh, in milliseconds. Default 15000. */

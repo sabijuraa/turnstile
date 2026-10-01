@@ -35,6 +35,7 @@ import type { WalletSnapshot, WalletStateSource } from "./state.js";
 import type { Agent, AgentOptions, PaidResponse, PaymentEvent, PaymentInfo } from "./types.js";
 
 const DEFAULT_POLICY_TTL_MS = 15_000;
+const DEFAULT_MAX_AUTHORIZATION_TTL_SECONDS = 300;
 
 interface LocalSpend {
   unix: bigint;
@@ -128,6 +129,14 @@ export function createAgent(options: AgentOptions): Agent {
       );
     }
   }
+  const maxTtlSeconds = options.maxAuthorizationTtlSeconds ?? DEFAULT_MAX_AUTHORIZATION_TTL_SECONDS;
+  if (!Number.isSafeInteger(maxTtlSeconds) || maxTtlSeconds <= 0) {
+    throw new TurnstileAgentError(
+      "invalid_option",
+      "maxAuthorizationTtlSeconds must be a positive whole number of seconds.",
+    );
+  }
+  const maxTtl = BigInt(maxTtlSeconds);
   const localPolicyCheck = options.localPolicyCheck ?? true;
   const ttlMs = options.policyTtlMs ?? DEFAULT_POLICY_TTL_MS;
   const now = options.now ?? Date.now;
@@ -234,6 +243,14 @@ export function createAgent(options: AgentOptions): Agent {
       refuse(
         "AuthorizationExpired",
         "The payment requirements expired before the agent could sign. Request the resource again.",
+        resource,
+        auth.amount,
+      );
+    }
+    if (auth.expiresAt - nowUnix > maxTtl) {
+      refuse(
+        "AuthorizationTtlTooLong",
+        `The payment requirements ask for a signature valid for ${auth.expiresAt - nowUnix} seconds. This agent signs for at most ${maxTtl} seconds. Ask the server for a shorter maxTimeoutSeconds or raise maxAuthorizationTtlSeconds.`,
         resource,
         auth.amount,
       );

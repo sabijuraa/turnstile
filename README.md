@@ -63,7 +63,7 @@ Every item below is asserted by a test in this repository.
 | `settle` compute units | 48,907 to 53,407 | LiteSVM, `programs/settlement/tests/settle.rs`. The spread comes from PDA bump searches |
 | `close_receipt` compute units | 4,155 | LiteSVM, `programs/settlement/tests/close_receipt.rs` |
 | Rent reclaimed per closed receipt | 3,180,720 lamports | 329 byte receipt account |
-| Paid request, end to end | median 364 ms, p90 520 ms | 20 sequential requests, full Docker stack on a 4 CPU CI runner, local validator |
+| Paid request, end to end | median 349 ms, p90 496 ms | 20 sequential requests through the agent SDK, CI run 37419090698 on a 4 CPU runner, local validator |
 | Paid request, SDK to settlement | median 392 ms, p90 545 ms | 25 requests, `sdk-resource` integration test on a local validator |
 
 ## Layout

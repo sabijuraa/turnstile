@@ -172,7 +172,7 @@ Rust tests live in `programs/settlement/tests/{settle,wallet,close_receipt,revie
 
 - `int` `sdk-resource/test/integration.test.ts` "keeps the median paid request under two seconds (NFR3)". Two runs of 25 measured medians of 455 ms and 427 ms on a lightly loaded WSL2 host. The numbers are in [packages/facilitator/README.md](../packages/facilitator/README.md).
 - `e2e` `packages/e2e/test/latency.test.ts` measures 20 paid requests through the agent SDK and writes `packages/e2e/results/latency.json`.
-- UNVERIFIED under load. The last e2e run failed its 2,000 ms budget with a 2,931.6 ms median and a 4,042.8 ms p90. The 1 minute load average was about 87 on 8 CPUs during that run.
+- Verified in CI run 37419090698 on 6 Oct 2026. Median 349.2 ms and p90 496.3 ms against the 2,000 ms budget, 20 runs on a 4 CPU runner with a 1 minute load average of 2.6. The `e2e-results` artifact of every CI run holds the measurement. A run on this build host under a load average near 87 measured a 2,931.6 ms median, so the budget holds on a sane host and an overloaded host is the known exception.
 
 ### NFR4. Reliability
 
@@ -213,5 +213,6 @@ Rust tests live in `programs/settlement/tests/{settle,wallet,close_receipt,revie
 
 - Devnet. Nothing has been deployed or run on a public cluster.
 - Vercel. The web app has not been deployed, and the services have no public hosting.
-- The validator image built from the Agave release download.
 - The quickstart commands `pnpm dev:up` and `pnpm stack:up` were not rerun end to end after the last changes.
+
+The CI `docker (validator)` job builds `infra/docker/validator.Dockerfile` from the GitHub release download with its sha256 checked on every push, so the image needs no local build on a fast link.

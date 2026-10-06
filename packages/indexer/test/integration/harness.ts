@@ -323,8 +323,7 @@ export async function compareWithChain(
       network: row.network,
     }).toEqual({
       receipt_address: address,
-      signature:
-        opts.allowNullSignature && row.signature === null ? null : landed.get(address),
+      signature: opts.allowNullSignature && row.signature === null ? null : landed.get(address),
       slot: r.slot.toString(),
       epoch: r.unixTimestamp.toString(),
       agent_wallet: r.agentWallet.toBase58(),

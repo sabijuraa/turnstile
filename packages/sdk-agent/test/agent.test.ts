@@ -254,7 +254,9 @@ describe("refusal before signing", () => {
     expect(err).toBeInstanceOf(PolicyRefusedError);
     expect(err).toMatchObject({ reason: "AuthorizationTtlTooLong", code: "policy_refused" });
     expect(err.message).toContain("at most 300 seconds");
-    expect(events).toEqual([expect.objectContaining({ type: "refused", reason: "AuthorizationTtlTooLong" })]);
+    expect(events).toEqual([
+      expect.objectContaining({ type: "refused", reason: "AuthorizationTtlTooLong" }),
+    ]);
     // Nothing was signed, so the server saw only the unpaid request.
     expect(srv.requests).toHaveLength(1);
     expect(srv.verified).toHaveLength(0);

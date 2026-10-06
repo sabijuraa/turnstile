@@ -37,7 +37,10 @@ let validator: Validator | undefined;
 const indexers: IndexerProc[] = [];
 
 async function historyStart(c: Chain): Promise<number> {
-  const [a, b] = await Promise.all([c.conn.getMinimumLedgerSlot(), c.conn.getFirstAvailableBlock()]);
+  const [a, b] = await Promise.all([
+    c.conn.getMinimumLedgerSlot(),
+    c.conn.getFirstAvailableBlock(),
+  ]);
   return Math.max(a, b);
 }
 

@@ -12,10 +12,13 @@
 
 name: turnstile
 
+# This Docker host has no bridge network, so builds default to the host network.
+# CI builds through a containerized buildx that refuses host networking, so it
+# sets TURNSTILE_BUILD_NETWORK=default instead.
 x-node-build: &node-build
   context: ..
   dockerfile: infra/docker/node.Dockerfile
-  network: host
+  network: ${TURNSTILE_BUILD_NETWORK:-host}
 
 x-node-service: &node-service
   network_mode: host
@@ -46,7 +49,7 @@ services:
     build:
       context: ..
       dockerfile: infra/docker/validator.Dockerfile
-      network: host
+      network: ${TURNSTILE_BUILD_NETWORK:-host}
     image: turnstile/validator:agave-4.0.2
     network_mode: host
     init: true

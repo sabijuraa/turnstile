@@ -207,6 +207,10 @@ jobs:
         run: infra/scripts/e2e.sh
         env:
           E2E_STACK: infra
+          # The runner's compose builds through a containerized buildx that
+          # refuses host networking, which is only a workaround for the WSL2
+          # build host anyway.
+          TURNSTILE_BUILD_NETWORK: default
       - name: Upload e2e results and logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

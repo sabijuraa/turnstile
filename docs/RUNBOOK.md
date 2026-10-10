@@ -102,6 +102,7 @@ After a change to the program interface, sync the IDLs into the shared package w
 | End to end, full | `pnpm e2e` | Docker |
 | End to end, infra | `E2E_STACK=infra pnpm e2e` | Docker for validator and Postgres only |
 | End to end, running stack | `E2E_STACK=running pnpm e2e` | a stack from `pnpm stack:up`, left running |
+| Horizontal scale (NFR5) | `bash infra/scripts/scale-e2e.sh` | Docker, ports 4020 to 4024 and 4030 to 4033 free |
 | Web unit tests | `pnpm --filter @turnstile/web test` | nothing |
 | Web contrast | `pnpm --filter @turnstile/web contrast` | nothing |
 | Web browser audit | `pnpm --filter @turnstile/web e2e` | a running web app, Playwright Chromium |

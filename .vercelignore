@@ -1,0 +1,16 @@
+target/
+keys/
+programs/
+infra/
+test-ledger/
+.anchor/
+**/node_modules/
+**/dist/
+**/.next/
+**/.next-*/
+**/coverage/
+apps/web/output/
+apps/web/e2e/output/
+**/*-keypair.json
+.env
+.env.*

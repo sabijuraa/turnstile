@@ -83,8 +83,8 @@ export class SourceError extends Error {
 }
 
 /**
- * The node refused a `signatures` call because it no longer holds the `until` signature, for
- * example after it purged old ledger data. The indexer then resumes by slot.
+ * The node refused a `signatures` call because it no longer holds the `until` signature or
+ * purged the slots on the way to it. The indexer then resumes by slot and backfills.
  */
 export class UntilSignatureUnavailableError extends Error {
   override name = "UntilSignatureUnavailableError";

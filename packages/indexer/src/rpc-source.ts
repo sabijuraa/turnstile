@@ -18,6 +18,11 @@ import { SourceError, UntilSignatureUnavailableError } from "./source.js";
 
 /** How Agave answers `getSignaturesForAddress` when it no longer holds the `until` signature. */
 const UNTIL_MISSING = /not found|TransactionHistoryNotAvailable|history is not available/i;
+/**
+ * How Agave answers `getSignaturesForAddress` when the walk crosses slots the node purged.
+ * It throws instead of truncating, even when every purged entry would have been past `limit`.
+ */
+const SLOT_CLEANED = /cleaned up/i;
 
 /** Turns program output into receipts. Backed by the shared settlement client. */
 export interface SettlementDecoder {
@@ -121,28 +126,54 @@ export function createRpcSource(opts: RpcSourceOptions): ReceiptSource {
     },
 
     async signatures(page: SignaturePage): Promise<SignatureInfo[]> {
-      let list: Awaited<ReturnType<SolanaRpc["getSignaturesForAddress"]>>;
-      try {
-        list = await rpc.getSignaturesForAddress(
-          settlementProgram,
-          {
-            limit: page.limit,
-            ...(page.until ? { until: page.until } : {}),
-            ...(page.before ? { before: page.before } : {}),
-          },
-          commitment,
-        );
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        if (page.until && UNTIL_MISSING.test(msg)) {
-          throw new UntilSignatureUnavailableError(
-            `The node no longer holds signature ${page.until} (${msg}).`,
-            { cause: err },
+      // Without `until` the node walks back until `limit` entries are found, and it throws
+      // SLOT_CLEANED when that walk crosses purged slots. The entries it does serve must still
+      // come back, so on that error the page is collected in shrinking steps until the walk
+      // lands exactly on the purged boundary. A short page then really means the history ends.
+      const out: SignatureInfo[] = [];
+      let before = page.before;
+      let remaining = page.limit;
+      let step = page.limit;
+      while (remaining > 0) {
+        const ask = Math.min(step, remaining);
+        let list: Awaited<ReturnType<SolanaRpc["getSignaturesForAddress"]>>;
+        try {
+          list = await rpc.getSignaturesForAddress(
+            settlementProgram,
+            {
+              limit: ask,
+              ...(page.until ? { until: page.until } : {}),
+              ...(before ? { before } : {}),
+            },
+            commitment,
           );
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          if (page.until && (UNTIL_MISSING.test(msg) || SLOT_CLEANED.test(msg))) {
+            // The walk cannot reach `until` any more. Serving only part of the page here would
+            // silently skip the rest, so the caller must resume by slot and backfill instead.
+            throw new UntilSignatureUnavailableError(
+              `The node no longer holds signature ${page.until} (${msg}).`,
+              { cause: err },
+            );
+          }
+          if (SLOT_CLEANED.test(msg)) {
+            if (ask === 1) return out;
+            step = Math.max(1, Math.floor(ask / 4));
+            continue;
+          }
+          throw err;
         }
-        throw err;
+        for (const s of list) {
+          out.push({ signature: s.signature, slot: s.slot, failed: s.err !== null });
+        }
+        if (list.length < ask) return out;
+        remaining -= list.length;
+        const last = list[list.length - 1];
+        if (!last) return out;
+        before = last.signature;
       }
-      return list.map((s) => ({ signature: s.signature, slot: s.slot, failed: s.err !== null }));
+      return out;
     },
 
     async signatureKnown(signature) {

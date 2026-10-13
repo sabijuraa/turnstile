@@ -266,6 +266,57 @@ describe("rpc source", () => {
     );
   });
 
+  it("treats a cleaned up slot on the way to until as the until being unavailable", async () => {
+    const { rpc } = fakeRpc({
+      getSignaturesForAddress: (async () => {
+        throw new Error("failed to get signatures for address: slot cleaned up");
+      }) as SolanaRpc["getSignaturesForAddress"],
+    });
+    const src = createRpcSource({
+      rpc,
+      settlementProgram: program,
+      decoder: testDecoder(new Map()),
+    });
+    await expect(src.signatures({ until: "5xyz", limit: 10 })).rejects.toBeInstanceOf(
+      UntilSignatureUnavailableError,
+    );
+  });
+
+  it("serves what the node still holds when the walk crosses purged slots", async () => {
+    // Agave throws "slot cleaned up" instead of truncating whenever a page would have to walk
+    // into purged slots, even for entries past the ones it can serve. The source must still
+    // return every served entry, in shrinking steps, and only then report the page as short.
+    const served = [
+      { signature: "sigC", slot: 30, err: null },
+      { signature: "sigB", slot: 20, err: null },
+      { signature: "sigA", slot: 10, err: null },
+    ];
+    const getSignaturesForAddress = (async (
+      _addr: unknown,
+      opts?: { limit?: number; before?: string },
+    ) => {
+      const start = opts?.before ? served.findIndex((s) => s.signature === opts.before) + 1 : 0;
+      const window = served.slice(start);
+      if ((opts?.limit ?? 1000) > window.length) {
+        throw new Error("failed to get signatures for address: slot cleaned up");
+      }
+      return window.slice(0, opts?.limit);
+    }) as SolanaRpc["getSignaturesForAddress"];
+    const src = createRpcSource({
+      rpc: fakeRpc({ getSignaturesForAddress }).rpc,
+      settlementProgram: program,
+      decoder: testDecoder(new Map()),
+    });
+    await expect(src.signatures({ limit: 10 })).resolves.toEqual([
+      { signature: "sigC", slot: 30, failed: false },
+      { signature: "sigB", slot: 20, failed: false },
+      { signature: "sigA", slot: 10, failed: false },
+    ]);
+    // A page that starts inside the purged region is empty, not an error.
+    served.length = 0;
+    await expect(src.signatures({ limit: 5 })).resolves.toEqual([]);
+  });
+
   it("reports history from the later of the minimum ledger slot and the first block", async () => {
     const { rpc } = fakeRpc({
       getMinimumLedgerSlot: (async () => 700) as SolanaRpc["getMinimumLedgerSlot"],

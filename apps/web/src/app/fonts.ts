@@ -5,7 +5,7 @@ export const display = Newsreader({
   subsets: ["latin"],
   weight: ["500", "600"],
   style: ["normal"],
-  display: "swap",
+  display: "optional",
   variable: "--font-newsreader",
   adjustFontFallback: true,
   fallback: ["Iowan Old Style", "Palatino Linotype", "Georgia", "serif"],
@@ -15,7 +15,7 @@ export const display = Newsreader({
 export const text = Hanken_Grotesk({
   subsets: ["latin"],
   weight: "variable",
-  display: "swap",
+  display: "optional",
   variable: "--font-hanken",
   fallback: ["Segoe UI", "Helvetica Neue", "Helvetica", "sans-serif"],
 });
@@ -24,7 +24,7 @@ export const text = Hanken_Grotesk({
 export const mono = IBM_Plex_Mono({
   subsets: ["latin"],
   weight: ["400", "500"],
-  display: "swap",
+  display: "optional",
   variable: "--font-plex-mono",
   preload: false,
   fallback: ["ui-monospace", "Menlo", "Consolas", "monospace"],

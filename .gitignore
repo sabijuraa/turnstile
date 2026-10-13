@@ -22,3 +22,5 @@ playwright-report/
 test-results/
 apps/web/AGENTS.md
 apps/web/CLAUDE.md
+apps/web/output/
+deployments/localnet.json

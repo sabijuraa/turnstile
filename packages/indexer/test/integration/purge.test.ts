@@ -108,15 +108,19 @@ describe.skipIf(!enabled)("indexer against a validator that purges its ledger", 
         );
       }
     }
-    const listed = await chain.conn.getSignaturesForAddress(
-      chain.agentWallet,
-      { limit: 1000 },
-      "confirmed",
-    );
+    // Agave either truncates the listing or throws "slot cleaned up" once the walk crosses
+    // purged slots. Both prove the oldest settlements are gone from the node.
+    const listed = await chain.conn
+      .getSignaturesForAddress(chain.agentWallet, { limit: 1000 }, "confirmed")
+      .then((l) => l.length)
+      .catch((err) => {
+        expect(String(err)).toMatch(/cleaned up/i);
+        return -1;
+      });
     log(
-      `getSignaturesForAddress now lists ${listed.length} of ${okSigs.length + 1} wallet transactions. The oldest settlements are gone from the node`,
+      `getSignaturesForAddress now ${listed < 0 ? "throws slot cleaned up" : `lists ${listed}`} for ${okSigs.length + 1} wallet transactions. The oldest settlements are gone from the node`,
     );
-    expect(listed.length).toBeLessThan(okSigs.length);
+    expect(listed).toBeLessThan(okSigs.length);
 
     // 1. Restart past a purged checkpoint.
     const restarted = startIndexer("after-purge");

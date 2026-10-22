@@ -420,11 +420,12 @@ describe.skipIf(!enabled)("paid request on a real validator", () => {
     expect(await balance(recipientToken)).toBe(recipientBefore + PRICE_UNITS);
   });
 
-  it("answers a replayed payment header with the same settlement and no second debit", async () => {
+  it("refuses a replayed payment header with the same settlement and no second debit", async () => {
     const vaultBefore = await balance(vault);
     const runsBefore = handlerRuns;
     const res = await post(`${apiUrl}/v1/summarize`, firstHeader);
-    expect(res.status).toBe(200);
+    // One payment buys one response, so the replay is refused and told where its receipt is.
+    expect(res.status).toBe(409);
     const settlement = decodeHeader<SettlementResponse>(res.headers.get("payment-response") ?? "");
     expect(settlement).toMatchObject({
       success: true,
@@ -432,11 +433,11 @@ describe.skipIf(!enabled)("paid request on a real validator", () => {
       transaction: firstSettlement?.transaction,
       receipt: firstSettlement?.receipt,
     });
-    expect(handlerRuns).toBe(runsBefore + 1);
+    expect(handlerRuns).toBe(runsBefore);
     expect(await balance(vault)).toBe(vaultBefore);
   });
 
-  it("settles concurrent copies of one payment exactly once", async () => {
+  it("settles concurrent copies of one payment exactly once and serves it once", async () => {
     const vaultBefore = await balance(vault);
     const header = sign(await requirementsFor(`${apiUrl}/v1/summarize`));
     const responses = await Promise.all(
@@ -445,7 +446,7 @@ describe.skipIf(!enabled)("paid request on a real validator", () => {
     const settlements = responses.map((r) =>
       decodeHeader<SettlementResponse>(r.headers.get("payment-response") ?? ""),
     );
-    expect(responses.map((r) => r.status)).toEqual([200, 200, 200, 200, 200]);
+    expect(responses.map((r) => r.status).sort()).toEqual([200, 409, 409, 409, 409]);
     expect(new Set(settlements.map((s) => s.transaction)).size).toBe(1);
     expect(await balance(vault)).toBe(vaultBefore - PRICE_UNITS);
   });

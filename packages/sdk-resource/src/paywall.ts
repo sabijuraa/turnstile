@@ -5,6 +5,7 @@ import {
   decodeHeader,
   encodeHeader,
   HEADER_PAYMENT_REQUIRED,
+  HEADER_PAYMENT_RESPONSE,
   HEADER_PAYMENT_SIGNATURE,
   type PaymentPayload,
   type PaymentRequired,
@@ -47,6 +48,40 @@ export interface PaywallOptions {
   timeoutMs?: number;
   /** Timeout for the settle call, which waits for confirmation. Default 60 seconds. */
   settleTimeoutMs?: number;
+  /**
+   * Remembers which payments have already been served, so one payment buys one response.
+   * Defaults to an in-memory record, which is right for a single server. Several servers behind
+   * a load balancer should share one, for example in Redis or Postgres.
+   */
+  servedPayments?: ServedPayments;
+}
+
+/**
+ * The record of payments that have bought a response. `claim` returns true the first time a key
+ * is claimed and false after that, until `untilMs` passes.
+ */
+export interface ServedPayments {
+  claim(key: string, untilMs: number): boolean | Promise<boolean>;
+}
+
+/** Seconds a receipt stays on chain after its authorization expires, before it can be closed. */
+const RECEIPT_RETENTION_SECONDS = 7 * 24 * 60 * 60;
+
+/** A served-payments record for one process. Expired entries are dropped as new ones arrive. */
+export function memoryServedPayments(now: () => number = Date.now): ServedPayments {
+  const seen = new Map<string, number>();
+  return {
+    claim(key, untilMs) {
+      const t = now();
+      if (seen.size > 1024) {
+        for (const [k, until] of seen) if (until <= t) seen.delete(k);
+      }
+      const until = seen.get(key);
+      if (until !== undefined && until > t) return false;
+      seen.set(key, untilMs);
+      return true;
+    },
+  };
 }
 
 /** Body of a 402 sent after a refused payment. PaymentRequired plus why it was refused. */
@@ -139,6 +174,7 @@ export function createPaywall(options: PaywallOptions): Paywall {
     timeoutMs: options.timeoutMs,
     settleTimeoutMs: options.settleTimeoutMs,
   });
+  const served = options.servedPayments ?? memoryServedPayments();
   /** The last requirements seen per resource. Holds the terms a payment must match. */
   const terms = new Map<string, PaymentRequirements>();
 
@@ -254,6 +290,27 @@ export function createPaywall(options: PaywallOptions): Paywall {
 
     const settlement = await facilitator.settle(payload, requirements);
     if (settlement.success) {
+      // One payment buys one response. A replayed header settles idempotently on chain, so it
+      // would otherwise be served again for free for as long as its receipt exists.
+      const key = `${settlement.payer}:${requirements.extra.nonce}`;
+      const untilMs = (Number(requirements.extra.expiresAt) + RECEIPT_RETENTION_SECONDS) * 1000;
+      if (!(await served.claim(key, untilMs))) {
+        return {
+          kind: "rejected",
+          reason: "payment_already_used",
+          response: json(
+            409,
+            {
+              error: {
+                code: "payment_already_used",
+                message:
+                  "This payment has already bought a response. Sign a new payment for the 402 this route returns.",
+              },
+            },
+            { [HEADER_PAYMENT_RESPONSE]: encodeHeader(settlement) },
+          ),
+        };
+      }
       return {
         kind: "paid",
         settlement,

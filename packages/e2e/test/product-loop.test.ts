@@ -300,7 +300,7 @@ describe("the loop, from 402 to a receipt in chain and store (FR1, FR4, FR7, FR9
     );
   });
 
-  it("serves a replayed payment header from the original receipt without a second debit", async () => {
+  it("refuses a replayed payment header with the original receipt and no second debit", async () => {
     const loop = requireLoop();
     const vaultBefore = await f.chain.tokenBalance(f.loop.vault);
     const res = await post(
@@ -308,7 +308,8 @@ describe("the loop, from 402 to a receipt in chain and store (FR1, FR4, FR7, FR9
       { text: TEXT, sentences: 2 },
       { [HEADER_PAYMENT_SIGNATURE]: loop.paymentHeader },
     );
-    expect(res.status).toBe(200);
+    // One payment buys one response. The replay is told its payment already settled.
+    expect(res.status).toBe(409);
     const settlement = decodeHeader<SettlementResponse>(
       res.headers.get(HEADER_PAYMENT_RESPONSE) as string,
     );

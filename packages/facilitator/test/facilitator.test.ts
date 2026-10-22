@@ -172,6 +172,29 @@ describe("POST /verify", () => {
     expect(res.invalidReason).toBe("requirements_mismatch");
   });
 
+  it("refuses an authorization signed for a later expiry than the requirements", async () => {
+    const agent = addWallet(h.chain);
+    const req = await issue(h, agent);
+    const { payload } = buildPayload(req, agent, { expiresAt: BigInt(req.extra.expiresAt) + 1n });
+    const res = await verify({ paymentPayload: payload, paymentRequirements: req });
+    expect(res.invalidReason).toBe("authorization_mismatch");
+  });
+
+  it("refuses requirements whose expiry sits far beyond the facilitator's timeout", async () => {
+    const agent = addWallet(h.chain);
+    const issued = await issue(h, agent);
+    // A resource server copies the expiry the client accepted, so a client can send any value.
+    const far = BigInt(issued.extra.expiresAt) + 10n * 86_400n;
+    const req: PaymentRequirements = {
+      ...issued,
+      extra: { ...issued.extra, expiresAt: far.toString() },
+    };
+    const { payload } = buildPayload(req, agent);
+    const res = await verify({ paymentPayload: payload, paymentRequirements: req });
+    expect(res.isValid).toBe(false);
+    expect(res.invalidReason).toBe("authorization_mismatch");
+  });
+
   it("refuses an authorization for a different amount than required", async () => {
     const agent = addWallet(h.chain);
     const req = await issue(h, agent);

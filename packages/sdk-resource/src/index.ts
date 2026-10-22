@@ -15,10 +15,12 @@ export {
 export { honoPaywall, type PaywallEnv, type PaywallVariables } from "./hono.js";
 export {
   createPaywall,
+  memoryServedPayments,
   type PaymentRejected,
   type Paywall,
   type PaywallOptions,
   type PaywallOutcome,
   type PaywallRoute,
   resourceIdHex,
+  type ServedPayments,
 } from "./paywall.js";

@@ -12,7 +12,12 @@ import { Hono } from "hono";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { expressPaywall, getSettlement } from "../src/express.js";
 import { honoPaywall, type PaywallEnv } from "../src/hono.js";
-import { createPaywall, type PaymentRejected, type PaywallOptions } from "../src/paywall.js";
+import {
+  createPaywall,
+  memoryServedPayments,
+  type PaymentRejected,
+  type PaywallOptions,
+} from "../src/paywall.js";
 import { FACILITATOR_URL, FakeFacilitator, payHeader } from "./fake-facilitator.js";
 
 const PAY_TO = Keypair.generate().publicKey.toBase58();
@@ -223,6 +228,41 @@ describe.each([honoAdapter, expressAdapter])("$name adapter", (adapter) => {
     expect(res.status).toBe(200);
     const settlement = decodeHeader<SettlementResponse>(res.headers.get("payment-response") ?? "");
     expect(settlement.alreadySettled).toBe(true);
+  });
+
+  it("serves one payment once and refuses the same header after that", async () => {
+    const req = (await required(await send("/v1/summarize", post())))
+      .accepts[0] as PaymentRequirements;
+    fake.settlement = {
+      success: true,
+      transaction: "6sig",
+      network: "solana:localnet",
+      payer: "wallet",
+      receipt: "receipt",
+    };
+    const before = handlerRuns();
+    const first = await send("/v1/summarize", post(payHeader(req)));
+    expect(first.status).toBe(200);
+    fake.verdict = { isValid: false, invalidReason: "NonceAlreadyUsed", invalidMessage: "used" };
+    fake.settlement = { ...fake.settlement, alreadySettled: true };
+    const again = await send("/v1/summarize", post(payHeader(req)));
+    expect(again.status).toBe(409);
+    const body = (await again.json()) as { error: { code: string } };
+    expect(body.error.code).toBe("payment_already_used");
+    const settlement = decodeHeader<SettlementResponse>(
+      again.headers.get("payment-response") ?? "",
+    );
+    expect(settlement.transaction).toBe("6sig");
+    expect(handlerRuns()).toBe(before + 1);
+  });
+
+  it("forgets a served payment once its receipt could be closed", () => {
+    let t = 1_000;
+    const served = memoryServedPayments(() => t);
+    expect(served.claim("wallet:nonce", 2_000)).toBe(true);
+    expect(served.claim("wallet:nonce", 2_000)).toBe(false);
+    t = 2_001;
+    expect(served.claim("wallet:nonce", 3_000)).toBe(true);
   });
 
   it("returns 402 with the program reason when settlement is refused", async () => {

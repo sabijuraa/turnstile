@@ -68,6 +68,8 @@ const MESSAGES: Record<string, string> = {
     "The session key signature does not cover this authorization. Sign the exact authorization message with the session key named in it.",
   NonceAlreadyUsed:
     "This payment has already settled. Call settle with the same payload to get the original receipt, or sign a new payment.",
+  ExpiryTooFar:
+    "The authorization expires more than 24 hours ahead, which the settlement program refuses. Sign one that expires sooner.",
 };
 
 export function reasonMessage(reason: string): string {

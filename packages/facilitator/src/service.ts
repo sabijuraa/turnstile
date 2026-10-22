@@ -87,6 +87,9 @@ function receiptMatches(r: ReceiptSnapshot, a: PaymentAuthorization): boolean {
  * The facilitator logic, independent of HTTP. Stateless apart from the store, so any number
  * of instances can serve the same traffic.
  */
+/** Clock skew allowed on top of maxTimeoutSeconds when bounding an expiry. */
+const EXPIRY_SLACK_SECONDS = 60n;
+
 export class Facilitator {
   constructor(private readonly d: FacilitatorDeps) {}
 
@@ -254,7 +257,8 @@ export class Facilitator {
       auth.mint.toBase58() !== req.asset ||
       auth.recipient.toBase58() !== req.payTo ||
       bytesToHex(auth.resourceId) !== req.extra.resourceId ||
-      bytesToHex(auth.nonce) !== req.extra.nonce
+      bytesToHex(auth.nonce) !== req.extra.nonce ||
+      auth.expiresAt !== BigInt(req.extra.expiresAt)
     ) {
       return refuse("authorization_mismatch", payer);
     }
@@ -272,6 +276,11 @@ export class Facilitator {
     const reqExpiry = BigInt(p.requirements.extra.expiresAt);
     if (now >= p.auth.expiresAt || now > reqExpiry) {
       return refuse("authorization_expired", p.auth.agentWallet.toBase58());
+    }
+    // The resource server copies the expiry from what the client accepted, so the facilitator
+    // bounds it itself. A far future expiry would keep the receipt rent locked for good.
+    if (p.auth.expiresAt > now + BigInt(this.d.config.maxTimeoutSeconds) + EXPIRY_SLACK_SECONDS) {
+      return refuse("authorization_mismatch", p.auth.agentWallet.toBase58());
     }
     return null;
   }

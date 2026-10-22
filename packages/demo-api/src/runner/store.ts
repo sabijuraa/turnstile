@@ -163,3 +163,122 @@ export class RunStore {
     return () => this.feed.off(runId, listener);
   }
 }
+
+/** What the runner needs from its history. Both stores below provide it. */
+export type RunHistory = Pick<
+  RunStore,
+  | "createRun"
+  | "setWallet"
+  | "append"
+  | "finish"
+  | "get"
+  | "latest"
+  | "running"
+  | "events"
+  | "maxWalletId"
+  | "subscribe"
+>;
+
+/**
+ * Run history held in memory, for a host without Postgres such as a serverless function. It keeps
+ * the most recent runs only, which is all the demo page shows.
+ */
+export class MemoryRunStore implements RunHistory {
+  private readonly feed = new EventEmitter();
+  private readonly runs = new Map<string, RunRecord>();
+  private readonly log = new Map<string, RunEvent[]>();
+
+  constructor(private readonly keep = 20) {
+    this.feed.setMaxListeners(1000);
+  }
+
+  async createRun(id: string, owner: string, network: string): Promise<RunRecord> {
+    const busy = await this.running();
+    if (busy) throw new RunBusyError(busy.id);
+    const run: RunRecord = {
+      id,
+      status: "running",
+      agentWallet: null,
+      walletId: null,
+      owner,
+      network,
+      startedAt: new Date().toISOString(),
+      finishedAt: null,
+      error: null,
+    };
+    this.runs.set(id, run);
+    this.log.set(id, []);
+    while (this.runs.size > this.keep) {
+      const oldest = this.runs.keys().next().value as string;
+      this.runs.delete(oldest);
+      this.log.delete(oldest);
+    }
+    return { ...run };
+  }
+
+  async setWallet(id: string, agentWallet: string, walletId: bigint): Promise<void> {
+    const run = this.runs.get(id);
+    if (run) Object.assign(run, { agentWallet, walletId: walletId.toString() });
+  }
+
+  async append<T extends RunEventType>(
+    runId: string,
+    type: T,
+    data: RunEventMap[T],
+  ): Promise<RunEvent<T>> {
+    const events = this.log.get(runId) ?? [];
+    const event: RunEvent<T> = {
+      runId,
+      seq: events.length + 1,
+      type,
+      data,
+      at: new Date().toISOString(),
+    };
+    events.push(event as RunEvent);
+    this.log.set(runId, events);
+    this.feed.emit(runId, event);
+    return event;
+  }
+
+  async finish(id: string, status: Exclude<RunStatus, "running">, error?: string): Promise<void> {
+    const run = this.runs.get(id);
+    if (run)
+      Object.assign(run, { status, finishedAt: new Date().toISOString(), error: error ?? null });
+  }
+
+  async get(id: string): Promise<RunRecord | null> {
+    const run = this.runs.get(id);
+    return run ? { ...run } : null;
+  }
+
+  async latest(): Promise<RunRecord | null> {
+    const all = [...this.runs.values()];
+    const last = all[all.length - 1];
+    return last ? { ...last } : null;
+  }
+
+  async running(): Promise<RunRecord | null> {
+    for (const run of this.runs.values()) if (run.status === "running") return { ...run };
+    return null;
+  }
+
+  async events(runId: string, afterSeq = 0): Promise<RunEvent[]> {
+    return (this.log.get(runId) ?? []).filter((e) => e.seq > afterSeq);
+  }
+
+  async maxWalletId(owner: string): Promise<bigint | null> {
+    let max: bigint | null = null;
+    for (const run of this.runs.values()) {
+      if (run.owner === owner && run.walletId !== null) {
+        const id = BigInt(run.walletId);
+        if (max === null || id > max) max = id;
+      }
+    }
+    return max;
+  }
+
+  subscribe(runId: string, listener: (event: RunEvent) => void): () => void {
+    this.feed.on(runId, listener);
+    return () => this.feed.off(runId, listener);
+  }
+}

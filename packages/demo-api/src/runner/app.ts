@@ -8,11 +8,11 @@ import type { RunnerMetrics } from "../metrics.js";
 import { DemoRunError } from "./demo-chain.js";
 import { type RunEvent, TERMINAL_EVENTS } from "./events.js";
 import type { DemoRunner } from "./run.js";
-import { RunBusyError, type RunStore } from "./store.js";
+import { RunBusyError, type RunHistory } from "./store.js";
 
 export interface RunnerAppDeps {
   runner: DemoRunner;
-  store: RunStore;
+  store: RunHistory;
   logger: Logger;
   metrics: RunnerMetrics;
   webOrigins: string[];

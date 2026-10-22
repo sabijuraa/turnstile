@@ -1,5 +1,13 @@
 export { type AppDeps, type BackendApp, createApp } from "./app.js";
+export { buildSignInMessage, type SignInFields } from "./auth/message.js";
 export type { AgentDirectory, SolanaRpc } from "./chain/directory.js";
-export { type Config, ConfigError, loadConfig } from "./config.js";
+export { createAgentDirectory } from "./chain/directory.js";
+export { type Config, ConfigError, explorerNetwork, loadConfig } from "./config.js";
 export type { AppEnv, Services } from "./context.js";
+export { ApiError, errorBody } from "./errors.js";
 export { createMetrics, type Metrics } from "./metrics.js";
+export { agentRoutes } from "./routes/agents.js";
+export { txRoutes } from "./routes/tx.js";
+export { type Range, rangeSchema, windowFor } from "./store/range.js";
+export type { ReceiptPage, ReceiptView } from "./store/receipts.js";
+export type { SpendPoint, SpendSeries } from "./store/spend.js";

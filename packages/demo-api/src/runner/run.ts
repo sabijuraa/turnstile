@@ -14,7 +14,7 @@ import { PASSAGES } from "../passages.js";
 import type { Summary } from "../text/summarize.js";
 import { type DemoChain, DemoRunError, type Withdrawal } from "./demo-chain.js";
 import type { Amount, DemoPolicyView, RunRecord } from "./events.js";
-import { RunBusyError, type RunStore } from "./store.js";
+import { RunBusyError, type RunHistory } from "./store.js";
 
 /** The demo policy. The numbers are chosen so six calls at 0.005 settle and the seventh does not. */
 export const DEMO_POLICY = {
@@ -29,7 +29,7 @@ const SUMMARY_SENTENCES = 2;
 const EXCERPT_CHARS = 240;
 
 export interface RunnerDeps {
-  store: RunStore;
+  store: RunHistory;
   chain: DemoChain;
   logger: Logger;
   metrics: RunnerMetrics;

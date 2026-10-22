@@ -63,6 +63,7 @@ async function authenticateApiKey(s: Services, c: Context<AppEnv>, key: string):
  * Cookie-authenticated writes must come from the web origin, which blocks cross-site requests.
  */
 export function requireOwner(s: Services, opts: { apiKey: boolean }): MiddlewareHandler<AppEnv> {
+  if (s.authorize) return s.authorize(opts);
   return async (c, next) => {
     const header = c.req.header("authorization");
     if (header !== undefined) {

@@ -1,6 +1,12 @@
 export { createApp, MAX_TEXT_CHARS, paywallRoutes } from "./app.js";
 export { buildCatalog, type Catalog, type CatalogRoute } from "./catalog.js";
+export { createLogger } from "./logger.js";
+export { createApiMetrics, createRunnerMetrics } from "./metrics.js";
 export { PASSAGES, type Passage } from "./passages.js";
+export { createRunnerApp, type RunnerAppDeps } from "./runner/app.js";
 export type * from "./runner/events.js";
+export { DEMO_POLICY, DemoRunner, MAX_CALLS, type RunnerDeps } from "./runner/run.js";
+export { SolanaDemoChain, type SolanaDemoChainOptions } from "./runner/solana-chain.js";
+export { MemoryRunStore, RunBusyError, type RunHistory, RunStore } from "./runner/store.js";
 export { type Keyphrase, keywords } from "./text/keywords.js";
 export { type Summary, type SummarySentence, summarize } from "./text/summarize.js";

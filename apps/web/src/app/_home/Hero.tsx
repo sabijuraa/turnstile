@@ -1,9 +1,8 @@
 import { ButtonLink } from "@/components/Button";
-import { Gate } from "@/components/Gate";
 import { Icon, type IconName } from "@/components/Icon";
 import { Illustration } from "@/components/Illustration";
+import { RequestFlow } from "@/components/RequestFlow";
 import styles from "./home.module.css";
-import { sampleChecks, sampleOutcome, sampleRequest } from "./illustration";
 
 const pillars: readonly { icon: IconName; text: string }[] = [
   { icon: "pulse", text: "Settles with the request" },
@@ -44,9 +43,9 @@ export function Hero() {
         </div>
         <Illustration
           className={styles.heroGate}
-          note="Illustration. A sample request and receipt, not live data."
+          note="Illustration. Six paid calls pass, the seventh would break the daily cap and is refused."
         >
-          <Gate request={sampleRequest} checks={sampleChecks} outcome={sampleOutcome} />
+          <RequestFlow />
         </Illustration>
       </div>
     </section>

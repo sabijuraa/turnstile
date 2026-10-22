@@ -6,17 +6,28 @@
 
 .hero {
   position: relative;
-  overflow: hidden;
+  padding: var(--space-4) var(--gutter) 0;
 }
 
+/* The hero is a lit stage: night ink, a faint grid and the glow of settled payments. */
 .heroInner {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-8);
   align-items: center;
   max-width: var(--content-max);
   margin: 0 auto;
-  padding: clamp(3rem, 2rem + 5vw, 6.5rem) var(--gutter) clamp(4rem, 3rem + 5vw, 7rem);
+  padding: clamp(2.5rem, 1.5rem + 4vw, 5.5rem) clamp(1.25rem, 0.5rem + 3vw, 4rem);
+  border-radius: 28px;
+  overflow: hidden;
+  color: var(--color-on-ink);
+  background:
+    radial-gradient(60% 70% at 85% 30%, rgb(70 227 183 / 0.18), transparent 70%),
+    radial-gradient(40% 50% at 0% 100%, rgb(245 177 74 / 0.1), transparent 70%),
+    linear-gradient(var(--color-on-night-line) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(90deg, var(--color-on-night-line) 1px, transparent 1px) 0 0 / 32px 32px,
+    var(--color-night);
 }
 
 @media (min-width: 64rem) {
@@ -32,8 +43,13 @@
   justify-items: start;
 }
 
+.hero .eyebrow {
+  color: var(--color-mint);
+}
+
 .heroTitle {
   max-width: 11ch;
+  color: var(--color-on-ink);
   font-size: var(--text-5xl);
   font-weight: 500;
   line-height: 0.98;
@@ -42,7 +58,7 @@
 
 .heroLead {
   max-width: 34rem;
-  color: var(--color-ink-muted);
+  color: var(--color-on-ink-muted);
   font-size: var(--text-lg);
   line-height: 1.6;
 }
@@ -61,8 +77,8 @@
   margin: var(--space-4) 0 0;
   padding: var(--space-5) 0 0;
   list-style: none;
-  border-top: 1px solid var(--color-line);
-  color: var(--color-ink-muted);
+  border-top: 1px solid var(--color-on-night-border);
+  color: var(--color-on-ink-muted);
   font-size: var(--text-sm);
   font-weight: 500;
 }
@@ -74,12 +90,12 @@
 }
 
 .pillars svg {
-  color: var(--color-accent);
+  color: var(--color-mint);
 }
 
 .heroGate {
   width: 100%;
-  max-width: 28rem;
+  max-width: 34rem;
   justify-self: center;
 }
 
@@ -563,4 +579,36 @@
   justify-content: center;
   gap: var(--space-3);
   margin-top: var(--space-2);
+}
+
+/* The illustration caption sits on the night stage in the hero. */
+.heroGate figcaption {
+  color: var(--color-on-ink-muted);
+}
+
+/* How it works sits on the night stage. */
+.howDark .stepIcon {
+  border-color: var(--color-on-night-border);
+  background: var(--color-night-2);
+  color: var(--color-mint);
+}
+
+.howDark .stepNumber {
+  color: var(--color-mint);
+}
+
+.howDark .stepTitle {
+  color: var(--color-on-ink);
+}
+
+.howDark .stepBody {
+  color: var(--color-on-ink-muted);
+}
+
+.howDark .track {
+  background: var(--color-on-night-border);
+}
+
+.howDark .trackFill {
+  background: var(--color-mint);
 }

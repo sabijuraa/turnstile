@@ -70,39 +70,41 @@ export function ReceiptCard({
 }: ReceiptCardProps) {
   const Heading = `h${headingLevel}` as const;
   return (
-    <article className={styles.card}>
-      <header className={styles.cardHead}>
-        <Heading className={styles.cardTitle}>
-          <Icon name="receipt" size={18} />
-          Receipt
-        </Heading>
-        <ReceiptStatusPill status={status} />
-      </header>
-      <p className={styles.cardAmount}>
-        <span className={styles.cardFigure}>{groupDigits(amount)}</span>
-        <span className={styles.cardAsset}>{asset}</span>
-      </p>
-      <p className={styles.cardTime}>
-        <time dateTime={settledAt}>
-          {formatTimestamp(settledAt, timeZone)} {timeZone === "UTC" ? "UTC" : ""}
-        </time>
-      </p>
-      <dl className={styles.fields}>
-        {fields.map((field) => (
-          <div key={field.label} className={styles.field}>
-            <dt>{field.label}</dt>
-            <dd className={field.mono ? styles.mono : undefined}>{field.value}</dd>
-          </div>
-        ))}
-      </dl>
-      {explorerUrl ? (
-        <a className={styles.explorer} href={explorerUrl} target="_blank" rel="noreferrer">
-          {explorerLabel}
-          <Icon name="arrowUpRight" size={16} />
-          <span className="visually-hidden">(opens in a new tab)</span>
-        </a>
-      ) : null}
-    </article>
+    <div className={styles.roll}>
+      <article className={styles.card}>
+        <header className={styles.cardHead}>
+          <Heading className={styles.cardTitle}>
+            <Icon name="receipt" size={18} />
+            Receipt
+          </Heading>
+          <ReceiptStatusPill status={status} />
+        </header>
+        <p className={styles.cardAmount}>
+          <span className={styles.cardFigure}>{groupDigits(amount)}</span>
+          <span className={styles.cardAsset}>{asset}</span>
+        </p>
+        <p className={styles.cardTime}>
+          <time dateTime={settledAt}>
+            {formatTimestamp(settledAt, timeZone)} {timeZone === "UTC" ? "UTC" : ""}
+          </time>
+        </p>
+        <dl className={styles.fields}>
+          {fields.map((field) => (
+            <div key={field.label} className={styles.field}>
+              <dt>{field.label}</dt>
+              <dd className={field.mono ? styles.mono : undefined}>{field.value}</dd>
+            </div>
+          ))}
+        </dl>
+        {explorerUrl ? (
+          <a className={styles.explorer} href={explorerUrl} target="_blank" rel="noreferrer">
+            {explorerLabel}
+            <Icon name="arrowUpRight" size={16} />
+            <span className="visually-hidden">(opens in a new tab)</span>
+          </a>
+        ) : null}
+      </article>
+    </div>
   );
 }
 

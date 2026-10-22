@@ -29,6 +29,8 @@ export function HowItWorks() {
   return (
     <Section
       id="how-it-works"
+      tone="ink"
+      className={styles.howDark}
       eyebrow="How it works"
       title="From a free endpoint to a paid one in four steps."
       lead="The payment rides along with the request. Your agent pays. The service answers. The receipt is already on chain."

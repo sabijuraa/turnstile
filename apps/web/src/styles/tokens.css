@@ -38,6 +38,16 @@
 
   --color-meter-track: #e6e5dd;
 
+  /* Night. The stage the product is shown on: a control room lit by settled payments */
+  --color-night: #061210;
+  --color-night-2: #0a1c19;
+  --color-night-3: #12302b;
+  --color-mint: #46e3b7;
+  --color-amber: #f5b14a;
+  --color-refuse: #ff5f57;
+  --color-on-night-line: rgb(70 227 183 / 0.08);
+  --color-on-night-border: rgb(70 227 183 / 0.22);
+
   /* Translucent values derived from the ink and paper */
   --color-header-rest: rgb(246 245 240 / 0.78);
   --color-header-scrolled: rgb(246 245 240 / 0.94);

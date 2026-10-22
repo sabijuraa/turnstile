@@ -16,9 +16,13 @@
 }
 
 .ink {
-  background: var(--color-ink);
   color: var(--color-on-ink);
-  border-top-color: var(--color-ink);
+  border-top-color: var(--color-night);
+  background:
+    radial-gradient(50% 60% at 90% 0%, rgb(70 227 183 / 0.14), transparent 70%),
+    linear-gradient(var(--color-on-night-line) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(90deg, var(--color-on-night-line) 1px, transparent 1px) 0 0 / 32px 32px,
+    var(--color-night);
 }
 
 .container {
@@ -46,7 +50,7 @@
 }
 
 .ink .eyebrow {
-  color: var(--color-on-ink-muted);
+  color: var(--color-mint);
 }
 
 .title {

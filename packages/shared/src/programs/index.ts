@@ -4,7 +4,9 @@
  * Everything here encodes and decodes through the Anchor IDL coder built from the program IDLs
  * in ./idl.ts. These builders and decoders are the only program encoders used off chain.
  */
-import anchor, { type BN, type Idl } from "@anchor-lang/core";
+
+import type { BN, Idl } from "@anchor-lang/core";
+import * as anchorModule from "@anchor-lang/core";
 import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {
   type AccountMeta,
@@ -30,8 +32,11 @@ export type { AgentWallet as AgentWalletIdlType } from "./agent_wallet.js";
 export { agentWalletIdl, settlementIdl } from "./idl.js";
 export type { Settlement as SettlementIdlType } from "./settlement.js";
 
-// @anchor-lang/core is CommonJS. Node ESM only exposes its default export, so read the
-// classes from there. Named value imports work under bundlers but fail under plain node.
+// @anchor-lang/core ships CommonJS for Node and ESM for bundlers. Node ESM exposes the CommonJS
+// exports as the default export, a bundler exposes the ESM build with no default, so take
+// whichever is there.
+const anchor = ((anchorModule as unknown as { default?: typeof anchorModule }).default ??
+  anchorModule) as typeof anchorModule;
 const { BorshCoder, EventParser } = anchor;
 
 export const agentWalletCoder = new BorshCoder(agentWalletIdl as unknown as Idl);

@@ -205,24 +205,38 @@ After the deploy, consider moving the upgrade authority off the deployer with `s
 
 ## Deploy the web app to Vercel
 
-Not yet executed. The web app only proxies. The backend, the demo agent and the facilitator must run somewhere public first.
+Not yet executed. It waits on the devnet deploy above.
 
-- Project root directory `apps/web`, framework Next.js, package manager pnpm.
-- Build command `cd ../.. && pnpm --filter "@turnstile/web..." build`, which builds `@turnstile/shared` before the site.
+The site can run the whole product without any other host. With `TURNSTILE_LIVE=1` it runs the facilitator under `/api/live/facilitator`, the paid demo API under `/v1`, the demo agent under `/demo/api` and the console API under `/api/backend`, all inside its own functions. Requests between them are routed in memory, not over HTTP.
 
-| Variable | Needed for | Example |
-| --- | --- | --- |
-| `NEXT_PUBLIC_SITE_URL` | metadata and canonical links | `https://turnstile.example` |
-| `TURNSTILE_NETWORK` | console and demo network label | `devnet` |
-| `SOLANA_RPC_URL` | `/api/console/send` and chain reads | `https://api.devnet.solana.com` |
-| `TURNSTILE_BACKEND_URL` | `/api/backend/*` and `/api/console/session` | the public backend URL |
-| `TURNSTILE_DEMO_AGENT_URL` | `/demo/api/*` | the public demo agent URL |
-| `FACILITATOR_URL` | shown in the console deployment facts | the public facilitator URL |
-| `DEPLOYMENT_FILE` | `/api/console/deployment` | a path to a deployment JSON bundled with the app |
+What changes in live mode.
 
-Without `DEPLOYMENT_FILE` the console falls back to the program ids in `@turnstile/shared` and reports no mint. A path on Vercel must point at a file inside the deployment, which is not set up yet.
+- The demo streams its run over the same request that starts it, so no run has to outlive a function.
+- The console session is a signed cookie, so any instance can check it.
+- The console reads receipts from the chain with `getProgramAccounts`, filtered by owner. There is no indexer or Postgres behind it. Labels and API keys are not available and answer 501.
+- Served payments are remembered per instance. A replayed header that lands on a different instance is still refused by the chain, because the nonce is spent, but it can be served once more from the receipt. Give the paywall a shared `servedPayments` store before charging real money.
 
-On the backend set `WEB_ORIGIN` to the site origin and `COOKIE_SECURE=true`. On the demo agent set `WEB_ORIGIN` to the site origin as well.
+Project settings.
+
+- Root directory `apps/web`, framework Next.js, package manager pnpm.
+- Build command `cd ../.. && pnpm --filter "@turnstile/web..." build`, which builds every workspace package the site imports first.
+
+| Variable | Value |
+| --- | --- |
+| `TURNSTILE_LIVE` | `1` |
+| `TURNSTILE_NETWORK` | `devnet` |
+| `SOLANA_RPC_URL` | a devnet RPC URL. The public one rate limits, so a provider URL is better |
+| `TURNSTILE_DEPLOYMENT` | the contents of `deployments/devnet.json` on one line |
+| `FACILITATOR_SECRET_KEY` | the JSON byte array in `keys/devnet/facilitator.json` |
+| `DEMO_OWNER_SECRET_KEY` | the JSON byte array in `keys/devnet/demo-owner.json` |
+| `DEMO_SESSION_SECRET_KEY` | the JSON byte array in `keys/devnet/demo-session.json` |
+| `CONSOLE_SESSION_SECRET` | at least 32 random characters, for example `openssl rand -hex 32` |
+| `TURNSTILE_PUBLIC_URL` | optional, the public origin when it differs from the request's |
+| `NEXT_PUBLIC_SITE_URL` | the public origin, for metadata |
+
+The three keys are devnet keys with devnet funds. Keep them out of preview deployments by setting them for Production only, and rotate them if one leaks.
+
+Without `TURNSTILE_LIVE` the site proxies to separately hosted services as before, through `TURNSTILE_BACKEND_URL`, `TURNSTILE_DEMO_AGENT_URL` and `FACILITATOR_URL`. On those set `WEB_ORIGIN` to the site origin, and on the backend `COOKIE_SECURE=true`.
 
 ## Recover the indexer
 

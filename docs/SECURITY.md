@@ -103,7 +103,7 @@ Every instruction except `debit` requires the owner signature and `has_one = own
 ## What is not protected
 
 - Spending inside the policy. A compromised session key, or a hostile resource server on the allow-list, can spend up to the caps. The caps are the limit of the damage.
-- Long lived authorizations. The resource server picks `expiresAt` in the requirements. The facilitator caps `maxTimeoutSeconds` at 3600 when it issues requirements, but the agent SDK does not cap the expiry it signs. A server that forges requirements can get a signature that stays valid for a long time and settle it later, within policy.
+- Authorizations inside their lifetime. `settle` refuses an authorization that expires more than 24 hours after chain time, and the facilitator refuses one whose expiry differs from the requirements it issued. Inside that window a signed payment can still be settled later, within policy.
 - Revocation is not retroactive. Revoking a key stops its unsettled authorizations only while it stays revoked. See the findings below.
 - The owner key. Whoever holds it controls the wallet. There is no recovery and no way to change the owner.
 - Availability. The facilitator, the RPC node or the backend can refuse service. They cannot redirect funds.
@@ -126,6 +126,13 @@ The program review was run against the SBF builds. Its cases live in `programs/s
 | The recipient token account is not pinned to the associated token account | Low | Accepted, documented here |
 | A receipt address prefunded with lamports could block a nonce | Low | Fixed before the review. Test added in `52143a0` |
 | A copy of an agent wallet owned by another program | Informational | Not exploitable. Test added in `52143a0` |
+| One payment header could be resent for repeat access to a paid route | High | Fixed in `caf493d` |
+| An authorization with an unbounded expiry locked the fee payer's receipt rent for good | Medium | Fixed in `92cd6e2` and `caf493d` |
+| A dust deposit into the vault could block `close_wallet` | Low | Fixed in `92cd6e2` |
+| `verify_receipt` does not compare `expires_at` | Informational | Accepted. The nonce is unique |
+| Token-2022 mints are refused at `create_wallet` | Informational | Accepted. Each extension would need its own review |
+| A session key created with `expires_at = 0` never expires | Informational | By design |
+| Anyone can front run a settle with their own fee payer | Informational | No loss. The payment still goes to the signed recipient and the facilitator answers from the receipt |
 
 ### Receipt rent
 
@@ -173,3 +180,27 @@ A settled authorization replayed after it expired fails with `AuthorizationExpir
 - The receipt records `recipient_token`, so the recipient can find them.
 - The shared settle builder uses the associated token account by default.
 - Disposition. Accepted. Pinning to the associated account would block recipients who use other token accounts.
+
+## October 2026 review
+
+A second review in October 2026 went over both programs, the facilitator and the resource SDK again. It confirmed the findings above and found three new ones. It was an internal review, not an independent audit.
+
+### Repeat access from one payment header
+
+The paywall took the nonce and expiry from the client's payment and treated a settlement that the facilitator answered from an existing receipt as paid. An agent could pay once and send the same `PAYMENT-SIGNATURE` header again for as long as the receipt existed, and so could anyone who saw the header.
+
+- Fix. The paywall keeps a record of served payments keyed by payer and nonce. The first success serves the request. A second one is answered with 409 `payment_already_used` and the original `PAYMENT-RESPONSE`, so a client that lost the first response can still read its receipt. `memoryServedPayments()` is the default and the `servedPayments` option takes a shared store for several instances.
+- Tests. The paywall unit tests, the integration suite and the end to end replay test in `packages/e2e/test/product-loop.test.ts`, which now expects 409.
+
+### Unbounded expiry
+
+`settle` put no upper bound on `expires_at`. An agent could sign a payment within policy that expires in the year 292 billion. The receipt could then never be closed, so each such call locked about 0.0032 SOL of the fee payer's rent for good.
+
+- Fix on chain. `MAX_AUTHORIZATION_TTL_SECONDS` is 86,400 and `settle` fails with `ExpiryTooFar` past it.
+- Fix in the facilitator. It refuses an authorization whose expiry differs from the requirements it issued, or lies beyond the requirement's timeout plus 60 seconds.
+
+### Dust blocks closing a wallet
+
+`close_wallet` required an empty vault, and anyone can transfer tokens into it. An attacker could front run every close with one unit of dust.
+
+- Fix. `close_wallet` takes the owner's token account for the wallet's mint, sweeps whatever the vault holds into it and then closes. The console always passes the owner's associated token account and asks before closing a wallet that still holds funds.

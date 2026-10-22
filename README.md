@@ -35,26 +35,36 @@ Turnstile puts the limit where neither the agent nor any server can move it. The
 
 Every item below is asserted by a test in this repository.
 
-**Programs.** `cargo test -p settlement -p agent-wallet` runs 61 tests in LiteSVM against the compiled programs.
+**Programs.** `cargo test -p settlement -p agent-wallet` runs 64 tests in LiteSVM against the compiled programs.
 
 - A payment over the per-call cap, over the rolling daily cap, to a resource off the allow-list, to the wrong recipient or in the wrong mint fails inside the program.
-- A replayed nonce fails with `NonceAlreadyUsed`. An expired authorization or a revoked or unknown session key fails.
+- A replayed nonce fails with `NonceAlreadyUsed`. An expired authorization, one that expires more than 24 hours out, or a revoked or unknown session key fails.
 - The ed25519 signature must cover this exact program, message and key, and must sit in the instruction right before `settle`.
 - `debit` called directly, outside settlement, is refused. Every owner instruction refuses a non-owner signer.
 - The rolling daily cap ages out bucket by bucket and never admits more than the cap inside any 24 hour window.
 - A receipt can be closed after its retention period, returns its exact rent to the fee payer, and a replay after the close fails as expired and moves no funds.
 - The program's authorization message matches the TypeScript encoder byte for byte.
 
-**Services and SDKs.** `pnpm -r --filter '!@turnstile/e2e' run test` runs 322 tests across the shared library, facilitator, both SDKs, indexer, console backend, demo API and web app. With `TURNSTILE_INTEGRATION=1`, all 31 `sdk-resource` tests run against a real `solana-test-validator` and facilitator.
+**Services and SDKs.** `pnpm -r --filter '!@turnstile/e2e' run test` runs the unit tests across the shared library, facilitator, both SDKs, indexer, console backend, demo API and web app. With `TURNSTILE_INTEGRATION=1`, all 31 `sdk-resource` tests run against a real `solana-test-validator` and facilitator.
 
 **End to end.** `pnpm e2e` brings up the full stack in Docker and runs 19 tests. CI runs it on every push to `main`.
 
 - The full loop from 402 to a receipt on chain that matches the indexer row field by field (`packages/e2e/test/product-loop.test.ts`).
 - An over-cap payment, an off allow-list payment and a replayed nonce are each refused by the program, the facilitator and the SDK.
-- A replayed payment header is answered from the original receipt without a second debit.
+- A replayed payment header gets 409 `payment_already_used` with the original receipt. The route is not served twice and nothing is debited twice.
 - The console backend signs an owner in with a wallet signature and serves the same receipt, the summary and the CSV export.
 - The demo agent settles six calls and the chain refuses the seventh with `DailyCapExceeded` (`packages/e2e/test/demo-run.test.ts`).
 - Every service answers `/healthz`, `/readyz` and `/metrics`.
+
+## The site
+
+`apps/web` is the marketing site, the docs, the owner console and a live demo. The design is a night stage in deep green with a mint signal colour, the look of a ticket gate at night. The home page shows the product working: paid requests leave an agent, pass a turnstile one at a time while a daily cap gauge fills and a printer issues a receipt for each, and the seventh request bounces back with `DailyCapExceeded`. Receipts are drawn as thermal paper with a torn edge, since a receipt is what every payment leaves behind. The animation respects reduced motion.
+
+With `TURNSTILE_LIVE=1` the site runs the whole product by itself. The facilitator, the paid demo API, the demo agent and the console API all run inside its own functions and talk to each other in memory. The demo streams a real run against the chain, and the console signs an owner in with their wallet and reads their receipts straight from the chain. [docs/RUNBOOK.md](docs/RUNBOOK.md) lists the variables and what changes in this mode.
+
+## Security
+
+The programs and the services have been reviewed twice in house. The October 2026 review found that one payment header could be resent for repeat access to a paid route, that an authorization with no expiry limit could lock the facilitator's rent for good, and that dust in a vault could block closing a wallet. All three are fixed and tested. [docs/SECURITY.md](docs/SECURITY.md) has the threat model, every finding and what was accepted. Neither review is an independent audit.
 
 ## Performance
 

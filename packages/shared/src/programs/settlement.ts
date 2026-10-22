@@ -247,6 +247,11 @@ export type Settlement = {
       name: "notFeePayer";
       msg: "Only the fee payer that paid for this receipt can close it. Sign with that key";
     },
+    {
+      code: 6107;
+      name: "expiryTooFar";
+      msg: "The authorization expires too far ahead. Sign one that expires within 24 hours";
+    },
   ];
   types: [
     {
@@ -599,6 +604,15 @@ export type Settlement = {
       docs: ["Domain prefix of every signed authorization. Exactly 20 ASCII bytes."];
       type: "bytes";
       value: "[84, 85, 82, 78, 83, 84, 73, 76, 69, 95, 80, 65, 89, 77, 69, 78, 84, 95, 86, 49]";
+    },
+    {
+      name: "maxAuthorizationTtlSeconds";
+      docs: [
+        "Longest an authorization may stay valid when it settles. Bounding it bounds",
+        "how long a receipt's rent stays locked.",
+      ];
+      type: "i64";
+      value: "86400";
     },
     {
       name: "receiptRetentionSeconds";

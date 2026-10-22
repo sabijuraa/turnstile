@@ -43,7 +43,12 @@ export type AgentWallet = {
     },
     {
       name: "closeWallet";
-      docs: ["Closes an empty vault and the wallet. Rent from both goes back to the owner."];
+      docs: [
+        "Sweeps whatever is left in the vault to the owner, then closes the vault",
+        "and the wallet. Rent from both goes back to the owner. Sweeping here,",
+        "rather than requiring an empty vault, means a stranger who sends dust to",
+        "the vault cannot keep the owner from closing it.",
+      ];
       discriminator: [35, 212, 234, 224, 244, 208, 31, 204];
       accounts: [
         {
@@ -60,6 +65,11 @@ export type AgentWallet = {
           name: "vault";
           writable: true;
           relations: ["agentWallet"];
+        },
+        {
+          name: "ownerToken";
+          docs: ["Receives what is left in the vault. Must be the owner's, in the wallet's mint."];
+          writable: true;
         },
         {
           name: "tokenProgram";

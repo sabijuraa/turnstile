@@ -154,12 +154,11 @@ pub mod agent_wallet {
         Ok(())
     }
 
-    /// Closes an empty vault and the wallet. Rent from both goes back to the owner.
+    /// Sweeps whatever is left in the vault to the owner, then closes the vault
+    /// and the wallet. Rent from both goes back to the owner. Sweeping here,
+    /// rather than requiring an empty vault, means a stranger who sends dust to
+    /// the vault cannot keep the owner from closing it.
     pub fn close_wallet(ctx: Context<CloseWallet>) -> Result<()> {
-        require!(
-            ctx.accounts.vault.amount == 0,
-            AgentWalletError::VaultNotEmpty
-        );
         let wallet = &ctx.accounts.agent_wallet;
         let id_bytes = wallet.id.to_le_bytes();
         let seeds: &[&[u8]] = &[
@@ -168,6 +167,21 @@ pub mod agent_wallet {
             &id_bytes,
             std::slice::from_ref(&wallet.bump),
         ];
+        let left = ctx.accounts.vault.amount;
+        if left > 0 {
+            token::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.key(),
+                    Transfer {
+                        from: ctx.accounts.vault.to_account_info(),
+                        to: ctx.accounts.owner_token.to_account_info(),
+                        authority: ctx.accounts.agent_wallet.to_account_info(),
+                    },
+                    &[seeds],
+                ),
+                left,
+            )?;
+        }
         token::close_account(CpiContext::new_with_signer(
             ctx.accounts.token_program.key(),
             CloseAccount {
@@ -323,6 +337,13 @@ pub struct CloseWallet<'info> {
     pub agent_wallet: Box<Account<'info, AgentWallet>>,
     #[account(mut)]
     pub vault: Box<Account<'info, TokenAccount>>,
+    /// Receives what is left in the vault. Must be the owner's, in the wallet's mint.
+    #[account(
+        mut,
+        constraint = owner_token.owner == owner.key() @ AgentWalletError::AccountMismatch,
+        constraint = owner_token.mint == agent_wallet.mint @ AgentWalletError::MintMismatch,
+    )]
+    pub owner_token: Box<Account<'info, TokenAccount>>,
     pub token_program: Program<'info, Token>,
 }
 

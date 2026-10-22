@@ -380,6 +380,7 @@ impl Env {
                 owner: *owner,
                 agent_wallet: self.wallet,
                 vault: self.vault,
+                owner_token: self.owner_token,
                 token_program: spl_token::ID,
             }
             .to_account_metas(None),

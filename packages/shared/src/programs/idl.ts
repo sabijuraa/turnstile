@@ -39,7 +39,12 @@ export const agentWalletIdl = {
     },
     {
       name: "close_wallet",
-      docs: ["Closes an empty vault and the wallet. Rent from both goes back to the owner."],
+      docs: [
+        "Sweeps whatever is left in the vault to the owner, then closes the vault",
+        "and the wallet. Rent from both goes back to the owner. Sweeping here,",
+        "rather than requiring an empty vault, means a stranger who sends dust to",
+        "the vault cannot keep the owner from closing it.",
+      ],
       discriminator: [35, 212, 234, 224, 244, 208, 31, 204],
       accounts: [
         {
@@ -56,6 +61,11 @@ export const agentWalletIdl = {
           name: "vault",
           writable: true,
           relations: ["agent_wallet"],
+        },
+        {
+          name: "owner_token",
+          docs: ["Receives what is left in the vault. Must be the owner's, in the wallet's mint."],
+          writable: true,
         },
         {
           name: "token_program",
@@ -825,6 +835,11 @@ export const settlementIdl = {
       name: "NotFeePayer",
       msg: "Only the fee payer that paid for this receipt can close it. Sign with that key",
     },
+    {
+      code: 6107,
+      name: "ExpiryTooFar",
+      msg: "The authorization expires too far ahead. Sign one that expires within 24 hours",
+    },
   ],
   types: [
     {
@@ -1177,6 +1192,15 @@ export const settlementIdl = {
       docs: ["Domain prefix of every signed authorization. Exactly 20 ASCII bytes."],
       type: "bytes",
       value: "[84, 85, 82, 78, 83, 84, 73, 76, 69, 95, 80, 65, 89, 77, 69, 78, 84, 95, 86, 49]",
+    },
+    {
+      name: "MAX_AUTHORIZATION_TTL_SECONDS",
+      docs: [
+        "Longest an authorization may stay valid when it settles. Bounding it bounds",
+        "how long a receipt's rent stays locked.",
+      ],
+      type: "i64",
+      value: "86400",
     },
     {
       name: "RECEIPT_RETENTION_SECONDS",

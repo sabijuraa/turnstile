@@ -412,15 +412,20 @@ export function updatePolicyInstruction(p: {
   );
 }
 
-/** Closes an empty vault and the wallet. Rent goes back to the owner. */
+/**
+ * Sweeps what is left in the vault to `ownerToken`, then closes the vault and the wallet. Rent
+ * goes back to the owner. `ownerToken` must be the owner's token account for the wallet's mint.
+ */
 export function closeWalletInstruction(p: {
   owner: PublicKey;
   agentWallet: PublicKey;
+  ownerToken: PublicKey;
 }): TransactionInstruction {
   return agentWalletIx("close_wallet", {}, [
     meta(p.owner, true, true),
     meta(p.agentWallet, false, true),
     meta(vaultAddress(p.agentWallet)[0], false, true),
+    meta(p.ownerToken, false, true),
     meta(TOKEN_PROGRAM_ID, false, false),
   ]);
 }

@@ -49,7 +49,10 @@
     {
       "name": "close_wallet",
       "docs": [
-        "Closes an empty vault and the wallet. Rent from both goes back to the owner."
+        "Sweeps whatever is left in the vault to the owner, then closes the vault",
+        "and the wallet. Rent from both goes back to the owner. Sweeping here,",
+        "rather than requiring an empty vault, means a stranger who sends dust to",
+        "the vault cannot keep the owner from closing it."
       ],
       "discriminator": [
         35,
@@ -80,6 +83,13 @@
           "relations": [
             "agent_wallet"
           ]
+        },
+        {
+          "name": "owner_token",
+          "docs": [
+            "Receives what is left in the vault. Must be the owner's, in the wallet's mint."
+          ],
+          "writable": true
         },
         {
           "name": "token_program",

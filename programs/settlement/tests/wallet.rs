@@ -226,12 +226,54 @@ fn update_policy_validates_and_replaces() {
 }
 
 #[test]
-fn close_wallet_requires_an_empty_vault_and_returns_rent() {
+fn close_wallet_sweeps_the_vault_so_dust_cannot_block_it() {
     let mut env = Env::new();
     let owner = env.owner.insecure_clone();
+    // A stranger sends dust straight to the vault with a plain token transfer.
+    let stranger_token = env.create_token_account(&env.recipient.pubkey());
+    env.mint_to(&stranger_token, 1);
+    let recipient = env.recipient.insecure_clone();
+    env.svm.airdrop(&recipient.pubkey(), 1_000_000_000).unwrap();
+    let dust = anchor_spl::token::spl_token::instruction::transfer(
+        &anchor_spl::token::spl_token::ID,
+        &stranger_token,
+        &env.vault,
+        &recipient.pubkey(),
+        &[],
+        1,
+    )
+    .unwrap();
+    env.send(&[dust], &[&recipient]).unwrap();
+    let in_vault = env.balance(&env.vault);
+    assert_eq!(in_vault, FUNDED + 1);
+    let owner_before = env.balance(&env.owner_token);
     let ix = env.close_wallet_ix(&owner.pubkey());
-    assert_error(&env.send(&[ix], &[&owner]), AgentWalletError::VaultNotEmpty);
+    let res = env.send(&[ix], &[&owner]);
+    assert!(res.is_ok(), "{res:?}");
+    assert_eq!(env.balance(&env.owner_token), owner_before + in_vault);
+    let closed = |k: &Pubkey| env.svm.get_account(k).is_none_or(|a| a.lamports == 0);
+    assert!(closed(&env.wallet));
+    assert!(closed(&env.vault));
+}
 
+#[test]
+fn close_wallet_refuses_a_destination_the_owner_does_not_hold() {
+    let mut env = Env::new();
+    let owner = env.owner.insecure_clone();
+    let theirs = env.create_token_account(&env.recipient.pubkey());
+    let mut ix = env.close_wallet_ix(&owner.pubkey());
+    // owner_token sits right after the vault.
+    ix.accounts[3].pubkey = theirs;
+    assert_error(
+        &env.send(&[ix], &[&owner]),
+        AgentWalletError::AccountMismatch,
+    );
+}
+
+#[test]
+fn close_wallet_returns_rent() {
+    let mut env = Env::new();
+    let owner = env.owner.insecure_clone();
     env.withdraw(FUNDED).unwrap();
     let wallet_rent = env.svm.get_account(&env.wallet).unwrap().lamports;
     let vault_rent = env.svm.get_account(&env.vault).unwrap().lamports;

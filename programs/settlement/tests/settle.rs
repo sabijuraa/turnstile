@@ -110,6 +110,22 @@ fn expired_authorization_fails() {
 }
 
 #[test]
+fn authorization_expiring_too_far_ahead_fails() {
+    let mut env = Env::new();
+    let mut auth = env.authorization(10_000);
+    // i64::MAX would keep the receipt's rent locked forever.
+    auth.expires_at = i64::MAX;
+    assert_error(&env.settle(&auth), SettlementError::ExpiryTooFar);
+    let mut auth = env.authorization(10_000);
+    auth.expires_at = T0 + settlement::MAX_AUTHORIZATION_TTL_SECONDS + 1;
+    assert_error(&env.settle(&auth), SettlementError::ExpiryTooFar);
+    // Exactly 24 hours ahead is accepted.
+    let mut auth = env.authorization(10_000);
+    auth.expires_at = T0 + settlement::MAX_AUTHORIZATION_TTL_SECONDS;
+    env.settle(&auth).unwrap();
+}
+
+#[test]
 fn over_per_call_cap_fails() {
     let mut env = Env::new();
     let auth = env.authorization(PER_CALL_CAP + 1);

@@ -18,4 +18,6 @@ pub enum SettlementError {
     RetentionNotElapsed,
     #[msg("Only the fee payer that paid for this receipt can close it. Sign with that key")]
     NotFeePayer,
+    #[msg("The authorization expires too far ahead. Sign one that expires within 24 hours")]
+    ExpiryTooFar,
 }

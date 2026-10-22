@@ -133,7 +133,7 @@ describe("instruction builders", () => {
         }),
         "update_policy",
       ],
-      [closeWalletInstruction({ owner, agentWallet: wallet }), "close_wallet"],
+      [closeWalletInstruction({ owner, agentWallet: wallet, ownerToken: owner }), "close_wallet"],
       [rollingSpendInstruction({ agentWallet: wallet }), "rolling_spend"],
     ];
     for (const [ix, name] of cases) {
@@ -346,7 +346,8 @@ describe("program errors", () => {
     expect(PROGRAM_ERRORS.get(6016)?.program).toBe("agent_wallet");
     expect(programErrorName(6105)).toBe("RetentionNotElapsed");
     expect(programErrorName(6106)).toBe("NotFeePayer");
-    expect(PROGRAM_ERRORS.size).toBe(18 + 7);
+    expect(programErrorName(6107)).toBe("ExpiryTooFar");
+    expect(PROGRAM_ERRORS.size).toBe(18 + 8);
     expect(programErrorName(1)).toBeNull();
   });
 

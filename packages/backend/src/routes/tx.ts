@@ -573,35 +573,29 @@ export function txRoutes(s: Services): Hono<AppEnv> {
     const owner = new PublicKey(c.get("owner"));
     const w = await owned(owner, body.agentWallet);
     const [balance = 0n] = await vaultBalances(s.rpc, [w.address]);
-    const ixs: NamedIx[] = [];
-    if (balance > 0n) {
-      if (!body.withdrawRemaining) {
-        throw new ApiError(
-          409,
-          "vault_not_empty",
-          `The agent vault still holds ${formatUnits(balance, decimals)}. Withdraw it first or send withdrawRemaining true to do both in one transaction.`,
-        );
-      }
-      ixs.push(
-        {
-          name: "create_owner_token_account",
-          ix: createAssociatedTokenIdempotentInstruction(owner, owner, w.account.mint),
-        },
-        {
-          name: "withdraw",
-          ix: withdrawInstruction({
-            owner,
-            agentWallet: w.address,
-            ownerToken: associatedTokenAddress(owner, w.account.mint),
-            amount: balance,
-          }),
-        },
+    // close_wallet sweeps whatever the vault holds to the owner before closing it. The owner
+    // still has to say so when there is money in it, so a close never moves funds by surprise.
+    if (balance > 0n && !body.withdrawRemaining) {
+      throw new ApiError(
+        409,
+        "vault_not_empty",
+        `The agent vault still holds ${formatUnits(balance, decimals)}. Withdraw it first or send withdrawRemaining true to do both in one transaction.`,
       );
     }
-    ixs.push({
-      name: "close_wallet",
-      ix: closeWalletInstruction({ owner, agentWallet: w.address }),
-    });
+    const ixs: NamedIx[] = [
+      {
+        name: "create_owner_token_account",
+        ix: createAssociatedTokenIdempotentInstruction(owner, owner, w.account.mint),
+      },
+      {
+        name: "close_wallet",
+        ix: closeWalletInstruction({
+          owner,
+          agentWallet: w.address,
+          ownerToken: associatedTokenAddress(owner, w.account.mint),
+        }),
+      },
+    ];
     return c.json(
       await respond(
         owner,

@@ -31,6 +31,11 @@ pub const AUTHORIZATION_MESSAGE_LEN: usize = 20 + 32 + AUTHORIZATION_BODY_LEN;
 #[constant]
 pub const RECEIPT_RETENTION_SECONDS: i64 = 7 * 24 * 60 * 60;
 
+/// Longest an authorization may stay valid when it settles. Bounding it bounds
+/// how long a receipt's rent stays locked.
+#[constant]
+pub const MAX_AUTHORIZATION_TTL_SECONDS: i64 = 86_400;
+
 /// A payment the agent's session key agreed to. Borsh layout is the 208 byte body of the
 /// signed message and matches `encodeAuthorizationBody` in packages/shared.
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Eq)]
@@ -126,6 +131,15 @@ pub mod settlement {
         require!(
             clock.unix_timestamp <= authorization.expires_at,
             SettlementError::AuthorizationExpired
+        );
+        // A receipt can only be closed after its authorization expires, so an
+        // expiry far in the future would lock the fee payer's rent for good.
+        require!(
+            authorization.expires_at
+                <= clock
+                    .unix_timestamp
+                    .saturating_add(MAX_AUTHORIZATION_TTL_SECONDS),
+            SettlementError::ExpiryTooFar
         );
 
         ed25519::verify_preceding_instruction(

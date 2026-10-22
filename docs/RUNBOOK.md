@@ -115,7 +115,7 @@ Other browser checks in `apps/web/e2e` run with `node` from `apps/web` against a
 
 ## Deploy the programs to devnet
 
-Not yet executed. The deployer `Ez15MJVD5PGMVgHDHVXx29fSiHhnS7aUSVXFp49ZhM8J` has no devnet SOL. See BLOCKERS.md.
+Done on 22 Oct 2026. agent_wallet in transaction `5JY5g3yJkpAdYNzCrpSZUKoBFqmmFzWCsUcpsgNLL9WifJcsD8Lco5PBPHjHcZMyRvedpfZRRriGct2EqVXbbJGD`, settlement in `2e7vV7SFb8PvtirCbFZvX4dvh6uW8TBbaYJK5AJgkUmaiGXxsqSxhTuJzBH5niyKy3vmDotHMTAvFUB9NfrLWLcV`. The record is `deployments/devnet.json`. The public RPC drops buffer writes under load, so sending with `--with-compute-unit-price 10000` and without `--use-rpc` worked where the defaults did not. A failed upload leaves its buffer funded, and passing `--buffer <address>` resumes it.
 
 Keys used.
 
@@ -205,7 +205,7 @@ After the deploy, consider moving the upgrade authority off the deployer with `s
 
 ## Deploy the web app to Vercel
 
-Not yet executed. It waits on the devnet deploy above.
+Deployed to https://turnstile-lyart.vercel.app in live mode. `apps/web/vercel.json` holds the build command. The public devnet RPC rate limits Vercel's shared addresses, so use a provider URL for `SOLANA_RPC_URL`.
 
 The site can run the whole product without any other host. With `TURNSTILE_LIVE=1` it runs the facilitator under `/api/live/facilitator`, the paid demo API under `/v1`, the demo agent under `/demo/api` and the console API under `/api/backend`, all inside its own functions. Requests between them are routed in memory, not over HTTP.
 

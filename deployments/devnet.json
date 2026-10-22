@@ -1,0 +1,19 @@
+{
+  "network": "devnet",
+  "caip2": "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
+  "genesisHash": "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG",
+  "programs": {
+    "agentWallet": "7onzUVc1HGc9oBDUspBdP8dz1QW6uXrSdBn4NH6aiLb",
+    "settlement": "6FrY43zorjSv8wCuarPL3z8ZnyBTyyC86xRjBqgu1K9z"
+  },
+  "settlementAuthority": "AchLyVbEk5nXx2K73LB43wvBCqY4V4xyei9bTwSrS5Tz",
+  "mint": "DiZdwwKcWkNAtGSAu5tW4MUyLS9bDqsfUxq7uVsx4yNG",
+  "mintSymbol": "tUSDC",
+  "mintDecimals": 6,
+  "mintAuthority": "9dEciz99hPQQa9QnPGKYG4ZqMvZF5B5qkEQTiUHJvEBV",
+  "facilitator": "EXWWqSyQRE2ZWFEWaxSRRHUmvAssxSwr1h2gnSVtr64D",
+  "demoOwner": "2VJ19NHqMCuNUVB4whvuRwEECxYYiu3BpXfjLqevgszi",
+  "demoSession": "4vZdF1TbX639qfKXMFJTyk7YcmTvsi2wLGem9LtVLzCw",
+  "demoRecipient": "3j4kvCC84rPLjqgm1AUZYAAoq6qMP5bFG3Su3fF4pNQc",
+  "createdAt": "2026-10-22T20:05:22.000Z"
+}

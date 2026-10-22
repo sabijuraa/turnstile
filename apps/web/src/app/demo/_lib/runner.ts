@@ -2,6 +2,8 @@
  * Server side access to the demo agent runner. The browser never calls the runner directly. It
  * goes through the same origin proxy in app/demo/api, which uses these helpers.
  */
+import { headers } from "next/headers";
+import { live, liveEnabled } from "@/lib/live/runtime";
 import {
   type DemoPolicyView,
   isPolicy,
@@ -9,6 +11,16 @@ import {
   parseSnapshot,
   type RunSnapshot,
 } from "./events";
+
+/** This site's origin, for the in-app runtime, from the incoming request's headers. */
+async function requestOrigin(): Promise<string> {
+  const configured = process.env.TURNSTILE_PUBLIC_URL;
+  if (configured) return new URL(configured).origin;
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
+  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  return `${proto}://${host}`;
+}
 
 /** Base URL of the runner, without a trailing slash, or null when it is not configured. */
 export function runnerBaseUrl(): string | null {
@@ -33,15 +45,21 @@ const READ_TIMEOUT_MS = 4000;
 async function readJson(
   path: string,
 ): Promise<{ status: number; body: unknown } | RunnerUnavailable> {
-  const base = runnerBaseUrl();
+  const inApp = liveEnabled();
+  const base = inApp ? "the in-app demo agent" : runnerBaseUrl();
   if (!base) return "not_configured";
   let res: Response;
   try {
-    res = await fetch(`${base}${path}`, {
+    const init: RequestInit = {
       cache: "no-store",
       headers: { accept: "application/json" },
       signal: AbortSignal.timeout(READ_TIMEOUT_MS),
-    });
+    };
+    res = inApp
+      ? await live(await requestOrigin()).runnerApp.fetch(
+          new Request(`http://demo-agent${path}`, init),
+        )
+      : await fetch(`${base}${path}`, init);
   } catch (err) {
     console.error(`The demo agent at ${base} did not answer GET ${path}.`, err);
     return "unreachable";

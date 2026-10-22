@@ -41,6 +41,8 @@ export interface DemoRunProps {
   /** True when the runner did not answer while the page rendered. */
   offline: boolean;
   settlementProgram: { address: string; url: string };
+  /** The agent runs inside this site, so a run streams back on the request that starts it. */
+  live?: boolean;
 }
 
 type Mode = "idle" | "starting" | "running" | "watching";
@@ -70,7 +72,14 @@ async function readBody(res: Response): Promise<unknown> {
   }
 }
 
-export function DemoRun({ network, policy, initial, offline, settlementProgram }: DemoRunProps) {
+export function DemoRun({
+  network,
+  policy,
+  initial,
+  offline,
+  settlementProgram,
+  live = false,
+}: DemoRunProps) {
   const reduced = usePrefersReducedMotion();
   const [events, setEvents] = useState<RunEvent[]>(() => initial?.events ?? []);
   const [instantUntil, setInstantUntil] = useState(() => lastSeq(initial?.events ?? []));
@@ -243,9 +252,83 @@ export function DemoRun({ network, policy, initial, offline, settlementProgram }
     }
   }, []);
 
+  /**
+   * Starts a run and reads its events from the same response. A serverless host may send a second
+   * request to an instance that knows nothing about the run, so the live site never makes one.
+   */
+  const startStreamed = useCallback(async () => {
+    let res: Response;
+    try {
+      res = await fetch(`${API}/runs/stream`, { method: "POST", cache: "no-store" });
+    } catch (err) {
+      console.error("POST /demo/api/runs/stream failed.", err);
+      setMode("idle");
+      setNotice({
+        kind: "error",
+        title: "The run did not start",
+        message: "The page could not reach the demo. Check your connection and try again.",
+      });
+      return;
+    }
+    if (!res.ok || !res.body || !res.headers.get("content-type")?.includes("text/event-stream")) {
+      setMode("idle");
+      const error = parseApiError(await readBody(res));
+      if (res.status === 409) {
+        setNotice({ kind: "busy", runId: error?.runId ?? null });
+        return;
+      }
+      setNotice({
+        kind: "error",
+        title: "The run did not start",
+        message: error?.message ?? `The demo answered ${res.status}. Try again in a minute.`,
+      });
+      return;
+    }
+    setInstantUntil(0);
+    setEvents([]);
+    setMode("running");
+    setAnnouncement("Run started. The agent is setting up a fresh wallet.");
+    focusStatus.current = true;
+    const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+    let buffer = "";
+    for (;;) {
+      const { value, done } = await reader.read().catch(() => ({ value: undefined, done: true }));
+      if (done) break;
+      buffer += value ?? "";
+      let cut = buffer.indexOf("\n\n");
+      while (cut >= 0) {
+        const frame = buffer.slice(0, cut);
+        buffer = buffer.slice(cut + 2);
+        cut = buffer.indexOf("\n\n");
+        const data = frame
+          .split("\n")
+          .filter((line) => line.startsWith("data:"))
+          .map((line) => line.slice(5).trimStart())
+          .join("\n");
+        if (!data) continue;
+        let raw: unknown;
+        try {
+          raw = JSON.parse(data);
+        } catch {
+          continue;
+        }
+        const event = parseRunEvent(raw);
+        if (!event) continue;
+        if (!runIdRef.current || event.seq === 1) runIdRef.current = event.runId;
+        append(event);
+      }
+    }
+    setMode("idle");
+  }, [append]);
+
   const start = useCallback(async () => {
     setNotice(null);
     setMode("starting");
+    if (live) {
+      runIdRef.current = null;
+      await startStreamed();
+      return;
+    }
     let res: Response;
     try {
       res = await fetch(`${API}/runs`, { method: "POST", cache: "no-store" });
@@ -282,7 +365,7 @@ export function DemoRun({ network, policy, initial, offline, settlementProgram }
       title: "The run did not start",
       message: error?.message ?? `The demo answered ${res.status}. Try again in a minute.`,
     });
-  }, []);
+  }, [live, startStreamed]);
 
   const settleable = activePolicy ? expectedSettled(activePolicy) : null;
   const callCount = view.calls.length;

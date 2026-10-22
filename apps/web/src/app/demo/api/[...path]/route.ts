@@ -2,10 +2,26 @@
  * Same origin proxy to the demo agent runner, so the browser needs no CORS and never meets mixed
  * content. Only the runner's public routes pass. Server-Sent Events stream through untouched.
  */
+import { live, liveEnabled, originOf } from "@/lib/live/runtime";
 import { runnerBaseUrl } from "../../_lib/runner";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+// A streamed run lasts as long as the run, which is under a minute on devnet.
+export const maxDuration = 120;
+
+/**
+ * Calls the demo agent. With TURNSTILE_LIVE the agent runs inside this app and is answered in
+ * process, otherwise it is the runner at TURNSTILE_DEMO_AGENT_URL.
+ */
+async function upstream(request: Request, path: string, init: RequestInit): Promise<Response> {
+  if (liveEnabled()) {
+    return live(originOf(request)).runnerApp.fetch(new Request(`http://demo-agent/${path}`, init));
+  }
+  const base = runnerBaseUrl();
+  if (!base) return notConfigured();
+  return fetch(`${base}/${path}`, init);
+}
 
 const RUN_ID = "[0-9a-f-]{36}";
 const GET_ROUTES = [
@@ -64,17 +80,17 @@ export async function GET(
   if (!GET_ROUTES.some((route) => route.test(path))) {
     return problem(404, "not_found", `The demo API has no GET route at /${path}.`);
   }
-  const base = runnerBaseUrl();
+  const base = liveEnabled() ? "the in-app demo agent" : runnerBaseUrl();
   if (!base) return notConfigured();
 
   if (!EVENTS.test(path)) {
     try {
-      const upstream = await fetch(`${base}/${path}`, {
+      const res = await upstream(request, path, {
         cache: "no-store",
         headers: { accept: "application/json" },
         signal: AbortSignal.timeout(JSON_TIMEOUT_MS),
       });
-      return passJson(upstream);
+      return passJson(res);
     } catch (err) {
       return unreachable(base, `GET /${path}`, err);
     }
@@ -85,9 +101,9 @@ export async function GET(
   const after = new URL(request.url).searchParams.get("after");
   const resume =
     request.headers.get("last-event-id") ?? (after && /^\d+$/.test(after) ? after : null);
-  let upstream: Response;
+  let res: Response;
   try {
-    upstream = await fetch(`${base}/${path}`, {
+    res = await upstream(request, path, {
       cache: "no-store",
       headers: {
         accept: "text/event-stream",
@@ -98,8 +114,12 @@ export async function GET(
   } catch (err) {
     return unreachable(base, `GET /${path}`, err);
   }
-  if (!upstream.ok || !upstream.body) return passJson(upstream);
-  return new Response(upstream.body, {
+  return sse(res);
+}
+
+function sse(res: Response): Response {
+  if (!res.ok || !res.body) return passJson(res);
+  return new Response(res.body, {
     status: 200,
     headers: {
       "content-type": "text/event-stream; charset=utf-8",
@@ -111,24 +131,34 @@ export async function GET(
 }
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ path: string[] }> },
 ): Promise<Response> {
   const path = await pathOf(params);
-  if (path !== "runs") {
+  if (path !== "runs" && !(path === "runs/stream" && liveEnabled())) {
     return problem(404, "not_found", `The demo API has no POST route at /${path}.`);
   }
-  const base = runnerBaseUrl();
+  const base = liveEnabled() ? "the in-app demo agent" : runnerBaseUrl();
   if (!base) return notConfigured();
   try {
-    const upstream = await fetch(`${base}/runs`, {
+    const started = await upstream(request, "runs", {
       method: "POST",
       cache: "no-store",
       headers: { accept: "application/json" },
       signal: AbortSignal.timeout(JSON_TIMEOUT_MS),
     });
-    return passJson(upstream);
+    if (path === "runs" || started.status !== 202) return passJson(started);
+    // Start the run and stream it from the same instance that is running it, so a serverless
+    // host never sends the feed to an instance that knows nothing about the run.
+    const { runId } = (await started.json()) as { runId: string };
+    return sse(
+      await upstream(request, `runs/${runId}/events`, {
+        cache: "no-store",
+        headers: { accept: "text/event-stream" },
+        signal: request.signal,
+      }),
+    );
   } catch (err) {
-    return unreachable(base, "POST /runs", err);
+    return unreachable(base, `POST /${path}`, err);
   }
 }

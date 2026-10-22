@@ -6,6 +6,8 @@
 
 import type { NextRequest } from "next/server";
 import { backendUrl } from "@/lib/console/server";
+import { consoleApi } from "@/lib/live/console";
+import { liveEnabled, originOf } from "@/lib/live/runtime";
 
 export const dynamic = "force-dynamic";
 
@@ -26,13 +28,20 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
 
   let upstream: Response;
   try {
-    upstream = await fetch(target, {
+    const init = {
       method: request.method,
       headers,
       body: hasBody ? await request.arrayBuffer() : undefined,
-      redirect: "manual",
-      cache: "no-store",
-    });
+    };
+    if (liveEnabled()) {
+      // No backend on this host. The console API answers in process from the chain.
+      const origin = originOf(request);
+      const inner = new URL(`/${path.map(encodeURIComponent).join("/")}`, origin);
+      inner.search = request.nextUrl.search;
+      upstream = await consoleApi(origin).fetch(new Request(inner, init));
+    } else {
+      upstream = await fetch(target, { ...init, redirect: "manual", cache: "no-store" });
+    }
   } catch (error) {
     console.error("Console backend unreachable", target.origin, error);
     return Response.json(

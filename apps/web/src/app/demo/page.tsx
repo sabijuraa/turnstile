@@ -1,5 +1,6 @@
 import { explorerAddressUrl, NETWORKS, SETTLEMENT_PROGRAM_ID } from "@turnstile/shared";
 import type { Metadata } from "next";
+import { liveEnabled } from "@/lib/live/runtime";
 import { demoNetwork } from "./_lib/network";
 import { loadLatestRun, loadPolicy } from "./_lib/runner";
 import { DemoRun } from "./_parts/DemoRun";
@@ -41,6 +42,7 @@ export default async function Page() {
         policy={policy.ok ? policy.value : null}
         initial={initial}
         offline={!latest.ok && !policy.ok}
+        live={liveEnabled()}
         settlementProgram={{
           address: settlement,
           url: explorerAddressUrl(NETWORKS[network.name], settlement),

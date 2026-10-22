@@ -120,7 +120,7 @@ export class SolanaDemoChain implements DemoChain {
       const ids = Array.from({ length: ID_PROBE_BATCH }, (_, i) => start + BigInt(i));
       const addresses = ids.map((id) => agentWalletAddress(this.owner.publicKey, id)[0]);
       const infos = await this.connection.getMultipleAccountsInfo(addresses, "confirmed");
-      const free = infos.findIndex((info) => info === null);
+      const free = infos.indexOf(null);
       const id = ids[free];
       if (free !== -1 && id !== undefined) return id;
     }

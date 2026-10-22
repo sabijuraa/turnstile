@@ -10,6 +10,7 @@ export function RequestFlow() {
   return (
     <div className={styles.stage} aria-hidden="true">
       <svg viewBox="0 0 520 360" className={styles.svg}>
+        <title>Paid requests passing a turnstile until the daily cap refuses one</title>
         <defs>
           <linearGradient id="rf-lane" x1="0" x2="1">
             <stop offset="0" stopColor="var(--color-mint)" stopOpacity="0" />

@@ -1,9 +1,9 @@
-target/
-keys/
-programs/
-infra/
-test-ledger/
-.anchor/
+/target/
+/keys/
+/programs/
+/infra/
+/test-ledger/
+/.anchor/
 **/node_modules/
 **/dist/
 **/.next/

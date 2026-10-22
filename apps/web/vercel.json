@@ -1,0 +1,4 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "cd ../.. && pnpm --filter \"@turnstile/web^...\" run build && cd apps/web && pnpm exec next build"
+}

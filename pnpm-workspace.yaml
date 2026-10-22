@@ -10,3 +10,5 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - '@hono/node-server@2.1.3'
   - hono@4.13.11
+overrides:
+  rpc-websockets>uuid: ^11.1.0

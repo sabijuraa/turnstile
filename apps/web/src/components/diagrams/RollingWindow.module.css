@@ -1,0 +1,127 @@
+.figure {
+  display: grid;
+  gap: var(--space-3);
+  width: 100%;
+  padding: clamp(1rem, 0.5rem + 1.5vw, 1.75rem);
+  border-radius: 20px;
+  background: var(--color-night);
+  color: var(--color-on-ink);
+}
+
+.head,
+.axis {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.head code {
+  color: var(--color-mint);
+  font-size: var(--text-xs);
+}
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: clamp(7.5rem, 6rem + 6vw, 10.5rem);
+  border-bottom: 1px solid var(--color-on-night-border);
+}
+
+.bar {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 1px 1px 0 0;
+  background: var(--color-mint);
+  opacity: 0.55;
+  transition: height 300ms ease;
+}
+
+.leaving {
+  background: var(--color-amber);
+  opacity: 1;
+}
+
+.now {
+  opacity: 1;
+}
+
+.axis {
+  color: var(--color-on-ink-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+}
+
+.meter {
+  position: relative;
+  height: 0.625rem;
+  margin-top: var(--space-2);
+  border-radius: 999px;
+  background: var(--color-night-3);
+  overflow: hidden;
+}
+
+.spent,
+.pending {
+  position: absolute;
+  inset-block: 0;
+  transition:
+    width 300ms ease,
+    left 300ms ease;
+}
+
+.spent {
+  left: 0;
+  background: var(--color-mint);
+}
+
+.pending {
+  background: var(--color-amber);
+}
+
+.pendingFail {
+  background: var(--color-refuse);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.facts dt {
+  color: var(--color-on-ink-muted);
+  font-size: var(--text-xs);
+}
+
+.facts dd {
+  font-family: var(--font-mono);
+  font-size: var(--text-md);
+  font-variant-numeric: tabular-nums;
+}
+
+.verdict {
+  min-height: 1.5rem;
+  font-size: var(--text-sm);
+}
+
+.verdict code {
+  font-size: var(--text-xs);
+}
+
+.pass {
+  color: var(--color-mint);
+}
+
+.fail {
+  color: var(--color-refuse);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar,
+  .spent,
+  .pending {
+    transition: none;
+  }
+}

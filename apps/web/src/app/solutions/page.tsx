@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { ButtonLink } from "@/components/Button";
-import { Icon, type IconName } from "@/components/Icon";
 import { PageIntro } from "@/components/PageIntro";
 import { Section } from "@/components/Section";
 import styles from "./solutions.module.css";
@@ -11,24 +10,6 @@ export const metadata: Metadata = {
   description:
     "Where per-call payment fits. Metered APIs, paid data feeds, agent to agent services and pay-per-use compute, with what each takes to build.",
 };
-
-const fits: readonly { icon: IconName; title: string; body: string }[] = [
-  {
-    icon: "agent",
-    title: "Software is the buyer",
-    body: "An agent cannot fill in a checkout. It can sign a payment in the same request.",
-  },
-  {
-    icon: "endpoint",
-    title: "One request carries the value",
-    body: "A lookup, an answer or a finished job. Not a seat and not a month.",
-  },
-  {
-    icon: "coins",
-    title: "The amount is small",
-    body: "A fraction of a cent is too small for a card. It settles cleanly in a stablecoin.",
-  },
-];
 
 const useCases: readonly UseCase[] = [
   {
@@ -96,29 +77,6 @@ const useCases: readonly UseCase[] = [
   },
 ];
 
-const handled: readonly { icon: IconName; title: string; body: string }[] = [
-  {
-    icon: "gate",
-    title: "The price and the 402",
-    body: "An unpaid call gets the price back in the standard x402 format. A paid call gets the response.",
-  },
-  {
-    icon: "shield",
-    title: "Limits on chain",
-    body: "The buyer's per-call cap, daily cap and allow-list are checked before a single token moves.",
-  },
-  {
-    icon: "receipt",
-    title: "A receipt for every call",
-    body: "Both sides can see what was paid, to whom and for which route. The record lives on Solana.",
-  },
-  {
-    icon: "check",
-    title: "Retries that charge once",
-    body: "Each payment carries a nonce. A retried payment settles once and never twice.",
-  },
-];
-
 export default function SolutionsPage() {
   return (
     <>
@@ -136,28 +94,8 @@ export default function SolutionsPage() {
           </>
         }
       >
-        Per-call payment fits wherever software does the buying and a single request carries the
-        value. Here are four places it fits well and what each one takes to build.
+        Per-call payment fits wherever software does the buying and one request carries the value.
       </PageIntro>
-
-      <Section
-        id="fit"
-        tone="surface"
-        eyebrow="Where it fits"
-        title="Three signs a route should be paid."
-      >
-        <ul className={styles.fits}>
-          {fits.map((fit) => (
-            <li key={fit.title} className={styles.fit}>
-              <span className={styles.fitIcon}>
-                <Icon name={fit.icon} size={20} />
-              </span>
-              <h3 className={styles.fitTitle}>{fit.title}</h3>
-              <p className={styles.fitBody}>{fit.body}</p>
-            </li>
-          ))}
-        </ul>
-      </Section>
 
       <Section
         id="use-cases"
@@ -174,35 +112,13 @@ export default function SolutionsPage() {
         </ul>
       </Section>
 
-      <Section
-        id="handled"
-        tone="surface"
-        eyebrow="In every case"
-        title="What Turnstile takes care of."
-      >
-        <ul className={styles.handled}>
-          {handled.map((item) => (
-            <li key={item.title} className={styles.handledItem}>
-              <span className={styles.handledIcon}>
-                <Icon name={item.icon} size={18} />
-              </span>
-              <span>
-                <strong className={styles.handledTitle}>{item.title}</strong>
-                <span className={styles.handledBody}>{item.body}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      </Section>
-
       <section className={styles.closing} aria-labelledby="solutions-closing-title">
         <div className={styles.closingInner}>
           <h2 id="solutions-closing-title" className={styles.closingTitle}>
             Start with one route.
           </h2>
           <p className={styles.closingLead}>
-            Wrap a single endpoint, point an agent at it and watch the first receipt land. You can
-            add the rest once it feels right.
+            Wrap a single endpoint, point an agent at it and watch the first receipt land.
           </p>
           <div className={styles.closingActions}>
             <ButtonLink href="/docs/quickstart" icon="arrowRight">

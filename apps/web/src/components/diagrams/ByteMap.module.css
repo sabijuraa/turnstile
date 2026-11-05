@@ -1,0 +1,93 @@
+.figure {
+  display: grid;
+  gap: var(--space-4);
+  padding: clamp(1rem, 0.5rem + 1.5vw, 1.75rem);
+  border: 1px solid var(--color-line);
+  border-radius: 20px;
+  background: var(--color-surface);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+}
+
+.head code {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.strip {
+  display: flex;
+  gap: 2px;
+  height: 2.75rem;
+}
+
+.cell {
+  flex-basis: 0;
+  min-width: 2px;
+  border-radius: 3px;
+}
+
+.domain {
+  background: var(--color-line-strong);
+}
+
+.who {
+  background: var(--color-accent);
+}
+
+.what {
+  background: var(--color-mint);
+}
+
+.replay {
+  background: var(--color-amber);
+}
+
+.when {
+  background: var(--color-ink);
+}
+
+.legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  gap: var(--space-5) var(--space-6);
+}
+
+.group {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+}
+
+.group dt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 3px;
+}
+
+.group dd {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+}
+
+.group dd span {
+  font-family: var(--font-mono);
+}

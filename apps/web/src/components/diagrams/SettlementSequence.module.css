@@ -1,0 +1,136 @@
+.panel {
+  display: grid;
+  width: 100%;
+  border: 1px solid var(--color-on-night-border);
+  border-radius: 20px;
+  background: var(--color-night-2);
+  overflow: hidden;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  padding: var(--space-3) var(--space-3) 0;
+}
+
+.lifeline {
+  stroke: var(--color-on-night-border);
+  stroke-dasharray: 3 5;
+}
+
+.actor {
+  fill: var(--color-night-3);
+  stroke: var(--color-on-night-border);
+}
+
+.actorName {
+  fill: var(--color-on-ink);
+  font: 600 14px var(--font-text);
+}
+
+.actorRole {
+  fill: var(--color-on-ink-muted);
+  font: 10.5px var(--font-mono);
+}
+
+.head_request {
+  fill: var(--color-on-ink);
+}
+
+.head_price {
+  fill: var(--color-amber);
+}
+
+.head_paid {
+  fill: var(--color-mint);
+}
+
+.row {
+  opacity: 0;
+  transition: opacity var(--duration-base, 200ms) ease;
+}
+
+.shown {
+  opacity: 0.82;
+}
+
+.active {
+  opacity: 1;
+}
+
+.arrow {
+  stroke-width: 1.5;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 480ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.shown .arrow {
+  stroke-dashoffset: 0;
+}
+
+.request .arrow {
+  stroke: var(--color-on-ink);
+}
+
+.price .arrow {
+  stroke: var(--color-amber);
+}
+
+.paid .arrow {
+  stroke: var(--color-mint);
+}
+
+.activation {
+  fill: var(--color-night);
+  stroke: var(--color-on-ink);
+}
+
+.paid .activation {
+  fill: var(--color-mint);
+  stroke: var(--color-mint);
+}
+
+.label {
+  fill: var(--color-on-ink);
+  font: 500 12px var(--font-mono);
+  paint-order: stroke;
+  stroke: var(--color-night-2);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}
+
+.price .label {
+  fill: var(--color-amber);
+}
+
+.paid .label {
+  fill: var(--color-mint);
+}
+
+.caption {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  min-height: 4.25rem;
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--color-on-night-border);
+  color: var(--color-on-ink);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.count {
+  flex: none;
+  color: var(--color-mint);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row,
+  .arrow {
+    transition: none;
+  }
+}

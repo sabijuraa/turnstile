@@ -16,14 +16,6 @@ const threats: readonly {
     codes: ["SignatureMismatch", "NonceAlreadyUsed"],
   },
   {
-    title: "A service lies about its price",
-    happens:
-      "A service can ask any price in its 402. The agent SDK compares it with your policy and refuses early.",
-    stops:
-      "Anything above the per-call cap is refused on chain. Below the cap the price is the service's call, so set the cap close to what you expect to pay.",
-    codes: ["PerCallCapExceeded"],
-  },
-  {
     title: "A service swaps in its own address",
     happens:
       "A compromised server keeps an allowed route but asks to be paid at a wallet it controls.",
@@ -38,14 +30,6 @@ const threats: readonly {
     stops:
       "The caps and the allow-list still apply. Revoke the key with one signature and the next payment it signs is refused. An expiry ends it on its own.",
     codes: ["SessionKeyRevoked", "SessionKeyExpired"],
-  },
-  {
-    title: "The website or console is compromised",
-    happens:
-      "An attacker could change what the page shows or prepare a transaction you did not ask for.",
-    stops:
-      "Neither holds a key that can move funds. Every change needs your signature in your own wallet, so read what the wallet shows before you approve.",
-    codes: [],
   },
   {
     title: "Someone replays a payment",

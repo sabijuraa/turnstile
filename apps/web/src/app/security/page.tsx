@@ -3,7 +3,6 @@ import { PageIntro } from "@/components/PageIntro";
 import { Boundaries } from "./_parts/Boundaries";
 import { Closing } from "./_parts/Closing";
 import { Guarantee } from "./_parts/Guarantee";
-import { Keys } from "./_parts/Keys";
 import styles from "./_parts/security.module.css";
 import { Threats } from "./_parts/Threats";
 
@@ -18,7 +17,6 @@ const sections = [
   { href: "#boundaries", label: "Trust boundaries" },
   { href: "#threats", label: "Threat model" },
   { href: "#guarantee", label: "The guarantee" },
-  { href: "#keys", label: "Keys" },
 ] as const;
 
 export default function SecurityPage() {
@@ -37,13 +35,11 @@ export default function SecurityPage() {
           </nav>
         }
       >
-        Turnstile puts your spending rules where no single service can change them. This page shows
-        what each part can do, what the chain guarantees and what it does not.
+        Your spending rules sit where no single service can change them.
       </PageIntro>
       <Boundaries />
       <Threats />
       <Guarantee />
-      <Keys />
       <Closing />
     </>
   );

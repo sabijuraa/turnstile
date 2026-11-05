@@ -1,6 +1,13 @@
+import { GateScene } from "@/components/art/scenes";
 import { ButtonLink } from "@/components/Button";
-import { SettlementSequence } from "@/components/diagrams/SettlementSequence";
+import { Icon, type IconName } from "@/components/Icon";
 import styles from "./home.module.css";
+
+const facts: readonly { icon: IconName; text: string }[] = [
+  { icon: "pulse", text: "Settles with the request" },
+  { icon: "shield", text: "Limits held on chain" },
+  { icon: "receipt", text: "A receipt for every call" },
+];
 
 export function Hero() {
   return (
@@ -12,8 +19,7 @@ export function Hero() {
             Let software pay for itself.
           </h1>
           <p className={styles.heroLead}>
-            Every API call carries its own stablecoin payment on Solana, inside limits the chain
-            enforces.
+            Your agent pays per call in a stablecoin on Solana, and never past the limits you set.
           </p>
           <div className={styles.heroActions}>
             <ButtonLink href="/console" icon="arrowRight">
@@ -23,8 +29,18 @@ export function Hero() {
               See it live
             </ButtonLink>
           </div>
+          <ul className={styles.heroFacts}>
+            {facts.map((fact) => (
+              <li key={fact.text}>
+                <Icon name={fact.icon} size={18} />
+                {fact.text}
+              </li>
+            ))}
+          </ul>
         </div>
-        <SettlementSequence />
+        <div className={styles.heroArt}>
+          <GateScene />
+        </div>
       </div>
     </section>
   );

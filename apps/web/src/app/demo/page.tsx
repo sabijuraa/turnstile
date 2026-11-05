@@ -33,8 +33,8 @@ export default async function Page() {
         <p className={`label ${styles.eyebrow}`}>Live demo</p>
         <h1 className={styles.title}>Watch an agent pay its way, then hit its limit.</h1>
         <p className={styles.lead}>
-          A real agent pays a real metered API on {network.label}. Every call settles on its own and
-          leaves a receipt. When the next call would pass the daily cap, the chain refuses it.
+          A real agent pays a real API on {network.label}, until the chain refuses the call past its
+          cap.
         </p>
       </header>
       <DemoRun

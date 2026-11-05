@@ -1,0 +1,41 @@
+.reveal[data-state="waiting"],
+.stagger[data-state="waiting"] > * {
+  opacity: 0;
+  transform: translateY(26px);
+}
+
+.reveal[data-state="in"]:not(.stagger) {
+  animation: rise 760ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.stagger[data-state="waiting"] {
+  opacity: 1;
+  transform: none;
+}
+
+.stagger[data-state="in"] > * {
+  animation: rise 760ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.stagger[data-state="in"] > :nth-child(2) {
+  animation-delay: 90ms;
+}
+
+.stagger[data-state="in"] > :nth-child(3) {
+  animation-delay: 180ms;
+}
+
+.stagger[data-state="in"] > :nth-child(4) {
+  animation-delay: 270ms;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

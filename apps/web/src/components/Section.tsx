@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Reveal } from "./Reveal";
 import styles from "./Section.module.css";
 
 export interface SectionProps {
@@ -43,15 +44,17 @@ export function Section({
     >
       <div className={styles.container}>
         {eyebrow || title || lead ? (
-          <header className={[styles.head, centered ? styles.centered : ""].join(" ")}>
-            {eyebrow ? <p className={`label ${styles.eyebrow}`}>{eyebrow}</p> : null}
-            {title ? (
-              <h2 id={headingId} className={styles.title}>
-                {title}
-              </h2>
-            ) : null}
-            {lead ? <p className={styles.lead}>{lead}</p> : null}
-          </header>
+          <Reveal>
+            <header className={[styles.head, centered ? styles.centered : ""].join(" ")}>
+              {eyebrow ? <p className={`label ${styles.eyebrow}`}>{eyebrow}</p> : null}
+              {title ? (
+                <h2 id={headingId} className={styles.title}>
+                  {title}
+                </h2>
+              ) : null}
+              {lead ? <p className={styles.lead}>{lead}</p> : null}
+            </header>
+          </Reveal>
         ) : null}
         {children}
       </div>

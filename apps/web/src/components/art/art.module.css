@@ -1,0 +1,156 @@
+.art {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.float {
+  animation: float 7s ease-in-out infinite;
+}
+
+.floatSlow {
+  animation: float 9s ease-in-out -3s infinite;
+}
+
+.floatFast {
+  animation: float 5.5s ease-in-out -1s infinite;
+}
+
+.ride {
+  offset-rotate: 0deg;
+  animation: ride 18s linear infinite;
+}
+
+/* The turnstile clicks round a third of a turn, then waits for the next payment. */
+.spin {
+  animation: click 3.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+.coinRun {
+  opacity: 0;
+  animation: coinRun 3.6s linear infinite;
+}
+
+.coinRun2 {
+  animation-delay: -1.2s;
+}
+
+.coinRun3 {
+  animation-delay: -2.4s;
+}
+
+.pulse {
+  animation: pulse 3.6s ease-in-out infinite;
+}
+
+.drop {
+  animation: drop 3.6s cubic-bezier(0.3, 0, 0.4, 1) infinite;
+}
+
+.bob {
+  animation: bob 3.6s ease-in-out infinite;
+}
+
+@keyframes float {
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes ride {
+  to {
+    offset-distance: 100%;
+  }
+}
+
+@keyframes click {
+  0%,
+  45% {
+    transform: rotate(0deg);
+  }
+  75%,
+  100% {
+    transform: rotate(120deg);
+  }
+}
+
+@keyframes coinRun {
+  0% {
+    opacity: 0;
+    transform: translate(-260px, -150px);
+  }
+  12% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(120px, 69px);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes drop {
+  0% {
+    transform: translateY(-46px);
+    opacity: 0;
+  }
+  20%,
+  70% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+}
+
+@keyframes bob {
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .float,
+  .floatSlow,
+  .floatFast,
+  .ride,
+  .spin,
+  .pulse,
+  .bob {
+    animation: none;
+  }
+
+  .drop {
+    animation: none;
+    opacity: 1;
+  }
+
+  .coinRun {
+    animation: none;
+    opacity: 1;
+    transform: translate(-60px, -35px);
+  }
+
+  .coinRun2 {
+    transform: translate(-160px, -92px);
+  }
+
+  .coinRun3 {
+    transform: translate(40px, 23px);
+  }
+}

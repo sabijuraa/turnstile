@@ -11,10 +11,7 @@ export function Footer() {
           <Link href="/" className={styles.home} aria-label="Turnstile home">
             <Wordmark />
           </Link>
-          <p className={styles.line}>
-            Turnstile lets software pay per request in a stablecoin, inside limits its owner sets
-            once. Built on the x402 standard.
-          </p>
+          <p className={styles.line}>Let software pay per request, inside limits you set once.</p>
           <p className={styles.network}>
             <span className={styles.dot} aria-hidden="true" />
             Settles on Solana

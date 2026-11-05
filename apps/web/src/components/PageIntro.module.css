@@ -1,9 +1,33 @@
+.band {
+  background:
+    linear-gradient(rgb(19 26 26 / 0.04) 1px, transparent 1px) 0 0 / 56px 56px,
+    linear-gradient(90deg, rgb(19 26 26 / 0.04) 1px, transparent 1px) 0 0 / 56px 56px;
+}
+
 .intro {
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-6);
+  align-items: center;
   max-width: var(--content-max);
   margin: 0 auto;
-  padding: clamp(4rem, 3rem + 5vw, 7rem) var(--gutter) clamp(4rem, 3rem + 5vw, 7rem);
+  padding: clamp(3rem, 2rem + 4vw, 5.5rem) var(--gutter);
+}
+
+.copy {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-4);
+}
+
+.art {
+  width: min(100%, 24rem);
+  margin-inline: auto;
+}
+
+@media (min-width: 60rem) {
+  .withArt {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  }
 }
 
 .eyebrow {
@@ -11,12 +35,12 @@
 }
 
 .title {
-  max-width: 20ch;
+  max-width: 16ch;
   font-size: var(--text-5xl);
 }
 
 .lead {
-  max-width: var(--measure);
+  max-width: 32rem;
   color: var(--color-ink-muted);
   font-size: var(--text-lg);
 }

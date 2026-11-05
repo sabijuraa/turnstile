@@ -95,7 +95,7 @@ for (const width of widths) {
   await context.close();
 }
 
-// No script. The sequence diagram must still render the whole exchange.
+// No script. The hero must still say what this is and show its picture.
 {
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
@@ -106,27 +106,19 @@ for (const width of widths) {
   const path = `${out}home-1440-no-javascript.png`;
   await page.screenshot({ path });
   report.screenshots.push(path);
-  report.noScriptSequenceText = await page.locator("figure").first().innerText();
-  if (!report.noScriptSequenceText.includes("PAYMENT-RESPONSE"))
-    failures.push("sequence diagram is incomplete without script");
+  report.noScriptHero = await page.locator("h1").first().innerText();
+  if (!report.noScriptHero.includes("Let software pay"))
+    failures.push("hero is missing without script");
+  if ((await page.locator("section svg").count()) === 0) failures.push("hero art is missing");
   await context.close();
 }
 
-// Reduced motion end state and the sequence mid flight, for visual review.
+// Reduced motion end state, for visual review.
 {
   const { context, page } = await openPage(1440, { reducedMotion: "reduce" });
   await go(page, "/");
   const path = `${out}home-1440-reduced-motion.png`;
   await page.screenshot({ path });
-  report.screenshots.push(path);
-  await context.close();
-}
-{
-  const { context, page } = await openPage(1440);
-  await go(page, "/");
-  await page.waitForTimeout(1200 + 7200 * 0.3);
-  const path = `${out}home-1440-sequence.png`;
-  await page.locator("figure").first().screenshot({ path });
   report.screenshots.push(path);
   await context.close();
 }

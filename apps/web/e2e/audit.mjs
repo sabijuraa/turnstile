@@ -95,7 +95,7 @@ for (const width of widths) {
   await context.close();
 }
 
-// No script. The gate must still render its complete first frame.
+// No script. The sequence diagram must still render the whole exchange.
 {
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
@@ -106,13 +106,13 @@ for (const width of widths) {
   const path = `${out}home-1440-no-javascript.png`;
   await page.screenshot({ path });
   report.screenshots.push(path);
-  report.noScriptGateText = await page.locator("figure[data-outcome]").first().innerText();
-  if (!report.noScriptGateText.includes("Settled"))
-    failures.push("gate is incomplete without script");
+  report.noScriptSequenceText = await page.locator("figure").first().innerText();
+  if (!report.noScriptSequenceText.includes("PAYMENT-RESPONSE"))
+    failures.push("sequence diagram is incomplete without script");
   await context.close();
 }
 
-// Reduced motion end state and the gate mid flight, for visual review.
+// Reduced motion end state and the sequence mid flight, for visual review.
 {
   const { context, page } = await openPage(1440, { reducedMotion: "reduce" });
   await go(page, "/");
@@ -125,7 +125,7 @@ for (const width of widths) {
   const { context, page } = await openPage(1440);
   await go(page, "/");
   await page.waitForTimeout(1200 + 7200 * 0.3);
-  const path = `${out}home-1440-gate-checking.png`;
+  const path = `${out}home-1440-sequence.png`;
   await page.locator("figure").first().screenshot({ path });
   report.screenshots.push(path);
   await context.close();

@@ -58,7 +58,7 @@ Every item below is asserted by a test in this repository.
 
 ## The site
 
-`apps/web` is the marketing site, the docs, the owner console and a live demo. The design is a night stage in deep green with a mint signal colour. The diagrams are drawn from the programs themselves. The home page walks through the x402 exchange as a sequence diagram, every check `settle` runs in order and the revert when one fails, the rolling daily cap as its real 97 buckets of 15 minutes, and the receipt account to scale. The product page maps the accounts and the signed message, and the security page shows which key can do what. The animation respects reduced motion.
+`apps/web` is the marketing site, the docs, the owner console and a live demo. The design is a night stage in deep green with a mint signal colour. Each page carries one short idea at a time beside an isometric illustration, a turnstile with coins going through it, a safe, a key, a receipt, drawn in SVG from one small kit. Sections and cards ease in as they scroll into view, and all of the motion respects reduced motion.
 
 The site is live at [turnstile-lyart.vercel.app](https://turnstile-lyart.vercel.app), running against devnet. With `TURNSTILE_LIVE=1` the site runs the whole product by itself. The facilitator, the paid demo API, the demo agent and the console API all run inside its own functions and talk to each other in memory. The demo streams a real run against the chain, and the console signs an owner in with their wallet and reads their receipts straight from the chain. [docs/RUNBOOK.md](docs/RUNBOOK.md) lists the variables and what changes in this mode.
 

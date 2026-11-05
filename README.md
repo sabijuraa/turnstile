@@ -6,6 +6,19 @@
 
 Turnstile lets software pay for what it uses, one HTTP request at a time, inside limits its owner sets in advance. An API answers an unpaid request with HTTP 402. The calling agent signs a stablecoin payment with a scoped session key and retries. Two Solana programs check the payment against the owner's policy, move the funds and write a receipt in a single instruction. The per-call cap, the rolling daily cap and the allow-list live on chain, so no server and no SDK can spend past them.
 
+## Live
+
+| | |
+| --- | --- |
+| Site | [turnstile-lyart.vercel.app](https://turnstile-lyart.vercel.app) |
+| Live demo | [turnstile-lyart.vercel.app/demo](https://turnstile-lyart.vercel.app/demo) |
+| Owner console | [turnstile-lyart.vercel.app/console](https://turnstile-lyart.vercel.app/console) |
+| Docs | [turnstile-lyart.vercel.app/docs](https://turnstile-lyart.vercel.app/docs) |
+| `agent_wallet` on devnet | [7onzUVc1…aiLb](https://explorer.solana.com/address/7onzUVc1HGc9oBDUspBdP8dz1QW6uXrSdBn4NH6aiLb?cluster=devnet) |
+| `settlement` on devnet | [6FrY43zo…1K9z](https://explorer.solana.com/address/6FrY43zorjSv8wCuarPL3z8ZnyBTyyC86xRjBqgu1K9z?cluster=devnet) |
+
+**Status.** Live on Solana devnet with a test stablecoin that has no value. It is not on mainnet. Before mainnet it needs an independent audit of the programs, a real stablecoin mint, a paid RPC provider and a decision on who holds the upgrade authority.
+
 ```
  agent + sdk-agent              resource server + sdk-resource           facilitator
  ─────────────────              ──────────────────────────────           ───────────
@@ -60,7 +73,7 @@ Every item below is asserted by a test in this repository.
 
 `apps/web` is the marketing site, the docs, the owner console and a live demo. The design is a night stage in deep green with a mint signal colour. Each page carries one short idea at a time beside an isometric illustration, a turnstile with coins going through it, a safe, a key, a receipt, drawn in SVG from one small kit. Sections and cards ease in as they scroll into view, and all of the motion respects reduced motion.
 
-The site is live at [turnstile-lyart.vercel.app](https://turnstile-lyart.vercel.app), running against devnet. With `TURNSTILE_LIVE=1` the site runs the whole product by itself. The facilitator, the paid demo API, the demo agent and the console API all run inside its own functions and talk to each other in memory. The demo streams a real run against the chain, and the console signs an owner in with their wallet and reads their receipts straight from the chain. [docs/RUNBOOK.md](docs/RUNBOOK.md) lists the variables and what changes in this mode.
+With `TURNSTILE_LIVE=1` the site runs the whole product by itself. The facilitator, the paid demo API, the demo agent and the console API all run inside its own functions and talk to each other in memory. The demo streams a real run against the chain, and the console signs an owner in with their wallet and reads their receipts straight from the chain. [docs/RUNBOOK.md](docs/RUNBOOK.md) lists the variables and what changes in this mode.
 
 ## Security
 
